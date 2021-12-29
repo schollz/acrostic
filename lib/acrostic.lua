@@ -1,5 +1,5 @@
 include("acrostic/lib/table_addons")
-local MusicUtil=require("acrostic/lib/musicutil")
+local MusicUtil=require("musicutil")
 local lattice_=require("lattice")
 local s=require("sequins")
 
@@ -9,9 +9,6 @@ function Acrostic:new (o)
   o=o or {} -- create object if user does not provide one
   setmetatable(o,self)
   self.__index=self
-
-  -- setup lattice
-  self.lattice=lattice_:new()
 
   -- setup midi
   self.midis={}
@@ -43,6 +40,10 @@ function Acrostic:new (o)
   self.matrix_final={}
   self.matrix_name={}
   for note=1,6 do
+    self.matrix_base[note]={}
+    self.matrix_octave[note]={}
+    self.matrix_final[note]={}
+    self.matrix_name[note]={}
     for chord=1,4 do
       self.matrix_base[note][chord]=0
       self.matrix_octave[note][chord]=0
@@ -50,10 +51,9 @@ function Acrostic:new (o)
       self.matrix_name[note][chord]=""
     end
   end
-  self:update_chords()
 
   -- setup selections
-  params:add{type="number",id="sel_selection",name="sel_selection",min=1,max=3,default=2}
+  params:add{type="number",id="sel_selection",name="sel_selection",min=1,max=4,default=4}
   params:hide("sel_selection")
   params:add{type="number",id="sel_chordprogression",name="sel_chordprogression",min=1,max=4,default=1}
   params:hide("sel_chordprogression")
@@ -61,6 +61,8 @@ function Acrostic:new (o)
   params:hide("sel_chord")
   params:add{type="number",id="sel_note",name="sel_note",min=1,max=6,default=1}
   params:hide("sel_note")
+  params:add{type="number",id="sel_cut",name="sel_cut",min=1,max=6,default=1}
+  params:hide("sel_cut")
 
   for i=1,6 do
     params:add_control("rec_level"..i,"rec level "..i,controlspec.new(0,1,'lin',0.01,0.5,'',0.01/1))
@@ -81,13 +83,39 @@ function Acrostic:new (o)
       self.waveforms[i][j]=0
     end
   end
-  softcut.event_render(function(ch,start,sec_per_sample,samples)
-    self.waveforms[ch]=samples
-  end)
+
+  -- setup softcut
+  self:softcut_init()
+
+  -- setup lattices
+  self.lattice=lattice_:new()
+  self.pattern_sync=self.lattice:new_pattern{
+    action=function(t)
+      self:softcut_goto0()
+    end,
+    division=8,
+  }
+  self.pattern_render=self.lattice:new_pattern{
+    action=function(t)
+      print("rendering")
+      local i=1
+      softcut.render_buffer(self.o.minmax[i][1],self.o.minmax[i][2],self.o.loop_length*clock.get_beat_sec(),55)
+    end,
+    division=1/2,
+  }
+
+  self.lattice:start()
 
   params:bang()
 
   return o
+end
+
+function Acrostic:softcut_goto0()
+  print("syncing samples")
+  for i=1,6 do
+    softcut.position(i,self.o.minmax[i][2])
+  end
 end
 
 function Acrostic:softcut_init()
@@ -101,12 +129,15 @@ function Acrostic:softcut_init()
     {2,163,243},
   }
   self.o.loop_length=16
-
+  self.o.pos={}
+  audio.level_adc_cut(1)
+  audio.level_eng_cut(1)
+  audio.level_tape_cut(1)
   softcut.reset()
   for i=1,6 do
     softcut.level(i,0.5)
     softcut.pan(i,0)
-    softcut.play(i,0)
+    softcut.play(i,1)
     softcut.rate(i,1)
     softcut.loop_start(i,self.o.minmax[i][2])
     softcut.loop_end(i,self.o.minmax[i][2]+self.o.loop_length*clock.get_beat_sec())
@@ -134,12 +165,21 @@ function Acrostic:softcut_init()
     softcut.pre_filter_lp(i,1.0)
     softcut.pre_filter_rq(i,1.0)
     softcut.pre_filter_fc(i,20100)
+    self.o.pos[i]=0
   end
+  softcut.event_render(function(ch,start,sec_per_sample,samples)
+    print("rendered")
+    self.waveforms[ch]=samples
+  end)
+  softcut.event_phase(function(i,pos)
+    self.o.pos[i]=pos-self.o.minmax[i][2]
+  end)
+  softcut.poll_start_phase()
 end
 
 function Acrostic:update_chords()
   for chord=1,4 do
-    local chord_notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",params:get("chord"..chord))
+    local chord_notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..chord)])
     local notes={}
     for _,note in ipairs(chord_notes) do
       table.insert(notes,note)
@@ -181,14 +221,16 @@ end
 
 -- change_chord rotates the chords
 function Acrostic:change_chord(chord,d)
+  d=d*-1
   local t={}
   for note=1,6 do
-    table.insert(t,self.matrix_base[note][chord])
+    table.insert(t,self.matrix_final[note][chord])
   end
 
-  table.rotate(t,d)
+  table.rotatex(t,d)
   for note=1,6 do
     self.matrix_base[note][chord]=t[note]
+    self.matrix_octave[note][chord]=0
   end
 
   self:update_final()
@@ -196,11 +238,19 @@ end
 
 function Acrostic:enc(k,d)
   if k==1 then
+    params:delta("sel_selection",d)
+  elseif k==2 then
     if params:get("sel_selection")==1 then
       params:delta("sel_chordprogression",d)
+    elseif params:get("sel_selection")==2 then
+      params:delta("sel_chord",d)
+    elseif params:get("sel_selection")==3 then
+      params:delta("sel_note",d)
+      params:set("sel_cut",params:get("sel_note"))
+    elseif params:get("sel_selection")==4 then
+      params:delta("sel_cut",d)
+      params:set("sel_note",params:get("sel_cut"))
     end
-  elseif k==2 then
-    params:delta("sel_selection",d)
   elseif k==3 then
     if params:get("sel_selection")==1 then
       params:delta("chord"..params:get("sel_chordprogression"),d)
@@ -242,7 +292,7 @@ function Acrostic:draw()
   local highlight_row=params:get("sel_selection")==3
   if highlight_row then
     screen.level(15)
-    screen.rect(1,10+9*0,71,9)
+    screen.rect(1,10+9*(params:get("sel_note")-1),71,9)
     screen.fill()
   end
   for i=1,4 do
@@ -252,7 +302,7 @@ function Acrostic:draw()
     for j=1,6 do
       table.insert(notes,self.matrix_name[j][i])
     end
-    if i==params:get("sel_note") and highlight_col then
+    if i==params:get("sel_chord") and highlight_col then
       screen.level(15)
       screen.rect(xx-8,yy+2,16,64)
       screen.fill()
@@ -274,14 +324,25 @@ function Acrostic:draw()
 
   -- draw the waveforms
   for j=1,6 do
+    local x=11+(4-1)*19+8
     local y=5+9*j
+    if params:get("sel_cut")==j and params:get("sel_selection")==4 then
+      -- screen.rect()
+      screen.level(15)
+      screen.rect(x,y-5,55,10)
+      screen.fill()
+    end
     local levels={12,5,2,1}
     for sign=-1,1,2 do
       for kk=4,1,-1 do
-        screen.level(levels[kk])
-        screen.move(11+(4-1)*19+8,y)
+        if params:get("sel_cut")==j and params:get("sel_selection")==4 then
+          screen.level(0)
+        else
+          screen.level(levels[kk])
+        end
+        screen.move(x,y)
         for i,sample in ipairs(self.waveforms[j]) do
-          local xx=11+(4-1)*19+8+(i-1)
+          local xx=x+(i-1)
           local yy=y+util.linlin(-1,1,-1*kk,kk,sign*math.abs(sample))
           screen.line(xx,yy)
           screen.stroke()
@@ -289,7 +350,19 @@ function Acrostic:draw()
         end
       end
     end
+    -- draw waveform positions
+    local pos=util.linlin(0,self.o.loop_length*clock.get_beat_sec(),0,53,self.o.pos[j])
+    local xx=x+(pos-1)
+    if params:get("sel_cut")==j and params:get("sel_selection")==4 then
+      screen.level(0)
+    else
+      screen.level(5)
+    end
+    screen.move(xx,y+4)
+    screen.line(xx,y-4)
+    screen.stroke()
   end
+
 end
 
 return Acrostic
