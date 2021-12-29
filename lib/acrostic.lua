@@ -273,6 +273,49 @@ function Acrostic:softcut_clear(i)
   end)
 end
 
+-- minimize_transposition transposes each chord for minimal distance
+function Acrostic:minimize_transposition(changes)
+  local chords={}
+  for chord=1,4 do
+    local notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..chord)])
+    table.insert(chords,notes)
+  end
+  local chords_basic=table.clone(chords)
+  for i,chord in ipairs(chords) do
+    if i>1 then
+      chords[i]=table.smallest_modded_rot(current_chord,chord,12)
+    end
+    while table.average(chords[i])-params:get("root_note")>12 do
+      for j,_ in ipairs(chords[i]) do
+        chords[i][j]=chords[i][j]-12
+      end
+    end
+    while table.average(chords[i])-params:get("root_note")<-12 do
+      for j,_ in ipairs(chords[i]) do
+        chords[i][j]=chords[i][j]+12
+      end
+    end
+    current_chord=chords[i]
+  end
+  if changes then
+    chords=table.minimize_row_changes(chords)
+  end
+  table.print_matrix(chords)
+  for chord=1,4 do
+    for i=1,3 do
+      local notes={i,i+3}
+      for ii,note in ipairs(notes) do
+        self.matrix_octave[note][chord]=(ii-1)*12
+        self.matrix_base[note][chord]=chords[chord][i]
+      end
+    end
+  end
+  for i=1,4 do
+    self.matrix_base[6][i]=(chords_basic[i][1]%12)+12
+  end
+  self:update_final()
+end
+
 function Acrostic:update_chords()
   for chord=1,4 do
     local chord_notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..chord)])
@@ -358,6 +401,13 @@ function Acrostic:key(k,z)
   end
   if self.shift and k==2 then
     self:softcut_clear(params:get("sel_cut"))
+  end
+  if params:get("sel_selection")==1 then
+    if k==2 then
+      self:minimize_transposition()
+    elseif k==3 then
+      self:minimize_transposition(true)
+    end
   end
   if params:get("sel_selection")==2 then
     if self.shift then
