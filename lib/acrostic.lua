@@ -10,6 +10,9 @@ function Acrostic:new (o)
   setmetatable(o,self)
   self.__index=self
 
+  self.shift=false
+  self.loop_length=4
+
   -- setup midi
   self.midis={}
   for _,dev in pairs(midi.devices) do
@@ -53,7 +56,7 @@ function Acrostic:new (o)
   end
 
   -- setup selections
-  params:add{type="number",id="sel_selection",name="sel_selection",min=1,max=4,default=4}
+  params:add{type="number",id="sel_selection",name="sel_selection",min=1,max=4,default=2}
   params:hide("sel_selection")
   params:add{type="number",id="sel_chordprogression",name="sel_chordprogression",min=1,max=4,default=1}
   params:hide("sel_chordprogression")
@@ -65,11 +68,15 @@ function Acrostic:new (o)
   params:hide("sel_cut")
 
   for i=1,6 do
-    params:add_control("rec_level"..i,"rec level "..i,controlspec.new(0,1,'lin',0.01,0.5,'',0.01/1))
+    params:add_control("level"..i,"level "..i,controlspec.new(0,1,'lin',0.01,1.0,'',0.01/1))
+    params:set_action("level"..i,function(x)
+      softcut.level(i,x)
+    end)
+    params:add_control("rec_level"..i,"rec level "..i,controlspec.new(0,1,'lin',0.01,1.0,'',0.01/1))
     params:set_action("rec_level"..i,function(x)
       softcut.rec_level(i,x)
     end)
-    params:add_control("pre_level"..i,"pre level "..i,controlspec.new(0,1,'lin',0.01,0.5,'',0.01/1))
+    params:add_control("pre_level"..i,"pre level "..i,controlspec.new(0,1,'lin',0.01,1.0,'',0.01/1))
     params:set_action("pre_level"..i,function(x)
       softcut.pre_level(i,x)
     end)
@@ -89,25 +96,55 @@ function Acrostic:new (o)
 
   -- setup lattices
   self.lattice=lattice_:new()
-  self.pattern_sync=self.lattice:new_pattern{
+  self.rec_queue={}
+  self.pattern_qn=self.lattice:new_pattern{
     action=function(t)
-      self:softcut_goto0()
+      if not table.is_empty(self.rec_queue) then
+        local i=self.rec_queue[1].i
+        self.rec_queue[1].left=self.rec_queue[1].left-1
+        if #self.rec_queue>1 then
+          if self.rec_queue[1].left<self.loop_length and self.rec_queue[2].primed==false then
+            softcut.rec_once(self.rec_queue[2].i)
+            self.rec_queue[2].left=self.loop_length
+          end
+        end
+        if self.rec_queue[1].left>0 then
+          self:softcut_render(i)
+        else
+          -- pop the first element
+          table.remove(self.rec_queue,1)
+        end
+      end
     end,
-    division=8,
+    division=1/4,
   }
-  self.pattern_render=self.lattice:new_pattern{
+  self.current_chord=4
+  self.pattern_measure=self.lattice:new_pattern{
     action=function(t)
-      print("rendering")
-      local i=1
-      softcut.render_buffer(self.o.minmax[i][1],self.o.minmax[i][2],self.o.loop_length*clock.get_beat_sec(),55)
+      self.current_chord=self.current_chord+1
+      if self.current_chord>4 then
+        self.current_chord=1
+      end
+      local note=self.matrix_final[params:get("sel_note")][self.current_chord]
+      -- print(note)
+      -- engine.bandpass_wet(1)
+      -- engine.bandpass_rq(0.1)
+      -- engine.bandpass_hz(MusicUtil.note_num_to_freq(note))
     end,
-    division=1/2,
+    division=1*self.loop_length/16,
   }
-
-  self.lattice:start()
+  self.pattern_phrase=self.lattice:new_pattern{
+    action=function(t)
+      -- if math.random()<0.25 then
+      --   self.softcut_goto0()
+      -- end
+    end,
+    division=4*self.loop_length/16,
+  }
 
   params:bang()
 
+  self.lattice:start()
   return o
 end
 
@@ -128,20 +165,26 @@ function Acrostic:softcut_init()
     {2,82,161},
     {2,163,243},
   }
-  self.o.loop_length=16
   self.o.pos={}
-  audio.level_adc_cut(1)
-  audio.level_eng_cut(1)
-  audio.level_tape_cut(1)
+
   softcut.reset()
+  audio.level_cut(1)
+  audio.level_adc_cut(1)
+  audio.level_eng_cut(0)
+  audio.level_tape_cut(1)
   for i=1,6 do
-    softcut.level(i,0.5)
+    softcut.enable(i,1)
+
+    softcut.level_input_cut(1,i,0.5)
+    softcut.level_input_cut(2,i,0.5)
+
+    softcut.buffer(i,self.o.minmax[i][1])
+    softcut.level(i,1.0)
     softcut.pan(i,0)
-    softcut.play(i,1)
     softcut.rate(i,1)
-    softcut.loop_start(i,self.o.minmax[i][2])
-    softcut.loop_end(i,self.o.minmax[i][2]+self.o.loop_length*clock.get_beat_sec())
     softcut.loop(i,1)
+    softcut.loop_start(i,self.o.minmax[i][2])
+    softcut.loop_end(i,self.o.minmax[i][2]+self.loop_length*clock.get_beat_sec())
     softcut.rec(i,0)
 
     softcut.level_slew_time(i,0.2)
@@ -151,9 +194,6 @@ function Acrostic:softcut_init()
 
     softcut.rec_level(i,params:get("rec_level"..i))
     softcut.pre_level(i,params:get("pre_level"..i))
-    softcut.buffer(i,self.o.minmax[i][1])
-    softcut.position(i,self.o.minmax[i][2])
-    softcut.enable(i,1)
     softcut.phase_quant(i,0.025)
 
     softcut.post_filter_dry(i,0.0)
@@ -165,16 +205,38 @@ function Acrostic:softcut_init()
     softcut.pre_filter_lp(i,1.0)
     softcut.pre_filter_rq(i,1.0)
     softcut.pre_filter_fc(i,20100)
+
+    softcut.position(i,self.o.minmax[i][2])
+    softcut.play(i,1)
     self.o.pos[i]=0
   end
   softcut.event_render(function(ch,start,sec_per_sample,samples)
-    print("rendered")
-    self.waveforms[ch]=samples
+    print("rendered",start)
+    for i,v in ipairs(self.o.minmax) do
+      if v[1]==ch and v[2]==start then
+        self.waveforms[i]=samples
+      end
+    end
   end)
   softcut.event_phase(function(i,pos)
     self.o.pos[i]=pos-self.o.minmax[i][2]
   end)
   softcut.poll_start_phase()
+end
+
+function Acrostic:softcut_render(i)
+  softcut.render_buffer(self.o.minmax[i][1],self.o.minmax[i][2],self.loop_length*clock.get_beat_sec()+0.5,55)
+end
+
+function Acrostic:softcut_clear(i)
+  softcut.level(i,0)
+  clock.run(function()
+    clock.sleep(0.2)
+    softcut.buffer_clear_region_channel(self.o.minmax[i][1],self.o.minmax[i][2],self.loop_length*clock.get_beat_sec()+1,0,0)
+    clock.sleep(0.2)
+    softcut.level(i,params:get("level"..i))
+    self:softcut_render(i)
+  end)
 end
 
 function Acrostic:update_chords()
@@ -236,6 +298,30 @@ function Acrostic:change_chord(chord,d)
   self:update_final()
 end
 
+function Acrostic:key(k,z)
+  if k==1 then
+    self.shift=z==1
+  end
+  if z==0 then
+    do return end
+  end
+  if self.shift and k==2 then
+    self:softcut_clear(params:get("sel_cut"))
+  end
+  if k==3 then
+    if table.is_empty(self.rec_queue) then
+      table.insert(self.rec_queue,{i=params:get("sel_cut"),left=self.loop_length+self:beats_left(params:get("sel_cut")),primed=true})
+      softcut.rec_once(params:get("sel_cut"))
+    else
+      table.insert(self.rec_queue,{i=params:get("sel_cut"),left=self.loop_length,rec=false,primed=false})
+    end
+  end
+end
+
+function Acrostic:beats_left(i)
+  return math.ceil(self.loop_length*(1-(self.o.pos[i]/(self.loop_length*clock.get_beat_sec()))))
+end
+
 function Acrostic:enc(k,d)
   if k==1 then
     params:delta("sel_selection",d)
@@ -294,6 +380,10 @@ function Acrostic:draw()
     screen.level(15)
     screen.rect(1,10+9*(params:get("sel_note")-1),71,9)
     screen.fill()
+  else
+    screen.level(15)
+    screen.rect(2,11+9*(params:get("sel_note")-1),70,8)
+    screen.stroke()
   end
   for i=1,4 do
     local xx=8+(i-1)*19
@@ -310,12 +400,14 @@ function Acrostic:draw()
       screen.level(15)
     end
     for j,note in ipairs(notes) do
+      local low=(self.current_chord==i and j==params:get("sel_note")) and 0 or 3
+      local high=(self.current_chord==i and j==params:get("sel_note")) and 15 or 5
       if highlight_row and j==params:get("sel_note") then
-        screen.level(0)
+        screen.level(low)
       elseif highlight_col and i==params:get("sel_chord") then
-        screen.level(0)
+        screen.level(low)
       else
-        screen.level(15)
+        screen.level(high)
       end
       screen.move(xx,yy+9*j)
       screen.text_center(note)
@@ -351,7 +443,7 @@ function Acrostic:draw()
       end
     end
     -- draw waveform positions
-    local pos=util.linlin(0,self.o.loop_length*clock.get_beat_sec(),0,53,self.o.pos[j])
+    local pos=util.linlin(0,self.loop_length*clock.get_beat_sec(),0,53,self.o.pos[j])
     local xx=x+(pos-1)
     if params:get("sel_cut")==j and params:get("sel_selection")==4 then
       screen.level(0)
@@ -361,6 +453,12 @@ function Acrostic:draw()
     screen.move(xx,y+4)
     screen.line(xx,y-4)
     screen.stroke()
+  end
+
+  if not table.is_empty(self.rec_queue) then
+    screen.move(100,8)
+    screen.level(15)
+    screen.text(self.rec_queue[1].i.." "..self.rec_queue[1].left)
   end
 
 end

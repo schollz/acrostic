@@ -5,6 +5,10 @@ function table.reverse(t)
   end
 end
 
+function table.is_empty(t)
+  return next(t)==nil
+end
+
 function table.get_rotation(t)
   local t2={}
   local v1=0
