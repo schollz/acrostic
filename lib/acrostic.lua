@@ -62,6 +62,17 @@ function Acrostic:new (o)
   params:add{type="number",id="sel_note",name="sel_note",min=1,max=6,default=1}
   params:hide("sel_note")
 
+  for i=1,6 do
+    params:add_control("rec_level"..i,"rec level "..i,controlspec.new(0,1,'lin',0.01,0.5,'',0.01/1))
+    params:set_action("rec_level"..i,function(x)
+      softcut.rec_level(i,x)
+    end)
+    params:add_control("pre_level"..i,"pre level "..i,controlspec.new(0,1,'lin',0.01,0.5,'',0.01/1))
+    params:set_action("pre_level"..i,function(x)
+      softcut.pre_level(i,x)
+    end)
+  end
+
   -- setup the waveforms
   self.waveforms={}
   for i=1,6 do
@@ -74,7 +85,56 @@ function Acrostic:new (o)
     self.waveforms[ch]=samples
   end)
 
+  params:bang()
+
   return o
+end
+
+function Acrostic:softcut_init()
+  self.o={}
+  self.o.minmax={
+    {1,1,80},
+    {1,82,161},
+    {1,163,243},
+    {2,1,80},
+    {2,82,161},
+    {2,163,243},
+  }
+  self.o.loop_length=16
+
+  softcut.reset()
+  for i=1,6 do
+    softcut.level(i,0.5)
+    softcut.pan(i,0)
+    softcut.play(i,0)
+    softcut.rate(i,1)
+    softcut.loop_start(i,self.o.minmax[i][2])
+    softcut.loop_end(i,self.o.minmax[i][2]+self.o.loop_length*clock.get_beat_sec())
+    softcut.loop(i,1)
+    softcut.rec(i,0)
+
+    softcut.level_slew_time(i,0.2)
+    softcut.rate_slew_time(i,0.2)
+    softcut.recpre_slew_time(i,0.1)
+    softcut.fade_time(i,0.2)
+
+    softcut.rec_level(i,params:get("rec_level"..i))
+    softcut.pre_level(i,params:get("pre_level"..i))
+    softcut.buffer(i,self.o.minmax[i][1])
+    softcut.position(i,self.o.minmax[i][2])
+    softcut.enable(i,1)
+    softcut.phase_quant(i,0.025)
+
+    softcut.post_filter_dry(i,0.0)
+    softcut.post_filter_lp(i,1.0)
+    softcut.post_filter_rq(i,1.0)
+    softcut.post_filter_fc(i,20100)
+
+    softcut.pre_filter_dry(i,1.0)
+    softcut.pre_filter_lp(i,1.0)
+    softcut.pre_filter_rq(i,1.0)
+    softcut.pre_filter_fc(i,20100)
+  end
 end
 
 function Acrostic:update_chords()
