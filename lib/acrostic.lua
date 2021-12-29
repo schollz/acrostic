@@ -11,7 +11,7 @@ function Acrostic:new (o)
   self.__index=self
 
   self.shift=false
-  self.loop_length=4
+  self.loop_length=8
 
   -- setup midi
   self.midis={}
@@ -112,11 +112,33 @@ function Acrostic:new (o)
           self:softcut_render(i)
         else
           -- pop the first element
+          self:softcut_render(self.rec_queue[1].i)
+          clock.run(function()
+            local ii=self.rec_queue[1].i
+            clock.sleep(0.2)
+            self:softcut_render(ii)
+          end)
           table.remove(self.rec_queue,1)
         end
       end
     end,
     division=1/4,
+  }
+  self.pattern_phrase=self.lattice:new_pattern{
+    action=function(t)
+      print("phrase")
+      if not table.is_empty(self.rec_queue) then
+        if params:get("sel_note")~=self.rec_queue[1].i then
+          if (self.rec_queue[1].left~=nil and self.rec_queue[1].left>1) or self.rec_queue[1].left==nil then
+            params:set("sel_note",self.rec_queue[1].i)
+          end
+        end
+      end
+      -- if math.random()<0.25 then
+      --   self.softcut_goto0()
+      -- end
+    end,
+    division=4*self.loop_length/16,
   }
   self.current_chord=4
   self.pattern_measure=self.lattice:new_pattern{
@@ -132,14 +154,6 @@ function Acrostic:new (o)
       -- engine.bandpass_hz(MusicUtil.note_num_to_freq(note))
     end,
     division=1*self.loop_length/16,
-  }
-  self.pattern_phrase=self.lattice:new_pattern{
-    action=function(t)
-      -- if math.random()<0.25 then
-      --   self.softcut_goto0()
-      -- end
-    end,
-    division=4*self.loop_length/16,
   }
 
   params:bang()
@@ -211,7 +225,6 @@ function Acrostic:softcut_init()
     self.o.pos[i]=0
   end
   softcut.event_render(function(ch,start,sec_per_sample,samples)
-    print("rendered",start)
     for i,v in ipairs(self.o.minmax) do
       if v[1]==ch and v[2]==start then
         self.waveforms[i]=samples
@@ -335,7 +348,6 @@ function Acrostic:enc(k,d)
       params:set("sel_cut",params:get("sel_note"))
     elseif params:get("sel_selection")==4 then
       params:delta("sel_cut",d)
-      params:set("sel_note",params:get("sel_cut"))
     end
   elseif k==3 then
     if params:get("sel_selection")==1 then
@@ -455,11 +467,25 @@ function Acrostic:draw()
     screen.stroke()
   end
 
+  local foo=""
   if not table.is_empty(self.rec_queue) then
-    screen.move(100,8)
-    screen.level(15)
-    screen.text(self.rec_queue[1].i.." "..self.rec_queue[1].left)
+    if self.rec_queue[1].left<=self.loop_length then
+      foo=foo.."r:"..self.rec_queue[1].i
+      if #self.rec_queue>1 then
+        foo=foo.." q:"
+      end
+    else
+      foo=foo.."q:"..self.rec_queue[1].i.." "
+    end
+    for i,v in ipairs(self.rec_queue) do
+      if i>1 then
+        foo=foo..v.i.." "
+      end
+    end
   end
+  screen.move(96,8)
+  screen.level(15)
+  screen.text_center(foo)
 
 end
 
