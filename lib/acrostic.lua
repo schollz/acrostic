@@ -585,27 +585,35 @@ function Acrostic:beats_left(i)
 end
 
 function Acrostic:enc(k,d)
+  if self.shift then
+    if k==1 then
+    elseif k==2 and (params:get("sel_selection")==2 or params:get("sel_selection")==3) then
+      self:change_note(params:get("sel_note"),d)
+    elseif k==3 and (params:get("sel_selection")==2 or params:get("sel_selection")==3) then
+      self:change_chord(params:get("sel_chord"),d)
+    end
+    do return end
+  end
   if k==1 then
     params:delta("sel_selection",math.sign(d))
   elseif k==2 then
-    if params:get("sel_selection")<=2 then
+    if params:get("sel_selection")==1 then
       params:delta("sel_chord",d)
-    elseif params:get("sel_selection")==3 then
-      params:delta("sel_note",d)
-      params:set("sel_cut",params:get("sel_note"))
     elseif params:get("sel_selection")==4 then
       params:delta("sel_cut",d)
+    else
+      params:delta("sel_note",d)
+      params:set("sel_cut",params:get("sel_note"))
+      params:set("sel_selection",3)
     end
   elseif k==3 then
     if params:get("sel_selection")==1 then
       params:delta("chord"..params:get("sel_chord"),d)
-    elseif params:get("sel_selection")==2 then
-      self:change_chord(params:get("sel_chord"),d)
-    elseif params:get("sel_selection")==3 then
-      self:change_note(params:get("sel_note"),d)
     elseif params:get("sel_selection")==4 then
       params:delta("level"..params:get("sel_cut"),d)
       self.show_level=10
+    else
+      params:delta("sel_chord",d)
     end
   end
 end
