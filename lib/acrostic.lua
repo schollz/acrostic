@@ -1,4 +1,8 @@
 include("acrostic/lib/table_addons")
+if not string.find(package.cpath,"/home/we/dust/code/o-o-o/lib/") then
+  package.cpath=package.cpath..";/home/we/dust/code/o-o-o/lib/?.so"
+end
+local json=require("cjson")
 local MusicUtil=require("musicutil")
 local lattice_=require("lattice")
 local s=require("sequins")
@@ -97,6 +101,7 @@ function Acrostic:new (o)
   -- setup lattices
   self.lattice=lattice_:new()
   self.rec_queue={}
+  self.recorded={false,false,false,false,false,false}
   self.pattern_qn=self.lattice:new_pattern{
     action=function(t)
       if not table.is_empty(self.rec_queue) then
@@ -109,6 +114,7 @@ function Acrostic:new (o)
           end
         end
         if self.rec_queue[1].left>0 then
+          self.recorded[i]=true
           self:softcut_render(i)
         else
           -- pop the first element
@@ -167,6 +173,16 @@ function Acrostic:new (o)
       print("saving "..fname)
       softcut.buffer_write_mono(fname,self.o.minmax[i][2],self.loop_length*clock.get_beat_sec()+2,self.o.minmax[i][1])
     end
+    local fname=filename..".json"
+    local data={}
+    local to_save={"loop_length","recorded","matrix_octave","matrix_base","matrix_final","matrix_name"}
+    for _,key in ipairs(to_save) do
+      data[key]=json.encode(self[key])
+    end
+    local file=io.open(fname,"w+")
+    io.output(file)
+    io.write(json.encode(data))
+    io.close(file)
   end
   params.action_read=function(filename,silent)
     print("read",filename,silent)
@@ -178,6 +194,16 @@ function Acrostic:new (o)
         self:softcut_render(i)
       end
     end
+    local fname=filename..".json"
+    local f=io.open(fname,"rb")
+    local content=f:read("*all")
+    f:close()
+    local data=json.decode(content)
+    for k,v in pairs(data) do
+      self[k]=json.decode(v)
+    end
+    self:softcut_init()
+    params:bang()
   end
   self.lattice:start()
   return o
@@ -263,6 +289,7 @@ function Acrostic:softcut_render(i)
 end
 
 function Acrostic:softcut_clear(i)
+  self.recorded[i]=true
   softcut.level(i,0)
   clock.run(function()
     clock.sleep(0.2)
@@ -444,12 +471,24 @@ function Acrostic:key(k,z)
     self:update_final()
   end
   if params:get("sel_selection")==4 and k==3 then
-    if table.is_empty(self.rec_queue) then
-      table.insert(self.rec_queue,{i=params:get("sel_cut"),left=self.loop_length+self:beats_left(params:get("sel_cut")),primed=true})
-      softcut.rec_once(params:get("sel_cut"))
+    if self.shift then
+      for i=1,6 do
+        if not self.recorded[i] then
+          self:queue_recording(i)
+        end
+      end
     else
-      table.insert(self.rec_queue,{i=params:get("sel_cut"),left=self.loop_length,rec=false,primed=false})
+      self:queue_recording(params:get("sel_cut"))
     end
+  end
+end
+
+function Acrostic:queue_recording(i)
+  if table.is_empty(self.rec_queue) then
+    table.insert(self.rec_queue,{i=i,left=self.loop_length+self:beats_left(i),primed=true})
+    softcut.rec_once(i)
+  else
+    table.insert(self.rec_queue,{i=i,left=self.loop_length,rec=false,primed=false})
   end
 end
 
@@ -481,12 +520,11 @@ function Acrostic:enc(k,d)
 end
 
 function Acrostic:draw()
-
   -- draw the chords at the top
   -- block for the top
   if params:get("sel_selection")==1 then
     screen.level(15)
-    screen.rect(0,0,70,9)
+    screen.rect(0,0,73,9)
     screen.fill()
   end
   for i=1,4 do
