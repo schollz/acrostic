@@ -63,14 +63,16 @@ function Acrostic:new (o)
   -- setup selections
   params:add{type="number",id="sel_selection",name="sel_selection",min=1,max=4,default=1}
   params:hide("sel_selection")
-  params:add{type="number",id="sel_chordprogression",name="sel_chordprogression",min=1,max=4,default=1}
-  params:hide("sel_chordprogression")
   params:add{type="number",id="sel_chord",name="sel_chord",min=1,max=4,default=1}
   params:hide("sel_chord")
+  params:add{type="number",id="current_chord",name="current_chord",min=1,max=4,default=4,wrap=true}
+  params:hide("current_chord")
   params:add{type="number",id="sel_note",name="sel_note",min=1,max=6,default=1}
   params:hide("sel_note")
   params:add{type="number",id="sel_cut",name="sel_cut",min=1,max=6,default=1}
   params:hide("sel_cut")
+  params:add{type="number",id="is_playing",name="is_playing",min=0,max=1,default=1,wrap=true}
+  params:hide("is_playing")
 
   for i=1,6 do
     params:add_group("loop "..i,9)
@@ -163,16 +165,17 @@ function Acrostic:new (o)
     end,
     division=4*self.loop_length/16,
   }
-  self.current_chord=4
+
   self.pattern_measure=self.lattice:new_pattern{
     action=function(t)
-      self.current_chord=self.current_chord+1
-      if self.current_chord>4 then
-        self.current_chord=1
+      params:delta("current_chord",1)
+      print("current_chord",params:get("current_chord"))
+      if params:get("is_playing")==1 then
+        params:set("sel_chord",params:get("current_chord"))
+        local note=self.matrix_final[params:get("sel_note")][params:get("sel_chord")]
+        print(MusicUtil.note_num_to_name(note,true))
+        self:play_note(note)
       end
-      local note=self.matrix_final[params:get("sel_note")][self.current_chord]
-      print(MusicUtil.note_num_to_name(note,true))
-      self:play_note(note)
       -- engine.bandpass_wet(1)
       -- engine.bandpass_rq(0.1)
       -- engine.bandpass_hz(MusicUtil.note_num_to_freq(note))
@@ -222,17 +225,21 @@ function Acrostic:new (o)
     self:softcut_init()
     params:bang()
   end
-  self.is_started=true
+
+  params:set("is_playing",1)
+  self.softcut_stopped=false
+  self.lattice:start()
   self:toggle_start()
+  self:toggle_start(true)
   return o
 end
 
-function Acrostic:toggle_start()
-  if self.is_started then
-    self.lattice:stop()
+function Acrostic:toggle_start(stop_all)
+  if stop_all then
+    print("stopping softcut")
+    self.softcut_stopped=true
     for i=1,6 do
       softcut.level(i,0)
-      softcut.position(i,self.o.minmax[i][2])
       softcut.rate(i,0)
       softcut.rec(i,0)
     end
@@ -240,23 +247,29 @@ function Acrostic:toggle_start()
       clock.sleep(0.5)
       for i=1,6 do
         softcut.play(i,0)
+        softcut.position(i,self.o.minmax[i][2])
       end
     end)
-    self.current_chord=1
+    params:set("is_playing",0)
   else
-    self.current_chord=4
-    for i=1,6 do
-      softcut.position(i,self.o.minmax[i][2])
-      softcut.play(i,1)
-      softcut.rate(i,1)
+    params:delta("is_playing",1)
+    if params:get("is_playing")==1 then
+      if self.softcut_stopped then
+        print("restting all")
+        self.softcut_stopped=false
+        params:set("current_chord",4)
+        self.lattice:hard_restart()
+        for i=1,6 do
+          softcut.play(i,1)
+          softcut.rate(i,1)
+        end
+      end
     end
-    self.lattice:hard_restart()
   end
-  self.is_started=not self.is_started
 end
 
 function Acrostic:play_note(note)
-  engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
+  -- engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
   local gate_length=clock.get_beat_sec()*50/100
   if crow~=nil then
     crow.output[2].action="{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
@@ -331,7 +344,7 @@ function Acrostic:softcut_init()
     softcut.pre_filter_fc(i,20100)
 
     softcut.position(i,self.o.minmax[i][2])
-    softcut.play(i,0)
+    softcut.play(i,1)
     self.o.pos[i]=0
   end
   softcut.event_render(function(ch,start,sec_per_sample,samples)
@@ -488,7 +501,8 @@ function Acrostic:key(k,z)
   end
   if params:get("sel_selection")==1 then
     if k==2 then
-      self:toggle_start()
+      print("self:toggle_start",self.shift)
+      self:toggle_start(self.shift)
     elseif k==3 then
       if math.random()<0.5 then
         self:minimize_transposition()
@@ -613,18 +627,16 @@ function Acrostic:draw()
   -- block for the top
   if params:get("sel_selection")==1 then
     screen.level(15)
-    screen.rect(0,0,73,9)
-    screen.fill()
+  else
+    screen.level(5)
   end
+  screen.rect(0,0,73,9)
+  screen.fill()
   for i=1,4 do
-    if params:get("sel_selection")==1 then
-      if params:get("sel_chord")==i then
-        screen.level(0)
-      else
-        screen.level(3)
-      end
+    if params:get("sel_chord")==i then
+      screen.level(0)
     else
-      screen.level(15)
+      screen.level(3)
     end
     local chord=self.available_chords[params:get("chord"..i)]
     screen.move(8+(i-1)*19,7)
@@ -635,15 +647,11 @@ function Acrostic:draw()
   screen.level(15)
   local highlight_col=params:get("sel_selection")==2
   local highlight_row=params:get("sel_selection")==3
-  if highlight_row then
-    screen.level(15)
-    screen.rect(1,10+9*(params:get("sel_note")-1),71,9)
-    screen.fill()
-  else
-    screen.level(15)
-    screen.rect(2,11+9*(params:get("sel_note")-1),70,8)
-    screen.stroke()
-  end
+
+  screen.level(highlight_row and 15 or 4)
+  screen.rect(2,11+9*(params:get("sel_note")-1),70,8)
+  screen.stroke()
+
   for i=1,4 do
     local xx=8+(i-1)*19
     local yy=8
@@ -651,22 +659,19 @@ function Acrostic:draw()
     for j=1,6 do
       table.insert(notes,self.matrix_name[j][i])
     end
-    if i==params:get("sel_chord") and highlight_col then
-      screen.level(15)
-      screen.rect(xx-8,yy+2,16,64)
-      screen.fill()
-    else
-      screen.level(15)
+    if i==params:get("sel_chord") then
+      screen.level(highlight_col and 15 or 4)
+      screen.rect(xx-8+2,yy+2+1,16-2,53)
+      screen.stroke()
     end
     for j,note in ipairs(notes) do
-      local low=(self.current_chord==i and j==params:get("sel_note")) and 0 or 2
-      local high=(self.current_chord==i and j==params:get("sel_note")) and 15 or 5
-      if highlight_row and j==params:get("sel_note") then
-        screen.level(low)
-      elseif highlight_col and i==params:get("sel_chord") then
-        screen.level(low)
+      if i==params:get("sel_chord") and j==params:get("sel_note") then
+        screen.level(15)
+        screen.rect(xx-7,yy+9*j-7,15,9)
+        screen.fill()
+        screen.level(0)
       else
-        screen.level(high)
+        screen.level(5)
       end
       screen.move(xx,yy+9*j)
       screen.text_center(note)
@@ -680,7 +685,7 @@ function Acrostic:draw()
     if params:get("sel_cut")==j and params:get("sel_selection")==4 then
       -- screen.rect()
       screen.level(15)
-      screen.rect(x,y-5,55,10)
+      screen.rect(x-2,y-5,55,10)
       screen.fill()
     end
     local levels={12,5,3,2,1}
@@ -702,7 +707,7 @@ function Acrostic:draw()
       end
     end
     -- draw waveform positions
-    local pos=util.linlin(0,self.loop_length*clock.get_beat_sec(),0,53,self.o.pos[j])
+    local pos=util.linlin(0,self.loop_length*clock.get_beat_sec(),1,53,self.o.pos[j])
     local xx=x+(pos-1)
     if params:get("sel_cut")==j and params:get("sel_selection")==4 then
       screen.level(0)
@@ -742,6 +747,13 @@ function Acrostic:draw()
   screen.level(15)
   screen.text_center(foo)
 
+  screen.move(76,7)
+  screen.level(15)
+  if params:get("is_playing")==1 then
+    screen.text(">")
+  else
+    screen.text("||")
+  end
 end
 
 return Acrostic

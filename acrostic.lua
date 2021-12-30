@@ -2,13 +2,13 @@
 --
 
 --engine.name="Acrostic"
-engine.name="MxSynths"
+-- engine.name="MxSynths"
 
 local acrostic_=include("acrostic/lib/acrostic")
 
 function init()
-  local mxsynths_=include("mx.synths/lib/mx.synths")
-  mxsynths=mxsynths_:new()
+  -- local mxsynths_=include("mx.synths/lib/mx.synths")
+  -- mxsynths=mxsynths_:new()
 
   reroute_audio(true)
   acrostic=acrostic_:new()
