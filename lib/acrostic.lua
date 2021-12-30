@@ -17,9 +17,9 @@ function Acrostic:new (o)
   return o
 end
 
-function Acrostic:init()
+function Acrostic:init(o)
   self.shift=false
-  self.loop_length=8
+  self.loop_length=o.loop_length or 16
 
   -- setup midi
   self.midis={}
@@ -121,6 +121,9 @@ function Acrostic:init()
   self:softcut_init()
 
   -- setup lattices
+  if self.lattice~=nil then
+    self.lattice:destroy()
+  end
   self.lattice=lattice_:new()
   self.rec_queue={}
   self.recorded={false,false,false,false,false,false}
@@ -154,9 +157,16 @@ function Acrostic:init()
     end,
     division=1/4,
   }
+  self.first_beat=true
   self.pattern_phrase=self.lattice:new_pattern{
     action=function(t)
       print("phrase")
+      if self.first_beat then
+        self.first_beat=false
+        for i=1,6 do
+          softcut.position(i,self.o.minmax[i][2])
+        end
+      end
       if not table.is_empty(self.rec_queue) then
         if params:get("sel_note")~=self.rec_queue[1].i then
           if (self.rec_queue[1].left~=nil and self.rec_queue[1].left>1) or self.rec_queue[1].left==nil then
@@ -220,8 +230,6 @@ function Acrostic:init()
       delay=i*0.25,
     }
   end
-
-  params:bang()
 
   params.action_write=function(filename,name)
     print("write",filename,name)
@@ -308,7 +316,7 @@ end
 function Acrostic:play_note(note)
   -- engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
   print("play_note",note)
-  engine.hz(MusicUtil.note_num_to_freq(note))
+  -- engine.hz(MusicUtil.note_num_to_freq(note))
   local gate_length=clock.get_beat_sec()*50/100
   if crow~=nil then
     crow.output[2].action="{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
@@ -399,6 +407,9 @@ function Acrostic:softcut_init()
     self.o.pos[i]=pos-self.o.minmax[i][2]
   end)
   softcut.poll_start_phase()
+  for i=1,6 do
+    self:softcut_render(i)
+  end
 end
 
 function Acrostic:softcut_render(i)

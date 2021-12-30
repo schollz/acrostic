@@ -2,17 +2,21 @@
 --
 
 --engine.name="Acrostic"
-engine.name="PolyPerc"
+-- engine.name="PolyPerc"
 
 local acrostic_=include("acrostic/lib/acrostic")
 
 function init()
+  params:add{type="number",id="loop_length",name="loop length",min=4,max=64,default=16}
+  -- TODO: save the number of loops and load it
+
   -- local mxsynths_=include("mx.synths/lib/mx.synths")
   -- mxsynths=mxsynths_:new()
 
-  reroute_audio(true)
+  -- reroute_audio(true)
   acrostic=acrostic_:new()
-  acrostic:init()
+  acrostic:init({loop_length=params:get("loop_length")})
+  acrostic:update()
 
   clock.run(function()
     while true do
@@ -24,7 +28,7 @@ function init()
 end
 
 function cleanup()
-  reroute_audio(false)
+  -- reroute_audio(false)
 end
 
 function reroute_audio(startup)
