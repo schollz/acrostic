@@ -222,18 +222,34 @@ function Acrostic:new (o)
     self:softcut_init()
     params:bang()
   end
-  self.lattice:start()
-  self.lattice:stop()
-  self.is_started=false
+  self.is_started=true
+  self:toggle_start()
   return o
 end
 
 function Acrostic:toggle_start()
-  if not self.is_started then
-    self:lattice:stop()
+  if self.is_started then
+    self.lattice:stop()
+    for i=1,6 do
+      softcut.level(i,0)
+      softcut.position(i,self.o.minmax[i][2])
+      softcut.rate(i,0)
+      softcut.rec(i,0)
+    end
+    clock.run(function()
+      clock.sleep(0.5)
+      for i=1,6 do
+        softcut.play(i,0)
+      end
+    end)
     self.current_chord=1
   else
     self.current_chord=4
+    for i=1,6 do
+      softcut.position(i,self.o.minmax[i][2])
+      softcut.play(i,1)
+      softcut.rate(i,1)
+    end
     self.lattice:hard_restart()
   end
   self.is_started=not self.is_started
@@ -288,7 +304,7 @@ function Acrostic:softcut_init()
     softcut.buffer(i,self.o.minmax[i][1])
     softcut.level(i,1.0)
     softcut.pan(i,0)
-    softcut.rate(i,1)
+    softcut.rate(i,0)
     softcut.loop(i,1)
     softcut.loop_start(i,self.o.minmax[i][2])
     softcut.loop_end(i,self.o.minmax[i][2]+self.loop_length*clock.get_beat_sec())
@@ -314,7 +330,7 @@ function Acrostic:softcut_init()
     softcut.pre_filter_fc(i,20100)
 
     softcut.position(i,self.o.minmax[i][2])
-    softcut.play(i,1)
+    softcut.play(i,0)
     self.o.pos[i]=0
   end
   softcut.event_render(function(ch,start,sec_per_sample,samples)
@@ -469,12 +485,9 @@ function Acrostic:key(k,z)
   if z==0 then
     do return end
   end
-  if self.shift and k==2 then
-    self:softcut_clear(params:get("sel_cut"))
-  end
   if params:get("sel_selection")==1 then
     if k==2 then
-
+      self:toggle_start()
     elseif k==3 then
       if math.random()<0.5 then
         self:minimize_transposition()
@@ -517,6 +530,19 @@ function Acrostic:key(k,z)
     end
     self:update_final()
   end
+  if params:get("sel_selection")==4 and k==2 then
+    if self.shift then
+      self:softcut_clear(params:get("sel_cut"))
+    else
+      local foo={}
+      for i,v in ipairs(self.rec_queue) do
+        if i<#self.rec_queue then
+          table.insert(foo,v)
+        end
+      end
+      self.rec_queue=foo
+    end
+  end
   if params:get("sel_selection")==4 and k==3 then
     if self.shift then
       for i=1,6 do
@@ -545,7 +571,7 @@ end
 
 function Acrostic:enc(k,d)
   if k==1 then
-    params:delta("sel_selection",d)
+    params:delta("sel_selection",math.sign(d))
   elseif k==2 then
     if params:get("sel_selection")<=2 then
       params:delta("sel_chord",d)

@@ -35,24 +35,6 @@ function reroute_audio(startup)
     params:set("cut_input_eng",0)
     params:set("cut_input_tape",0)
   end
-  -- if startup then
-  --   -- disconnect system input to softcut
-  --   os.execute("jack_disconnect system:capture_1 crone:input_1")
-  --   os.execute("jack_disconnect system:capture_2 crone:input_2")
-  --   -- connect supercollider to system capture directly
-  --   os.execute("jack_disconnect crone:output_5 SuperCollider:in_1")
-  --   os.execute("jack_disconnect crone:output_6 SuperCollider:in_2")
-  --   os.execute("jack_connect system:capture_1 SuperCollider:in_1")
-  --   os.execute("jack_connect system:capture_2 SuperCollider:in_2")
-  -- else
-  --   -- reset
-  --   os.execute("jack_disconnect system:capture_1 SuperCollider:in_1")
-  --   os.execute("jack_disconnect system:capture_2 SuperCollider:in_2")
-  --   os.execute("jack_connect crone:output_5 SuperCollider:in_1")
-  --   os.execute("jack_connect crone:output_6 SuperCollider:in_2")
-  --   os.execute("jack_connect system:capture_1 crone:input_1")
-  --   os.execute("jack_connect system:capture_2 crone:input_2")
-  -- end
 end
 
 function key(k,z)
