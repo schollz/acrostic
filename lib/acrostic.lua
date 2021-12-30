@@ -1,4 +1,5 @@
 include("acrostic/lib/table_addons")
+include("acrostic/lib/utils")
 if not string.find(package.cpath,"/home/we/dust/code/acrostic/lib/") then
   package.cpath=package.cpath..";/home/we/dust/code/acrostic/lib/?.so"
 end
@@ -72,10 +73,8 @@ function Acrostic:new (o)
   params:hide("sel_cut")
 
   for i=1,6 do
-    params:add_control("level"..i,"level "..i,controlspec.new(0,1,'lin',0.01,1.0,'',0.01/1))
-    params:set_action("level"..i,function(x)
-      softcut.level(i,x)
-    end)
+    params:add_group("loop "..i,9)
+    params:add_control("level"..i,"level "..i,controlspec.new(0,1,'lin',0.01,0.5,'',0.01/1))
     params:add_control("rec_level"..i,"rec level "..i,controlspec.new(0,1,'lin',0.01,1.0,'',0.01/1))
     params:set_action("rec_level"..i,function(x)
       softcut.rec_level(i,x)
@@ -84,6 +83,22 @@ function Acrostic:new (o)
     params:set_action("pre_level"..i,function(x)
       softcut.pre_level(i,x)
     end)
+    params:add_control(i.."vol lfo amp","vol lfo amp",controlspec.new(0,1,"lin",0.01,0.25,"",0.01))
+    params:add_control(i.."vol lfo period","vol lfo period",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
+    params:add_control(i.."vol lfo offset","vol lfo offset",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
+    params:add_control(i.."pan lfo amp","pan lfo amp",controlspec.new(0,1,"lin",0.01,0.2,"",0.01))
+    params:add_control(i.."pan lfo period","pan lfo period",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
+    params:add_control(i.."pan lfo offset","pan lfo offset",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
+  end
+
+  -- randomize lfo
+  for i=1,6 do
+    params:set(i.."vol lfo period",round_time_to_nearest_beat(math.random()*20+2))
+    params:set(i.."vol lfo offset",round_time_to_nearest_beat(math.random()*60))
+    params:set(i.."vol lfo amp",math.random()*0.25+0.1)
+    params:set(i.."pan lfo amp",math.random()*0.6+0.2)
+    params:set(i.."pan lfo period",round_time_to_nearest_beat(math.random()*20+2))
+    params:set(i.."pan lfo offset",round_time_to_nearest_beat(math.random()*60))
   end
 
   -- setup the waveforms
@@ -212,8 +227,8 @@ end
 
 function Acrostic:play_note(note)
   local gate_length=clock.get_beat_sec()*50/100
-  if crow~=nil then 
-    crow.output[2].action = "{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
+  if crow~=nil then
+    crow.output[2].action="{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
     crow.output[2]()
     crow.output[1].volts=(note-24)/12
   end
@@ -307,12 +322,9 @@ end
 
 function Acrostic:softcut_clear(i)
   self.recorded[i]=true
-  softcut.level(i,0)
   clock.run(function()
-    clock.sleep(0.2)
-    softcut.buffer_clear_region_channel(self.o.minmax[i][1],self.o.minmax[i][2],self.loop_length*clock.get_beat_sec()+1,0,0)
-    clock.sleep(0.2)
-    softcut.level(i,params:get("level"..i))
+    softcut.buffer_clear_region_channel(self.o.minmax[i][1],self.o.minmax[i][2],self.loop_length*clock.get_beat_sec()+1,0.2,0)
+    clock.sleep(0.5)
     self:softcut_render(i)
   end)
 end
@@ -532,7 +544,22 @@ function Acrostic:enc(k,d)
       self:change_chord(params:get("sel_chord"),d)
     elseif params:get("sel_selection")==3 then
       self:change_note(params:get("sel_note"),d)
+    elseif params:get("sel_selection")==4 then
+      params:delta("level"..params:get("sel_cut"),d)
+      self.show_level=10
     end
+  end
+end
+
+function Acrostic:update()
+  local ct=clock.get_beat_sec()*clock.get_beats()
+  for i=1,6 do
+    local pan=params:get(i.."pan lfo amp")*calculate_lfo(ct,params:get(i.."pan lfo period"),params:get(i.."pan lfo offset"))
+    softcut.pan(i,util.clamp(pan,-1,1))
+
+    local vol=params:get(i.."vol lfo amp")*calculate_lfo(ct,params:get(i.."vol lfo period"),params:get(i.."vol lfo offset"))
+    vol=vol+params:get("level"..i)
+    softcut.level(i,util.clamp(vol,0,1))
   end
 end
 
@@ -643,20 +670,28 @@ function Acrostic:draw()
   end
 
   local foo=""
-  if not table.is_empty(self.rec_queue) then
-    if self.rec_queue[1].left<=self.loop_length then
-      foo=foo.."r:"..self.rec_queue[1].i
-      if #self.rec_queue>1 then
-        foo=foo.." q:"
+  if self.show_level==nil then
+    if not table.is_empty(self.rec_queue) then
+      if self.rec_queue[1].left<=self.loop_length then
+        foo=foo.."r:"..self.rec_queue[1].i
+        if #self.rec_queue>1 then
+          foo=foo.." q:"
+        end
+      else
+        foo=foo.."q:"..self.rec_queue[1].i.." "
       end
-    else
-      foo=foo.."q:"..self.rec_queue[1].i.." "
-    end
-    for i,v in ipairs(self.rec_queue) do
-      if i>1 then
-        foo=foo..v.i.." "
+      for i,v in ipairs(self.rec_queue) do
+        if i>1 then
+          foo=foo..v.i.." "
+        end
       end
     end
+  else
+    self.show_level=self.show_level-1
+    if self.show_level==0 then
+      self.show_level=nil
+    end
+    foo=params:get("level"..params:get("sel_cut"))
   end
   screen.move(96,8)
   screen.level(15)
