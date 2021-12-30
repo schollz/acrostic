@@ -1,6 +1,6 @@
 include("acrostic/lib/table_addons")
-if not string.find(package.cpath,"/home/we/dust/code/o-o-o/lib/") then
-  package.cpath=package.cpath..";/home/we/dust/code/o-o-o/lib/?.so"
+if not string.find(package.cpath,"/home/we/dust/code/acrostic/lib/") then
+  package.cpath=package.cpath..";/home/we/dust/code/acrostic/lib/?.so"
 end
 local json=require("cjson")
 local MusicUtil=require("musicutil")
@@ -15,7 +15,7 @@ function Acrostic:new (o)
   self.__index=self
 
   self.shift=false
-  self.loop_length=8
+  self.loop_length=16
 
   -- setup midi
   self.midis={}
@@ -156,7 +156,8 @@ function Acrostic:new (o)
         self.current_chord=1
       end
       local note=self.matrix_final[params:get("sel_note")][self.current_chord]
-      -- print(note)
+      print(MusicUtil.note_num_to_name(note,true))
+      self:play_note(note)
       -- engine.bandpass_wet(1)
       -- engine.bandpass_rq(0.1)
       -- engine.bandpass_hz(MusicUtil.note_num_to_freq(note))
@@ -207,6 +208,22 @@ function Acrostic:new (o)
   end
   self.lattice:start()
   return o
+end
+
+function Acrostic:play_note(note)
+  local gate_length=clock.get_beat_sec()*50/100
+  if crow~=nil then 
+    crow.output[2].action = "{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
+    crow.output[2]()
+    crow.output[1].volts=(note-24)/12
+  end
+  for name,m in pairs(self.midis) do
+    if m.last_note~=nil then
+      m.conn:note_off(m.last_note)
+    end
+    m.conn:note_on(note,64)
+    self.midis[name].last_note=note
+  end
 end
 
 function Acrostic:softcut_goto0()

@@ -22,9 +22,6 @@ function init()
       redraw()
     end
   end)
-  -- softcut.rec(1,1)
-  -- softcut.rec(1,1)
-  -- softcut.rec(1,0)
 end
 
 function reroute_audio(startup)
