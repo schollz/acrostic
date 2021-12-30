@@ -14,9 +14,12 @@ function Acrostic:new (o)
   o=o or {} -- create object if user does not provide one
   setmetatable(o,self)
   self.__index=self
+  return o
+end
 
+function Acrostic:init()
   self.shift=false
-  self.loop_length=16
+  self.loop_length=8
 
   -- setup midi
   self.midis={}
@@ -61,7 +64,7 @@ function Acrostic:new (o)
   end
 
   -- setup selections
-  params:add{type="number",id="sel_selection",name="sel_selection",min=1,max=4,default=1}
+  params:add{type="number",id="sel_selection",name="sel_selection",min=1,max=4,default=4}
   params:hide("sel_selection")
   params:add{type="number",id="sel_chord",name="sel_chord",min=1,max=4,default=1}
   params:hide("sel_chord")
@@ -73,6 +76,7 @@ function Acrostic:new (o)
   params:hide("sel_cut")
   params:add{type="number",id="is_playing",name="is_playing",min=0,max=1,default=1,wrap=true}
   params:hide("is_playing")
+  params:add_control("prob_note2","prob_note2",controlspec.new(0,1,'lin',0.125/4,0.25,'',(0.125/4)/1))
 
   for i=1,6 do
     params:add_group("loop "..i,9)
@@ -173,8 +177,16 @@ function Acrostic:new (o)
       if params:get("is_playing")==1 then
         params:set("sel_chord",params:get("current_chord"))
         local note=self.matrix_final[params:get("sel_note")][params:get("sel_chord")]
+        if note<10 then
+          do return end
+        end
         print(MusicUtil.note_num_to_name(note,true))
         self:play_note(note)
+        local sel_chord_next=params:get("sel_chord")+1
+        if sel_chord_next>4 then
+          sel_chord_next=1
+        end
+        self.next_note=self.matrix_final[params:get("sel_note")][sel_chord_next]
       end
       -- engine.bandpass_wet(1)
       -- engine.bandpass_rq(0.1)
@@ -182,6 +194,25 @@ function Acrostic:new (o)
     end,
     division=1*self.loop_length/16,
   }
+  self.pattern_measure_inter={}
+  local scale=MusicUtil.generate_scale_of_length(params:get("root_note"),"Major",120)
+  for i=1,3 do
+    self.pattern_measure_inter[i]=self.lattice:new_pattern{
+      action=function(t)
+        if params:get("is_playing")==1 and math.random()<params:get("prob_note2") and self.next_note~=nil and self.last_note~=nil then
+          print("next/last",self.next_note,self.last_note)
+          local note=MusicUtil.snap_note_to_array(util.round(self.next_note/2+self.last_note/2),scale)
+          print("play_note",note)
+          if note<10 then
+            do return end
+          end
+          self:play_note(note)
+        end
+      end,
+      division=1*self.loop_length/16,
+      delay=i*0.25,
+    }
+  end
 
   params:bang()
 
@@ -229,9 +260,6 @@ function Acrostic:new (o)
   params:set("is_playing",1)
   self.softcut_stopped=false
   self.lattice:start()
-  self:toggle_start()
-  self:toggle_start(true)
-  return o
 end
 
 function Acrostic:toggle_start(stop_all)
@@ -256,6 +284,7 @@ function Acrostic:toggle_start(stop_all)
     if params:get("is_playing")==1 then
       if self.softcut_stopped then
         print("restting all")
+        self.rec_queue={}
         self.softcut_stopped=false
         params:set("current_chord",4)
         self.lattice:hard_restart()
@@ -270,6 +299,8 @@ end
 
 function Acrostic:play_note(note)
   -- engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
+  print("play_note",note)
+  engine.hz(MusicUtil.note_num_to_freq(note))
   local gate_length=clock.get_beat_sec()*50/100
   if crow~=nil then
     crow.output[2].action="{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
@@ -283,6 +314,8 @@ function Acrostic:play_note(note)
     m.conn:note_on(note,64)
     self.midis[name].last_note=note
   end
+  self.last_note=note
+
 end
 
 function Acrostic:softcut_goto0()
@@ -318,7 +351,7 @@ function Acrostic:softcut_init()
     softcut.buffer(i,self.o.minmax[i][1])
     softcut.level(i,1.0)
     softcut.pan(i,0)
-    softcut.rate(i,0)
+    softcut.rate(i,1)
     softcut.loop(i,1)
     softcut.loop_start(i,self.o.minmax[i][2])
     softcut.loop_end(i,self.o.minmax[i][2]+self.loop_length*clock.get_beat_sec())
@@ -367,7 +400,7 @@ end
 function Acrostic:softcut_clear(i)
   self.recorded[i]=true
   clock.run(function()
-    softcut.buffer_clear_region_channel(self.o.minmax[i][1],self.o.minmax[i][2],self.loop_length*clock.get_beat_sec()+1,0.2,0)
+    softcut.buffer_clear_region_channel(self.o.minmax[i][1],self.o.minmax[i][2]-0.5,self.loop_length*clock.get_beat_sec()+1,0.2,0)
     clock.sleep(0.5)
     self:softcut_render(i)
   end)
@@ -378,6 +411,7 @@ function Acrostic:minimize_transposition(changes)
   local chords={}
   for chord=1,4 do
     local notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..chord)])
+    table.rotatex(notes,math.random(0,3))
     table.insert(chords,notes)
   end
   local chords_basic=table.clone(chords)
@@ -411,8 +445,28 @@ function Acrostic:minimize_transposition(changes)
     end
   end
   for i=1,4 do
-    self.matrix_base[6][i]=(chords_basic[i][1]%12)+12
+    self.matrix_base[6][i]=(chords_basic[i][1]%12)+24
   end
+  self:update_final()
+
+  local averages={}
+  for note=1,6 do
+    for i=1,4 do
+      self.matrix_base[note][i]=self.matrix_final[note][i]
+      self.matrix_octave[note][i]=0
+    end
+    table.insert(averages,{table.average(self.matrix_final[note]),note})
+  end
+  table.sort(averages,function(a,b)
+    return a[1]<b[1]
+  end)
+  table.print_matrix(averages)
+  local foo=table.clone(self.matrix_base)
+  for i,v in ipairs(averages) do
+    self.matrix_base[i]=foo[v[2]]
+  end
+  self.matrix_octave[5]={12,12,12,12}
+  self.matrix_octave[6]={24,24,24,24}
   self:update_final()
 end
 
@@ -572,7 +626,9 @@ function Acrostic:key(k,z)
 end
 
 function Acrostic:queue_recording(i)
+  print("queue_recording",i)
   if table.is_empty(self.rec_queue) then
+    print("primed",i)
     table.insert(self.rec_queue,{i=i,left=self.loop_length+self:beats_left(i),primed=true})
     softcut.rec_once(i)
   else
@@ -591,6 +647,8 @@ function Acrostic:enc(k,d)
       self:change_note(params:get("sel_note"),d)
     elseif k==3 and (params:get("sel_selection")==2 or params:get("sel_selection")==3) then
       self:change_chord(params:get("sel_chord"),d)
+    elseif k==3 and params:get("sel_selection")==1 then
+      params:delta("chord"..params:get("sel_chord"),d)
     end
     do return end
   end
@@ -608,12 +666,13 @@ function Acrostic:enc(k,d)
     end
   elseif k==3 then
     if params:get("sel_selection")==1 then
-      params:delta("chord"..params:get("sel_chord"),d)
+
     elseif params:get("sel_selection")==4 then
       params:delta("level"..params:get("sel_cut"),d)
       self.show_level=10
     else
       params:delta("sel_chord",d)
+      params:set("sel_selection",2)
     end
   end
 end
@@ -655,8 +714,8 @@ function Acrostic:draw()
   screen.level(15)
   local highlight_col=params:get("sel_selection")==2
   local highlight_row=params:get("sel_selection")==3
-
-  screen.level(highlight_row and 15 or 4)
+  local high=params:get("sel_selection")==1 and 5 or 16
+  screen.level(highlight_row and high or 4)
   screen.rect(2,11+9*(params:get("sel_note")-1),70,8)
   screen.stroke()
 
@@ -668,18 +727,24 @@ function Acrostic:draw()
       table.insert(notes,self.matrix_name[j][i])
     end
     if i==params:get("sel_chord") then
-      screen.level(highlight_col and 15 or 4)
+      screen.level(highlight_col and high or 4)
       screen.rect(xx-8+2,yy+2+1,16-2,53)
       screen.stroke()
     end
     for j,note in ipairs(notes) do
       if i==params:get("sel_chord") and j==params:get("sel_note") then
-        screen.level(15)
+        screen.level(high)
         screen.rect(xx-7,yy+9*j-7,15,9)
         screen.fill()
         screen.level(0)
       else
-        screen.level(5)
+        if highlight_col and i==params:get("sel_chord") then
+          screen.level(high)
+        elseif highlight_row and j==params:get("sel_note") then
+          screen.level(high)
+        else
+          screen.level(5)
+        end
       end
       screen.move(xx,yy+9*j)
       screen.text_center(note)

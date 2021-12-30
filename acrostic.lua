@@ -2,7 +2,7 @@
 --
 
 --engine.name="Acrostic"
--- engine.name="MxSynths"
+engine.name="PolyPerc"
 
 local acrostic_=include("acrostic/lib/acrostic")
 
@@ -12,7 +12,7 @@ function init()
 
   reroute_audio(true)
   acrostic=acrostic_:new()
-  acrostic:update()
+  acrostic:init()
 
   clock.run(function()
     while true do
@@ -31,14 +31,14 @@ function reroute_audio(startup)
   -- use the PARAMS > SOFTCUT to change the levels going into softcut
   if startup then
     audio.level_monitor(0)
-    params:set("cut_input_adc",-inf)
+    params:set("cut_input_adc",-90)
     params:set("cut_input_eng",0)
-    params:set("cut_input_tape",-inf)
+    params:set("cut_input_tape",-90)
   else
     audio.level_monitor(1)
-    params:set("cut_input_adc",0)
-    params:set("cut_input_eng",0)
-    params:set("cut_input_tape",0)
+    params:set("cut_input_adc",-6)
+    params:set("cut_input_eng",-6)
+    params:set("cut_input_tape",-6)
   end
 end
 

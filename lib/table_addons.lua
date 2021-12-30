@@ -5,6 +5,12 @@ function table.reverse(t)
   end
 end
 
+function table.add(t,scalar)
+  for i,_ in ipairs(t) do
+    t[i]=t[i]+scalar
+  end
+end
+
 function table.is_empty(t)
   return next(t)==nil
 end
