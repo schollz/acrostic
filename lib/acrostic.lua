@@ -200,6 +200,7 @@ function Acrostic:new (o)
     io.write(json.encode(data))
     io.close(file)
   end
+
   params.action_read=function(filename,silent)
     print("read",filename,silent)
     for i=1,6 do
@@ -222,7 +223,20 @@ function Acrostic:new (o)
     params:bang()
   end
   self.lattice:start()
+  self.lattice:stop()
+  self.is_started=false
   return o
+end
+
+function Acrostic:toggle_start()
+  if not self.is_started then
+    self:lattice:stop()
+    self.current_chord=1
+  else
+    self.current_chord=4
+    self.lattice:hard_restart()
+  end
+  self.is_started=not self.is_started
 end
 
 function Acrostic:play_note(note)
@@ -460,9 +474,13 @@ function Acrostic:key(k,z)
   end
   if params:get("sel_selection")==1 then
     if k==2 then
-      self:minimize_transposition()
+
     elseif k==3 then
-      self:minimize_transposition(true)
+      if math.random()<0.5 then
+        self:minimize_transposition()
+      else
+        self:minimize_transposition(true)
+      end
     end
   end
   if params:get("sel_selection")==2 then
