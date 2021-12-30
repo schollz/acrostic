@@ -256,6 +256,7 @@ function Acrostic:toggle_start()
 end
 
 function Acrostic:play_note(note)
+  engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
   local gate_length=clock.get_beat_sec()*50/100
   if crow~=nil then
     crow.output[2].action="{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
