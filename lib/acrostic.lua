@@ -76,7 +76,8 @@ function Acrostic:init()
   params:hide("sel_cut")
   params:add{type="number",id="is_playing",name="is_playing",min=0,max=1,default=1,wrap=true}
   params:hide("is_playing")
-  params:add_control("prob_note2","prob_note2",controlspec.new(0,1,'lin',0.125/4,0.25,'',(0.125/4)/1))
+  params:add_control("prob_note2","inter-note probability",controlspec.new(0,1,'lin',0.125/4,0.25,'',(0.125/4)/1))
+  params:add_option("random_mode","random mode",{"off","on"},1)
 
   for i=1,6 do
     params:add_group("loop "..i,9)
@@ -182,6 +183,12 @@ function Acrostic:init()
         end
         print(MusicUtil.note_num_to_name(note,true))
         self:play_note(note)
+        if params:get("random_mode")==2 then
+          -- randomize next position
+          params:delta("current_chord",math.random(0,2)-1)
+          params:set("sel_chord",params:get("current_chord"))
+          params:delta("sel_note",math.random(0,2)-1)
+        end
         local sel_chord_next=params:get("sel_chord")+1
         if sel_chord_next>4 then
           sel_chord_next=1
@@ -257,6 +264,7 @@ function Acrostic:init()
     params:bang()
   end
 
+  self:minimize_transposition(true)
   params:set("is_playing",1)
   self.softcut_stopped=false
   self.lattice:start()
