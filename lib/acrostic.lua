@@ -358,7 +358,7 @@ function Acrostic:softcut_init()
   softcut.reset()
   audio.level_cut(1)
   audio.level_adc_cut(1)
-  audio.level_eng_cut(0)
+  audio.level_eng_cut(1)
   audio.level_tape_cut(1)
   for i=1,6 do
     softcut.enable(i,1)
@@ -708,6 +708,7 @@ function Acrostic:update()
 end
 
 function Acrostic:draw()
+  screen.aa(0)
   -- draw the chords at the top
   -- block for the top
   if params:get("sel_selection")==1 then

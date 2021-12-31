@@ -4,11 +4,15 @@
 engine.name="Acrostic"
 
 global_shift=false
-page=1
+page=2
 
 local acrostic_=include("acrostic/lib/acrostic")
+local monosaw_=include("acrostic/lib/monosaw")
 
 function init()
+  monosaw=monosaw_:new()
+  monosaw:init()
+
   params:add{type="number",id="loop_length",name="loop length (requires restart)",min=4,max=64,default=16}
   -- write/read the loop length
   filename_ll=_path.data.."acrostic/loop_length"
@@ -67,6 +71,7 @@ function key(k,z)
   if page==1 then
     acrostic:key(k,z)
   elseif page==2 then
+    monosaw:key(k,d)
   end
 end
 
@@ -79,6 +84,7 @@ function enc(k,d)
   if page==1 then
     acrostic:enc(k,d)
   elseif page==2 then
+    monosaw:enc(k,d)
   end
 end
 
@@ -87,6 +93,7 @@ function redraw()
   if page==1 then
     acrostic:draw(k,d)
   elseif page==2 then
+    monosaw:draw(k,d)
   end
   screen.update()
 end
