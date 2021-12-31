@@ -6,10 +6,25 @@ engine.name="Acrostic"
 local acrostic_=include("acrostic/lib/acrostic")
 
 function init()
-  params:add{type="number",id="loop_length",name="loop length",min=4,max=64,default=16}
-  -- TODO: save the number of loops and load it
+  params:add{type="number",id="loop_length",name="loop length (requires restart)",min=4,max=64,default=16}
+  -- write/read the loop length
+  filename_ll=_path.data.."acrostic/loop_length"
+  params:set_action("loop_length",function(x)
+    local file=io.open(filename_ll,"w+")
+    io.output(file)
+    io.write(x)
+    io.close(file)
+  end)
+  if util.file_exists(filename_ll) then
+    -- TODO: save the number of loops and load it
+    local f=io.open(filename_ll,"rb")
+    local content=f:read("*all")
+    f:close()
+    if content~=nil then
+      params:set("loop_length",tonumber(content))
+    end
+  end
 
-  reroute_audio(true)
   acrostic=acrostic_:new()
   acrostic:init({loop_length=params:get("loop_length")})
   acrostic:update()
@@ -24,7 +39,6 @@ function init()
 end
 
 function cleanup()
-  reroute_audio(false)
 end
 
 function reroute_audio(startup)
