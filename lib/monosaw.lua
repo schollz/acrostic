@@ -41,7 +41,7 @@ function Monosaw:init()
   params:set("monosaw_lpfmin",800)
   params:set("monosaw_lpfadj",2000)
   params:set("monosaw_lpflfo",0.2)
-  params:set("monosaw_amp",0.5)
+  params:set("monosaw_amp",0.0)
   osc.event=function(path,args,from)
     if path=="lpf" then
       self.lpffreq=args[2]
