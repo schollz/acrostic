@@ -11,7 +11,7 @@ Engine_Acrostic : CroneEngine {
 			in = Mix.new(SoundIn.ar([0,1]));
 			amplitude=Lag.kr(Amplitude.kr(in),0.5);
 			# freq, hasFreq = Tartini.kr(in);
-			freq=Lag.kr(freq,0.5);
+			freq=Lag.kr(freq,0.5).poll;
 			snd=PitchShift.ar(in,pitchRatio:hz/freq);
 			snd=SelectX.ar(mix,[in,snd]);
 			snd=SelectX.ar(amplitude>amplitudeMin,[Silent.ar(1),snd],0);
