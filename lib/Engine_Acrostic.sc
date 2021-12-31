@@ -4,6 +4,7 @@ Engine_Acrostic : CroneEngine {
 	var paramsAutotune;
 	var synthMonosaw;
 	var paramsMonosaw;
+	var osfun;
 
 	alloc { 
 
@@ -22,7 +23,7 @@ Engine_Acrostic : CroneEngine {
 
 		SynthDef("monosaw",{
 			arg hz=220,amp=0.0,detuning=0.025,lpfmin=6000,lpfadj=1000,lpflfo=1;
-			var snd,fx,y,z, bass, basshz;
+			var snd,fx,y,z, bass, basshz,lpffreq;
 			var note=hz.cpsmidi;
 
 			amp=Lag.kr(amp);
@@ -42,14 +43,21 @@ Engine_Acrostic : CroneEngine {
 
 			lpfmin=Clip.kr(lpfmin,20,18000);
 			lpfadj=Clip.kr(lpfmin+lpfadj,20,20000);
-			snd=MoogLadder.ar(snd.tanh,LinExp.kr(SinOsc.kr(lpflfo),-1,1,lpfmin,lpfadj),SinOsc.kr(0.125).range(0.0,0.1));
-
+			lpffreq=LinExp.kr(SinOsc.kr(lpflfo),-1,1,lpfmin,lpfadj);
+			snd=MoogLadder.ar(snd.tanh,lpffreq,SinOsc.kr(0.125).range(0.0,0.1));
+			SendTrig.kr(Impulse.kr(10.0),0,lpffreq);
 			snd=HPF.ar(snd,20);
 			Out.ar(0,snd);
 		}).add;
 
+		osfun = OSCFunc(
+		{ 
+			arg msg, time; 
+			NetAddr("127.0.0.1", 10111).sendMsg("lpf",time,msg[3]);   
+		},'/tr', context.server.addr);
 
-  		Server.default.sync;	
+
+		Server.default.sync;	
 		// synthAutotune=Synth.new("autotune");	
 		// paramsAutotune = Dictionary.newFrom([
 		// 	\hz, 220,
@@ -63,7 +71,7 @@ Engine_Acrostic : CroneEngine {
 		// 	});
 		// });
 
-  		synthMonosaw=Synth.new("monosaw");
+		synthMonosaw=Synth.new("monosaw");
 		paramsMonosaw = Dictionary.newFrom([
 			\hz, 220,
 			\amp, 0.5,
@@ -83,6 +91,7 @@ Engine_Acrostic : CroneEngine {
 	free {
 		synthAutotune.free;
 		synthMonosaw.free;
+		osfun.free;
 	}
 
 }

@@ -3,6 +3,9 @@
 
 engine.name="Acrostic"
 
+global_shift=false
+page=1
+
 local acrostic_=include("acrostic/lib/acrostic")
 
 function init()
@@ -57,16 +60,34 @@ function reroute_audio(startup)
 end
 
 function key(k,z)
-  acrostic:key(k,z)
+  if k==1 then
+    global_shift=z==1
+    do return end
+  end
+  if page==1 then
+    acrostic:key(k,z)
+  elseif page==2 then
+  end
 end
 
 function enc(k,d)
-  acrostic:enc(k,d)
+  if global_shift and k==1 then
+    -- change page
+    page=util.clamp(page+d,1,2)
+    do return end
+  end
+  if page==1 then
+    acrostic:enc(k,d)
+  elseif page==2 then
+  end
 end
 
 function redraw()
   screen.clear()
-  acrostic:draw()
+  if page==1 then
+    acrostic:draw(k,d)
+  elseif page==2 then
+  end
   screen.update()
 end
 

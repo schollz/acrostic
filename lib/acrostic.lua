@@ -18,7 +18,6 @@ function Acrostic:new (o)
 end
 
 function Acrostic:init(o)
-  self.shift=false
   self.loop_length=o.loop_length or 16
 
   -- setup midi
@@ -569,16 +568,13 @@ function Acrostic:change_note(note,d)
 end
 
 function Acrostic:key(k,z)
-  if k==1 then
-    self.shift=z==1
-  end
   if z==0 then
     do return end
   end
   if params:get("sel_selection")==1 then
     if k==2 then
-      print("self:toggle_start",self.shift)
-      self:toggle_start(self.shift)
+      print("self:toggle_start",global_shift)
+      self:toggle_start(global_shift)
     elseif k==3 then
       if math.random()<0.5 then
         self:minimize_transposition()
@@ -588,7 +584,7 @@ function Acrostic:key(k,z)
     end
   end
   if params:get("sel_selection")==2 then
-    if self.shift then
+    if global_shift then
       if k==3 then
         local note=self.matrix_final[1][params:get("sel_chord")]
         local octave=(note-(note%12))/12
@@ -605,7 +601,7 @@ function Acrostic:key(k,z)
     self:update_final()
   end
   if params:get("sel_selection")==3 then
-    if self.shift then
+    if global_shift then
       if k==3 then
         local note=self.matrix_final[params:get("sel_note")][1]
         local octave=(note-(note%12))/12
@@ -622,7 +618,7 @@ function Acrostic:key(k,z)
     self:update_final()
   end
   if params:get("sel_selection")==4 and k==2 then
-    if self.shift then
+    if global_shift then
       self:softcut_clear(params:get("sel_cut"))
     else
       local foo={}
@@ -635,7 +631,7 @@ function Acrostic:key(k,z)
     end
   end
   if params:get("sel_selection")==4 and k==3 then
-    if self.shift then
+    if global_shift then
       for i=1,6 do
         if not self.recorded[i] then
           self:queue_recording(i)
@@ -663,7 +659,7 @@ function Acrostic:beats_left(i)
 end
 
 function Acrostic:enc(k,d)
-  if self.shift then
+  if global_shift then
     if k==1 then
     elseif k==2 and (params:get("sel_selection")==2 or params:get("sel_selection")==3) then
       self:change_note(params:get("sel_note"),d)
