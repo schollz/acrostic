@@ -120,6 +120,24 @@ function table.minimize_row_changes(m)
   -- table.print_matrix(best_m)
 end
 
+function table.maximize_row_changes(m)
+  local m_=table.clone(m)
+  -- generate random rotations
+  local best_change=0
+  local best_m={}
+  for i=1,10000 do
+    -- rotate a row randomly
+    local random_row=math.random(1,#m)
+    m_[random_row]=table.get_rotation(m_[random_row])
+    local change=table.get_change(m_)
+    if change>best_change then
+      best_change=change
+      best_m=table.clone(m_)
+    end
+  end
+  return best_m
+end
+
 function table.smallest_modded_rot(t1,t2,mod)
   local t1_diff=0
   t1_diff=t1[1]-(t1[1]%mod)
@@ -135,8 +153,6 @@ function table.smallest_modded_rot(t1,t2,mod)
   t2_mod_=table.copy(t2_mod)
   table.insert(t_rots,table.copy(t2_mod_))
   for i=1,2 do
-    -- print(i)
-    -- table.print(t2_mod_)
     table.rotate(t2_mod_)
     t2_mod_[#t2_mod_]=t2_mod_[#t2_mod_]+12
     table.insert(t_rots,table.copy(t2_mod_))
@@ -163,17 +179,11 @@ function table.smallest_modded_rot(t1,t2,mod)
   local best_t2={}
   for i,t_ in ipairs(t_rots) do
     local score=table.get_change({t1,t_})
-    -- print(i)
-    -- table.print(t_)
-    -- table.print(t1)
-    -- print("score",score)
     if score<best_change then
       best_change=score
       best_t2=t_
     end
   end
-  -- print("best")
-  -- table.print(best_t2)
   return best_t2
 end
 

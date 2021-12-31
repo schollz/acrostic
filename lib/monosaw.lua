@@ -39,7 +39,7 @@ function Monosaw:init()
   }
   params:set("monosaw_detuning",2.4)
   params:set("monosaw_lpfmin",800)
-  params:set("monosaw_lpfadj",2000)
+  params:set("monosaw_lpfadj",6000)
   params:set("monosaw_lpflfo",0.2)
   params:set("monosaw_amp",0.0)
   osc.event=function(path,args,from)
@@ -90,7 +90,7 @@ function Monosaw:draw()
 
   local brightness=10
   local irisSize=14
-  local blinkState=util.explin(20,2000,2.8,0,self.lpffreq)
+  local blinkState=util.explin(80,16000,2.8,0,self.lpffreq)
   local volume=100
 
   irisX=eye.edge[1]+util.round(((eye.ltr and 1 or-1)*eye.size[1])/2+(irisSize/1.5))

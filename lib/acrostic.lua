@@ -159,7 +159,7 @@ function Acrostic:init(o)
   self.first_beat=true
   self.pattern_phrase=self.lattice:new_pattern{
     action=function(t)
-      print("phrase")
+      --print("phrase")
       if self.first_beat then
         self.first_beat=false
         for i=1,6 do
@@ -183,14 +183,13 @@ function Acrostic:init(o)
   self.pattern_measure=self.lattice:new_pattern{
     action=function(t)
       params:delta("current_chord",1)
-      print("current_chord",params:get("current_chord"))
+      --print("current_chord",params:get("current_chord"))
       if params:get("is_playing")==1 then
         params:set("sel_chord",params:get("current_chord"))
         local note=self.matrix_final[params:get("sel_note")][params:get("sel_chord")]
         if note<10 then
           do return end
         end
-        print(MusicUtil.note_num_to_name(note,true))
         self:play_note(note)
         if params:get("random_mode")==2 then
           -- randomize next position
@@ -317,7 +316,7 @@ function Acrostic:play_note(note)
   print("play_note",note)
   local hz=MusicUtil.note_num_to_freq(note)
   if hz~=nil and hz>20 and hz<18000 then
-    engine.hz(hz)
+    --engine.hz(hz)
   end
   local gate_length=clock.get_beat_sec()*50/100
   if crow~=nil then
@@ -430,10 +429,12 @@ end
 -- minimize_transposition transposes each chord for minimal distance
 function Acrostic:minimize_transposition(changes)
   local chords={}
+  local chord_notes={}
   for chord=1,4 do
     local notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..chord)])
+    chord_notes[chord]=table.clone(notes)
     table.rotatex(notes,math.random(0,3))
-    table.insert(chords,notes)
+    table.insert(chords,table.clone(notes))
   end
   local chords_basic=table.clone(chords)
   for i,chord in ipairs(chords) do
@@ -453,22 +454,34 @@ function Acrostic:minimize_transposition(changes)
     current_chord=chords[i]
   end
   if changes then
-    chords=table.minimize_row_changes(chords)
+      chords=table.minimize_row_changes(chords)
   end
-  table.print_matrix(chords)
-  for chord=1,4 do
-    for i=1,3 do
-      local notes={i,i+3}
-      for ii,note in ipairs(notes) do
-        self.matrix_octave[note][chord]=(ii-1)*12
-        self.matrix_base[note][chord]=chords[chord][i]
-      end
+  -- print("chords")
+  -- table.print_matrix(chords)
+  self.matrix_octave={}
+  self.matrix_base={}
+  for note=1,6 do 
+    self.matrix_octave[note]={}
+    self.matrix_base[note]={}
+    for chord=1,4 do 
+      self.matrix_octave[note][chord]=0
+      self.matrix_base[note][chord]=chord_notes[chord][1]%12+36
     end
   end
-  for i=1,4 do
-    self.matrix_base[6][i]=(chords_basic[i][1]%12)+24
+  for chord=1,4 do
+    for note,note_midi in ipairs(chords[chord]) do
+      self.matrix_base[note+1][chord]=note_midi
+    end
+    local undone_note=#chords[chord]+2
+    for i=undone_note,6 do
+      self.matrix_base[i][chord]=chords[chord][math.random(1,#chords[chord])]+12
+    end
   end
+  -- print("self.matrix_base")
+  -- table.print_matrix(self.matrix_base)
   self:update_final()
+  -- print("update1")
+  -- table.print_matrix(self.matrix_name)
 
   local averages={}
   for note=1,6 do
@@ -481,11 +494,18 @@ function Acrostic:minimize_transposition(changes)
   table.sort(averages,function(a,b)
     return a[1]<b[1]
   end)
-  table.print_matrix(averages)
   local foo=table.clone(self.matrix_base)
   for i,v in ipairs(averages) do
-    self.matrix_base[i]=foo[v[2]]
+	  if i==1 then 
+		  for chord=1,4 do
+        self.matrix_base[i][chord]=chord_notes[chord][1]%12+36
+      end
+	  else
+      self.matrix_base[i]=foo[v[2]]
+    end
   end
+  self.matrix_octave[3]={12,12,12,12}
+  self.matrix_octave[4]={12,12,12,12}
   self.matrix_octave[5]={12,12,12,12}
   self.matrix_octave[6]={24,24,24,24}
   self:update_final()
@@ -516,7 +536,11 @@ function Acrostic:update_chords()
 end
 
 function Acrostic:update_final()
+  self.matrix_final={}
+  self.matrix_name={}
   for note=1,6 do
+    self.matrix_final[note]={}
+    self.matrix_name[note]={}
     for chord=1,4 do
       self.matrix_final[note][chord]=self.matrix_base[note][chord]+self.matrix_octave[note][chord]
       self.matrix_name[note][chord]=MusicUtil.note_num_to_name(self.matrix_final[note][chord],true)

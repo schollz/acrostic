@@ -1,17 +1,18 @@
 -- acrostic
 --
 
-engine.name="Acrostic"
+--engine.name="Acrostic"
 
 global_shift=false
-page=2
+page=1
 
-local acrostic_=include("acrostic/lib/acrostic")
-local monosaw_=include("acrostic/lib/monosaw")
 
 function init()
-  monosaw=monosaw_:new()
-  monosaw:init()
+  local acrostic_=include("acrostic/lib/acrostic")
+  -- local monosaw_=include("acrostic/lib/monosaw")
+  -- monosaw=monosaw_:new()
+  -- monosaw:init()
+  -- engine.amp(1)
 
   params:add{type="number",id="loop_length",name="loop length (requires restart)",min=4,max=64,default=16}
   -- write/read the loop length
@@ -35,6 +36,17 @@ function init()
   acrostic=acrostic_:new()
   acrostic:init({loop_length=params:get("loop_length")})
   acrostic:update()
+  params:set("chord1",3)
+  params:set("chord2",6)
+  params:set("chord3",4)
+  params:set("chord4",5)
+  acrostic:minimize_transposition(true)
+  acrostic:minimize_transposition(true)
+  acrostic:minimize_transposition(true)
+  acrostic:minimize_transposition(true)
+  acrostic:minimize_transposition(true)
+
+
 
   clock.run(function()
     while true do
