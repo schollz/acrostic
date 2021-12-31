@@ -2,6 +2,8 @@ Engine_Acrostic : CroneEngine {
 
 	var synthAutotune;
 	var paramsAutotune;
+	var synthMonosaw;
+	var paramsMonosaw;
 
 	alloc { 
 
@@ -18,25 +20,69 @@ Engine_Acrostic : CroneEngine {
 			Out.ar(0,snd.dup);
 		}).add;
 
+		SynthDef("monosaw",{
+			arg hz=220,amp=0.0,detuning=0.025,lpfmin=6000,lpfadj=1000,lpflfo=1;
+			var snd,fx,y,z, bass, basshz;
+			var note=hz.cpsmidi;
+
+			amp=Lag.kr(amp);
+			hz=Lag.kr(hz,0.05);
+			detuning=Lag.kr(detuning);
+			lpfmin=Lag.kr(lpfmin);
+			lpfadj=Lag.kr(lpfadj);
+			lpflfo=Lag.kr(lpflfo);
+			snd=Pan2.ar(Pulse.ar((note-12).midicps,LinLin.kr(LFTri.kr(0.5),-1,1,0.2,0.8))/12*amp);
+			snd=snd+Mix.ar({
+				var osc1,osc2,env,snd;
+				snd=SawDPW.ar((note+(Rand(-1.0,1.0)*detuning)).midicps*TChoose.kr(Impulse.kr(0),[1,1,1,2,0.5,0.5,0.25]));
+				snd=LPF.ar(snd,LinExp.kr(SinOsc.kr(rrand(1/30,1/10),rrand(0,2*pi)),-1,1,20,12000));
+				snd=DelayC.ar(snd, rrand(0.01,0.03), LFNoise1.kr(Rand(5,10),0.01,0.02)/15 );
+				Pan2.ar(snd,VarLag.kr(LFNoise0.kr(1/3),3,warp:\sine))/24*amp
+			}!24);
+
+			lpfmin=Clip.kr(lpfmin,20,18000);
+			lpfadj=Clip.kr(lpfmin+lpfadj,20,20000);
+			snd=MoogLadder.ar(snd.tanh,LinExp.kr(SinOsc.kr(lpflfo),-1,1,lpfmin,lpfadj),SinOsc.kr(0.125).range(0.0,0.1));
+
+			snd=HPF.ar(snd,20);
+			Out.ar(0,snd);
+		}).add;
+
 
   		Server.default.sync;	
-		synthAutotune=Synth.new("autotune");	
+		// synthAutotune=Synth.new("autotune");	
+		// paramsAutotune = Dictionary.newFrom([
+		// 	\hz, 220,
+		// 	\amp, 0.5,
+		// 	\mix, 0,
+		// 	\amplitudeMin,1,
+		// ]);
+		// paramsAutotune.keysDo({ arg key;
+		// 	this.addCommand(key, "f", { arg msg;
+		// 		synthAutotune.set(key,msg[1]);
+		// 	});
+		// });
 
-		paramsAutotune = Dictionary.newFrom([
+  		synthMonosaw=Synth.new("monosaw");
+		paramsMonosaw = Dictionary.newFrom([
 			\hz, 220,
 			\amp, 0.5,
-			\mix, 0,
-			\amplitudeMin,1,
+			\detuning, 0.05,
+			\lpfmin,6000,
+			\lpfadj,1000,
+			\lpflfo,1,
 		]);
-		paramsAutotune.keysDo({ arg key;
+		paramsMonosaw.keysDo({ arg key;
 			this.addCommand(key, "f", { arg msg;
-				synthAutotune.set(key,msg[1]);
+				synthMonosaw.set(key,msg[1]);
 			});
 		});
+
 	}
 
 	free {
 		synthAutotune.free;
+		synthMonosaw.free;
 	}
 
 }
