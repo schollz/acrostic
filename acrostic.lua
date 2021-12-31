@@ -1,7 +1,7 @@
 -- acrostic
 --
 
---engine.name="Acrostic"
+engine.name="Acrostic"
 
 global_shift=false
 page=1
@@ -9,10 +9,10 @@ page=1
 
 function init()
   local acrostic_=include("acrostic/lib/acrostic")
-  -- local monosaw_=include("acrostic/lib/monosaw")
-  -- monosaw=monosaw_:new()
-  -- monosaw:init()
-  -- engine.amp(1)
+  local monosaw_=include("acrostic/lib/monosaw")
+  monosaw=monosaw_:new()
+  monosaw:init()
+  engine.amp(1)
 
   params:add{type="number",id="loop_length",name="loop length (requires restart)",min=4,max=64,default=16}
   -- write/read the loop length

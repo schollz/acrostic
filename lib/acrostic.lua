@@ -133,7 +133,7 @@ function Acrostic:init(o)
         self.rec_queue[1].left=self.rec_queue[1].left-1
         if #self.rec_queue>1 then
           if self.rec_queue[1].left<self.loop_length and self.rec_queue[2].primed==false then
-            softcut.rec_once(self.rec_queue[2].i)
+            --softcut.rec_once(self.rec_queue[2].i)
             self.rec_queue[2].left=self.loop_length
           end
         end
@@ -672,7 +672,7 @@ function Acrostic:queue_recording(i)
   if table.is_empty(self.rec_queue) then
     print("primed",i)
     table.insert(self.rec_queue,{i=i,left=self.loop_length+self:beats_left(i),primed=true})
-    softcut.rec_once(i)
+    --softcut.rec_once(i)
   else
     table.insert(self.rec_queue,{i=i,left=self.loop_length,rec=false,primed=false})
   end
