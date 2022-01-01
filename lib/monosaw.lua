@@ -67,6 +67,7 @@ function Monosaw:enc(k,d)
   if global_shift then
     if k==1 then
     elseif k==2 then
+	    params:delta("monosaw_amp",d)
     elseif k==3 then
     end
     do return end
@@ -80,6 +81,7 @@ function Monosaw:enc(k,d)
   end
 end
 
+  brightness=10
 function Monosaw:draw()
   screen.aa(2)
 
@@ -88,10 +90,9 @@ function Monosaw:draw()
     edge={40,40},
   size={72,31}}
 
-  local brightness=10
   local irisSize=14
-  local blinkState=util.explin(80,16000,2.8,0,self.lpffreq)
-  local volume=100
+  local blinkState=util.explin(80,16000,3.5,0,self.lpffreq)
+  local volume=util.linlin(0,1,10,100,params:get("monosaw_amp"))
 
   irisX=eye.edge[1]+util.round(((eye.ltr and 1 or-1)*eye.size[1])/2+(irisSize/1.5))
   irisY=eye.edge[2]-util.round(eye.size[2]*0.6)
@@ -118,6 +119,7 @@ function Monosaw:draw()
   eye.edge[2])
   screen.stroke()
 
+  if blinkState<=2.8 then
   screen.level(util.round(util.linlin(1,100,0,util.linlin(0,3,8,4,blinkState),volume)))
   screen.arc(
     util.round(irisX-(irisSize*0.4))+blinkState,
@@ -133,12 +135,13 @@ function Monosaw:draw()
     math.pi*util.linexp(0,3,0.65,0.9,blinkState),
   math.pi*util.linexp(0,3,1.22,1.00,blinkState))
   screen.stroke()
+  end
 
-  if blinkState~=3 then
+  if blinkState<=3 then
     screen.circle(
       irisX-util.round(irisSize*0.4)+blinkState-5,
       irisY+util.round(irisSize*0.85)+blinkState+5,
-    util.linexp(0,3,util.linlin(1,100,6,3,brightness),3,blinkState))
+    util.linexp(0,3,util.linlin(1,100,6,3,volume),3,blinkState))
     screen.fill()
   end
 end
