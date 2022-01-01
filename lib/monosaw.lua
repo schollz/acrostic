@@ -38,10 +38,10 @@ function Monosaw:init()
     end
   }
   params:set("monosaw_detuning",2.4)
-  params:set("monosaw_lpfmin",800)
-  params:set("monosaw_lpfadj",6000)
-  params:set("monosaw_lpflfo",0.2)
-  params:set("monosaw_amp",0.0)
+  params:set("monosaw_lpfmin",121)
+  params:set("monosaw_lpfadj",2190)
+  params:set("monosaw_lpflfo",0.28)
+  params:set("monosaw_amp",0.5)
   osc.event=function(path,args,from)
     if path=="lpf" then
       self.lpffreq=args[2]
@@ -81,7 +81,8 @@ function Monosaw:enc(k,d)
   end
 end
 
-  brightness=10
+-- code generously provided @2994898
+-- original code:  https://github.com/monome-community/nc01-drone/blob/master/three-eyes.lua
 function Monosaw:draw()
   screen.aa(2)
 
@@ -93,6 +94,7 @@ function Monosaw:draw()
   local irisSize=14
   local blinkState=util.explin(80,16000,3.5,0,self.lpffreq)
   local volume=util.linlin(0,1,10,100,params:get("monosaw_amp"))
+  local brightness=10
 
   irisX=eye.edge[1]+util.round(((eye.ltr and 1 or-1)*eye.size[1])/2+(irisSize/1.5))
   irisY=eye.edge[2]-util.round(eye.size[2]*0.6)
@@ -137,7 +139,7 @@ function Monosaw:draw()
   screen.stroke()
   end
 
-  if blinkState<=3 then
+  if blinkState<=2.8 then
     screen.circle(
       irisX-util.round(irisSize*0.4)+blinkState-5,
       irisY+util.round(irisSize*0.85)+blinkState+5,
