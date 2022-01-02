@@ -9,7 +9,7 @@ Engine_Acrostic : CroneEngine {
 	alloc { 
 
 		SynthDef("autotune", {
-			arg hz=220,amp=0.5,mix=0.0,amplitudeMin=1;
+			arg hz=220,amp=0.0,mix=0.0,amplitudeMin=1;
 			var in, snd, freq, hasFreq, amplitude;
 			in = Mix.new(SoundIn.ar([0,1]));
 			amplitude=Lag.kr(Amplitude.kr(in),0.5);
@@ -22,7 +22,7 @@ Engine_Acrostic : CroneEngine {
 		}).add;
 
 		SynthDef("monosaw",{
-			arg hz=110,amp=0.5,detuning=0.025,lpfmin=200,lpfadj=4000,lpflfo=1,delay=1,feedback=0;
+			arg hz=110,amp=0.0,detuning=0.025,lpfmin=200,lpfadj=4000,lpflfo=1,delay=1,feedback=0;
 			var snd,fx,y,z, bass, basshz,lpffreq,lpffreq2,local,lpfosc1,lpfosc2;
 			var note=hz.cpsmidi;
 			
