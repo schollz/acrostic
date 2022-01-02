@@ -394,7 +394,7 @@ function Acrostic:softcut_init()
     softcut.pre_filter_fc(i,20100)
 
     softcut.position(i,self.o.minmax[i][2])
-    softcut.play(i,1)
+    --softcut.play(i,1)
     self.o.pos[i]=0
   end
   softcut.event_render(function(ch,start,sec_per_sample,samples)
