@@ -4,10 +4,13 @@
 engine.name="Acrostic"
 
 global_shift=false
-page=1
-
+page=2
 
 function init()
+  norns.enc.sens(1,6)
+  norns.enc.sens(2,6)
+  norns.enc.sens(3,6)
+
   local acrostic_=include("acrostic/lib/acrostic")
   local monosaw_=include("acrostic/lib/monosaw")
   monosaw=monosaw_:new()
@@ -40,8 +43,7 @@ function init()
   params:set("chord3",5)
   params:set("chord4",3)
   acrostic:minimize_transposition(true)
-  params:set("monosaw_amp",0)
-
+  params:set("monosaw_amp",1.0)
 
   clock.run(function()
     while true do

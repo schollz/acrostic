@@ -316,7 +316,7 @@ function Acrostic:play_note(note)
   print("play_note",note)
   local hz=MusicUtil.note_num_to_freq(note)
   if hz~=nil and hz>20 and hz<18000 then
-    --engine.hz(hz)
+    engine.hz(hz)
   end
   local gate_length=clock.get_beat_sec()*50/100
   if crow~=nil then
@@ -454,16 +454,16 @@ function Acrostic:minimize_transposition(changes)
     current_chord=chords[i]
   end
   if changes then
-      chords=table.minimize_row_changes(chords)
+    chords=table.minimize_row_changes(chords)
   end
   -- print("chords")
   -- table.print_matrix(chords)
   self.matrix_octave={}
   self.matrix_base={}
-  for note=1,6 do 
+  for note=1,6 do
     self.matrix_octave[note]={}
     self.matrix_base[note]={}
-    for chord=1,4 do 
+    for chord=1,4 do
       self.matrix_octave[note][chord]=0
       self.matrix_base[note][chord]=chord_notes[chord][1]%12+36
     end
@@ -496,11 +496,11 @@ function Acrostic:minimize_transposition(changes)
   end)
   local foo=table.clone(self.matrix_base)
   for i,v in ipairs(averages) do
-	  if i==1 then 
-		  for chord=1,4 do
+    if i==1 then
+      for chord=1,4 do
         self.matrix_base[i][chord]=chord_notes[chord][1]%12+36
       end
-	  else
+    else
       self.matrix_base[i]=foo[v[2]]
     end
   end
