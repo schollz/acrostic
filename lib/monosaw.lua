@@ -56,9 +56,10 @@ function Monosaw:init()
   params:set("monosaw_amp",0.5)
   params:set("monosaw_delay",1)
   params:set("monosaw_feedback",0)
+  self.lpffreq={0,0}
   osc.event=function(path,args,from)
     if path=="lpf" then
-      self.lpffreq=args[2]
+      self.lpffreq[tonumber(args[1])]=args[2]
     end
   end
 end
@@ -112,7 +113,7 @@ function Monosaw:draw()
   screen.aa(2)
 
   local irisSize=14
-  local blinkState=util.explin(80,16000,3.5,0,self.lpffreq)
+  local blinkState=util.clamp(util.explin(80,8000,3.0,0,self.lpffreq[1]),0,3)
   local volume=util.linlin(0,1,10,100,params:get("monosaw_amp"))
   local brightness=10
 
@@ -176,6 +177,7 @@ function Monosaw:draw()
     ltr=false,
     edge={44,40},
   size={73,32}}
+  blinkState=util.clamp(util.explin(80,8000,3.0,0,self.lpffreq[2]),0,3)
 
   irisX=eye.edge[1]+util.round(((eye.ltr and 1 or-1)*eye.size[1])/2+(irisSize/1.5))
   irisY=eye.edge[2]-util.round(eye.size[2]*0.6)

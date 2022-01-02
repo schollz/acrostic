@@ -18,6 +18,7 @@ function Acrostic:new (o)
 end
 
 function Acrostic:init(o)
+  self.debounce_chord_selection=0
   self.loop_length=o.loop_length or 16
 
   -- setup midi
@@ -185,7 +186,9 @@ function Acrostic:init(o)
       params:delta("current_chord",1)
       --print("current_chord",params:get("current_chord"))
       if params:get("is_playing")==1 then
-        params:set("sel_chord",params:get("current_chord"))
+        if self.debounce_chord_selection==0 then
+          params:set("sel_chord",params:get("current_chord"))
+        end
         local note=self.matrix_final[params:get("sel_note")][params:get("sel_chord")]
         if note<10 then
           do return end
@@ -308,6 +311,11 @@ function Acrostic:toggle_start(stop_all)
         end
       end
     end
+  end
+  if params:get("is_playing")==0 then
+    engine.amp(0)
+  else
+    engine.amp(params:get("monosaw_amp"))
   end
 end
 
@@ -597,14 +605,14 @@ function Acrostic:key(k,z)
   end
   if params:get("sel_selection")==1 then
     if k==2 then
-      print("self:toggle_start",global_shift)
-      self:toggle_start(global_shift)
-    elseif k==3 then
       if math.random()<0.5 then
         self:minimize_transposition()
       else
         self:minimize_transposition(true)
       end
+    elseif k==3 then
+      print("self:toggle_start",global_shift)
+      self:toggle_start(global_shift)
     end
   end
   if params:get("sel_selection")==2 then
@@ -690,7 +698,6 @@ function Acrostic:enc(k,d)
     elseif k==3 and (params:get("sel_selection")==2 or params:get("sel_selection")==3) then
       self:change_chord(params:get("sel_chord"),d)
     elseif k==3 and params:get("sel_selection")==1 then
-      params:delta("chord"..params:get("sel_chord"),d)
     end
     do return end
   end
@@ -699,6 +706,7 @@ function Acrostic:enc(k,d)
   elseif k==2 then
     if params:get("sel_selection")==1 then
       params:delta("sel_chord",d)
+      self.debounce_chord_selection=20
     elseif params:get("sel_selection")==4 then
       params:delta("sel_cut",d)
     else
@@ -708,18 +716,23 @@ function Acrostic:enc(k,d)
     end
   elseif k==3 then
     if params:get("sel_selection")==1 then
-
+      params:delta("chord"..params:get("sel_chord"),d)
+      self.debounce_chord_selection=20
     elseif params:get("sel_selection")==4 then
       params:delta("level"..params:get("sel_cut"),d)
       self.show_level=10
     else
       params:delta("sel_chord",d)
       params:set("sel_selection",2)
+      self.debounce_chord_selection=20
     end
   end
 end
 
 function Acrostic:update()
+  if self.debounce_chord_selection>0 then
+    self.debounce_chord_selection=self.debounce_chord_selection-1
+  end
   local ct=clock.get_beat_sec()*clock.get_beats()
   for i=1,6 do
     local pan=params:get(i.."pan lfo amp")*calculate_lfo(ct,params:get(i.."pan lfo period"),params:get(i.."pan lfo offset"))

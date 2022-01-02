@@ -23,7 +23,7 @@ Engine_Acrostic : CroneEngine {
 
 		SynthDef("monosaw",{
 			arg hz=110,amp=0.5,detuning=0.025,lpfmin=200,lpfadj=4000,lpflfo=1,delay=1,feedback=0;
-			var snd,fx,y,z, bass, basshz,lpffreq,local;
+			var snd,fx,y,z, bass, basshz,lpffreq,lpffreq2,local,lpfosc1,lpfosc2;
 			var note=hz.cpsmidi;
 			
 			amp=Lag.kr(amp);
@@ -59,7 +59,13 @@ Engine_Acrostic : CroneEngine {
 			
 			lpfmin=Clip.kr(lpfmin,20,18000);
 			lpfadj=Clip.kr(lpfmin+lpfadj,20,20000);
-			lpffreq=LinExp.kr(SinOsc.kr(lpflfo),-1,1,lpfmin,lpfadj);
+
+			lpfosc1=SinOsc.kr(lpflfo*VarLag.kr(LFNoise0.kr(lpflfo),1/lpflfo).range(0.8,1.2));
+			lpfosc2=SinOsc.kr(lpflfo*VarLag.kr(LFNoise0.kr(lpflfo),1/lpflfo).range(0.8,1.2));
+			lpffreq=LinExp.kr(lpfosc1,-1,1,lpfmin,lpfadj);
+			lpffreq2=LinExp.kr(lpfosc2,-1,1,lpfmin,lpfadj);
+			SendTrig.kr(Impulse.kr(10.0),1,lpffreq);
+			SendTrig.kr(Impulse.kr(10.0),2,SelectX.kr(feedback,[lpffreq,lpffreq2]));
 			
 			snd=MoogLadder.ar(snd.tanh,lpffreq,SinOsc.kr(0.125).range(0.0,0.1));
 			
@@ -74,7 +80,6 @@ Engine_Acrostic : CroneEngine {
 			snd = ((local + snd) * 1.25).softclip;
 			LocalOut.ar(snd*feedback);
 			
-			SendTrig.kr(Impulse.kr(10.0),0,lpffreq);
 			snd=HPF.ar(snd,20);
 			Out.ar(0,snd*amp);
 		}).add;
@@ -82,7 +87,7 @@ Engine_Acrostic : CroneEngine {
 		osfun = OSCFunc(
 		{ 
 			arg msg, time; 
-			NetAddr("127.0.0.1", 10111).sendMsg("lpf",time,msg[3]);   
+			NetAddr("127.0.0.1", 10111).sendMsg("lpf",msg[2],msg[3]);   
 		},'/tr', context.server.addr);
 
 
