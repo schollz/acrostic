@@ -48,8 +48,10 @@ function init()
   params:set("chord2",4)
   params:set("chord3",5)
   params:set("chord4",3)
-  acrostic:update()
-  acrostic:minimize_transposition(true)
+  clock.run(function()
+    clock.sleep(0.2)
+    acrostic:minimize_transposition(true)  
+  end)
   params:set("monosaw_amp",0.0)
 
   local show_startup_screen_max=10

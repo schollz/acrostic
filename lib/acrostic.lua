@@ -86,6 +86,12 @@ function Acrostic:init(o)
   params:hide("is_playing")
   params:add_control("prob_note2","inter-note probability",controlspec.new(0,1,'lin',0.125/4,0.5,'',(0.125/4)/1))
   params:add_option("random_mode","random mode",{"off","on"},1)
+  params:add_option("do_reverse","reverse mode",{"off","on"},1)
+  params:set_action("do_reverse",function(x)
+    for i=1,6 do 
+      softcut.rate(i,x==1 and 1 or -1)
+    end
+  end)
 
   for i=1,6 do
     params:add_group("loop "..i,9)
@@ -191,7 +197,7 @@ function Acrostic:init(o)
 
   self.pattern_measure=self.lattice:new_pattern{
     action=function(t)
-      params:delta("current_chord",1)
+      params:delta("current_chord",params:get("do_reverse")==1 and 1 or -1)
       --print("current_chord",params:get("current_chord"))
       if params:get("is_playing")==1 then
         if self.debounce_chord_selection==0 then
@@ -326,11 +332,11 @@ function Acrostic:toggle_start(stop_all)
         print("restting all")
         self.rec_queue={}
         self.softcut_stopped=false
-        params:set("current_chord",4)
+        params:set("current_chord",params:get("do_reverse")==1 and 4 or 1)
         self.lattice:hard_restart()
         for i=1,6 do
           softcut.play(i,1)
-          softcut.rate(i,1)
+          softcut.rate(i,params:get("do_reverse")==1 and 1 or -1)
         end
       else
         self:msg("begin phrase")
