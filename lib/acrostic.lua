@@ -361,7 +361,7 @@ function Acrostic:softcut_init()
   audio.level_tape_cut(1)
   for i=1,6 do
     softcut.enable(i,1)
-    softcut.play(i,1)
+    -- softcut.play(i,1) -- OK!
 
     softcut.level_input_cut(1,i,0.5)
     softcut.level_input_cut(2,i,0.5)
@@ -374,15 +374,20 @@ function Acrostic:softcut_init()
     softcut.loop_start(i,self.o.minmax[i][2])
     softcut.loop_end(i,self.o.minmax[i][2]+self.loop_length*clock.get_beat_sec())
     softcut.rec(i,0)
+    -- softcut.play(i,1) -- OK!
 
     softcut.level_slew_time(i,0.2)
     softcut.rate_slew_time(i,0.2)
+    -- softcut.play(i,1) -- OK!
     softcut.recpre_slew_time(i,0.1)
+    -- softcut.play(i,1) -- BAD!
     softcut.fade_time(i,0.2)
+    -- softcut.play(i,1) -- BAD!
 
     softcut.rec_level(i,params:get("rec_level"..i))
     softcut.pre_level(i,params:get("pre_level"..i))
     softcut.phase_quant(i,0.025)
+    -- softcut.play(i,1) -- BAD!
 
     softcut.post_filter_dry(i,0.0)
     softcut.post_filter_lp(i,1.0)
@@ -393,7 +398,8 @@ function Acrostic:softcut_init()
     softcut.pre_filter_lp(i,1.0)
     softcut.pre_filter_rq(i,1.0)
     softcut.pre_filter_fc(i,20100)
-
+   
+    -- softcut.play(i,1) -- BAD! (original one)
     softcut.position(i,self.o.minmax[i][2])
     self.o.pos[i]=0
   end
