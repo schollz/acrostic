@@ -361,6 +361,7 @@ function Acrostic:softcut_init()
   audio.level_tape_cut(1)
   for i=1,6 do
     softcut.enable(i,1)
+    softcut.play(i,1)
 
     softcut.level_input_cut(1,i,0.5)
     softcut.level_input_cut(2,i,0.5)
@@ -394,7 +395,6 @@ function Acrostic:softcut_init()
     softcut.pre_filter_fc(i,20100)
 
     softcut.position(i,self.o.minmax[i][2])
-    softcut.play(i,1)
     self.o.pos[i]=0
   end
   softcut.event_render(function(ch,start,sec_per_sample,samples)
