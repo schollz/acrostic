@@ -18,6 +18,8 @@ function Acrostic:new (o)
 end
 
 function Acrostic:init(o)
+  self.message=""
+  self.message_level=0
   self.debounce_chord_selection=0
   self.loop_length=o.loop_length or 16
 
@@ -66,6 +68,10 @@ function Acrostic:init(o)
   -- setup selections
   params:add{type="number",id="sel_selection",name="sel_selection",min=1,max=4,default=4}
   params:hide("sel_selection")
+  local sel_selection_text={"chord","note","phrase","sampling"}
+  params:set_action("sel_selection",function(x)
+    self:msg(x..") "..sel_selection_text[x])
+  end)
   params:add{type="number",id="sel_chord",name="sel_chord",min=1,max=4,default=1}
   params:hide("sel_chord")
   params:add{type="number",id="current_chord",name="current_chord",min=1,max=4,default=4,wrap=true}
@@ -76,7 +82,7 @@ function Acrostic:init(o)
   params:hide("sel_cut")
   params:add{type="number",id="is_playing",name="is_playing",min=0,max=1,default=1,wrap=true}
   params:hide("is_playing")
-  params:add_control("prob_note2","inter-note probability",controlspec.new(0,1,'lin',0.125/4,0.25,'',(0.125/4)/1))
+  params:add_control("prob_note2","inter-note probability",controlspec.new(0,1,'lin',0.125/4,0.5,'',(0.125/4)/1))
   params:add_option("random_mode","random mode",{"off","on"},1)
 
   for i=1,6 do
@@ -217,7 +223,7 @@ function Acrostic:init(o)
   for i=1,3 do
     self.pattern_measure_inter[i]=self.lattice:new_pattern{
       action=function(t)
-        if params:get("is_playing")==1 and math.random()<params:get("prob_note2") and self.next_note~=nil and self.last_note~=nil then
+        if params:get("is_playing")==1 and math.random()<(params:get("prob_note2")*params:get("sel_cut")/6) and self.next_note~=nil and self.last_note~=nil then
           print("next/last",self.next_note,self.last_note)
           local note=MusicUtil.snap_note_to_array(util.round(self.next_note/2+self.last_note/2),scale)
           print("play_note",note)
@@ -279,9 +285,15 @@ function Acrostic:init(o)
   self.lattice:start()
 end
 
+function Acrostic:msg(s)
+  self.message=s
+  self.message_level=15
+end
+
 function Acrostic:toggle_start(stop_all)
   if stop_all then
-    print("stopping softcut")
+    self:msg("stop all")
+    print("stop all")
     self.softcut_stopped=true
     for i=1,6 do
       softcut.level(i,0)
@@ -300,6 +312,7 @@ function Acrostic:toggle_start(stop_all)
     params:delta("is_playing",1)
     if params:get("is_playing")==1 then
       if self.softcut_stopped then
+        self:msg("begin all")
         print("restting all")
         self.rec_queue={}
         self.softcut_stopped=false
@@ -309,7 +322,11 @@ function Acrostic:toggle_start(stop_all)
           softcut.play(i,1)
           softcut.rate(i,1)
         end
+      else
+        self:msg("begin phrase")
       end
+    else
+      self:msg("stop phrase")
     end
   end
   if params:get("is_playing")==0 then
@@ -369,6 +386,7 @@ function Acrostic:softcut_init()
   audio.level_tape_cut(1)
   for i=1,6 do
     softcut.enable(i,1)
+    softcut.play(i,1)
 
     softcut.level_input_cut(1,i,0.5)
     softcut.level_input_cut(2,i,0.5)
@@ -402,7 +420,6 @@ function Acrostic:softcut_init()
     softcut.pre_filter_fc(i,20100)
 
     softcut.position(i,self.o.minmax[i][2])
-    softcut.play(i,1)
     self.o.pos[i]=0
   end
   softcut.event_render(function(ch,start,sec_per_sample,samples)
@@ -436,6 +453,7 @@ end
 
 -- minimize_transposition transposes each chord for minimal distance
 function Acrostic:minimize_transposition(changes)
+  self:msg("regen notes")
   local chords={}
   local chord_notes={}
   for chord=1,4 do
@@ -603,6 +621,7 @@ function Acrostic:key(k,z)
   if z==0 then
     do return end
   end
+
   if params:get("sel_selection")==1 then
     if k==2 then
       if math.random()<0.5 then
@@ -698,6 +717,12 @@ function Acrostic:enc(k,d)
     elseif k==3 and (params:get("sel_selection")==2 or params:get("sel_selection")==3) then
       self:change_chord(params:get("sel_chord"),d)
     elseif k==3 and params:get("sel_selection")==1 then
+    elseif k==2 and params:get("sel_selection")==4 then
+      params:delta("pre_level"..params:get("sel_cut"),d)
+      self:msg("pre: "..params:get("pre_level"..params:get("sel_cut")))
+    elseif k==3 and params:get("sel_selection")==4 then
+      params:delta("rec_level"..params:get("sel_cut"),d)
+      self:msg("rec: "..params:get("rec_level"..params:get("sel_cut")))
     end
     do return end
   end
@@ -720,7 +745,8 @@ function Acrostic:enc(k,d)
       self.debounce_chord_selection=20
     elseif params:get("sel_selection")==4 then
       params:delta("level"..params:get("sel_cut"),d)
-      self.show_level=10
+      print("lvl: "..params:get("level"..params:get("sel_cut")))
+      self:msg("lvl: "..params:get("level"..params:get("sel_cut")))
     else
       params:delta("sel_chord",d)
       params:set("sel_selection",2)
@@ -848,8 +874,15 @@ function Acrostic:draw()
     screen.stroke()
   end
 
-  local foo=""
-  if self.show_level==nil then
+
+
+  if self.message_level>0 and self.message~="" then
+    self.message_level=self.message_level-1
+    screen.move(100,8)
+    screen.level(self.message_level)
+    screen.text_center(self.message)
+  else
+    local foo=""
     if not table.is_empty(self.rec_queue) then
       if self.rec_queue[1].left<=self.loop_length then
         foo=foo.."r:"..self.rec_queue[1].i
@@ -865,23 +898,17 @@ function Acrostic:draw()
         end
       end
     end
-  else
-    self.show_level=self.show_level-1
-    if self.show_level==0 then
-      self.show_level=nil
+    screen.move(96,8)
+    screen.level(15)
+    screen.text_center(foo)
+  
+    screen.move(76,7)
+    screen.level(15)
+    if params:get("is_playing")==1 then
+      screen.text(">")
+    else
+      screen.text("||")
     end
-    foo=params:get("level"..params:get("sel_cut"))
-  end
-  screen.move(96,8)
-  screen.level(15)
-  screen.text_center(foo)
-
-  screen.move(76,7)
-  screen.level(15)
-  if params:get("is_playing")==1 then
-    screen.text(">")
-  else
-    screen.text("||")
   end
 end
 

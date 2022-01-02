@@ -35,7 +35,7 @@ function Monosaw:init()
     end
   }
   params:add{type="control",id="monosaw_lpflfo",name="lpf lfo",
-    controlspec=controlspec.new(0.025,30,'lin',0.025,0.1,"Hz",0.025/30),action=function(x)
+    controlspec=controlspec.new(0.1,10,'exp',0.1,0.1,"Hz",0.1/10),action=function(x)
       engine.lpflfo(x)
     end
   }
@@ -114,9 +114,23 @@ function Monosaw:draw()
 
   local irisSize=14
   local blinkState=util.clamp(util.explin(80,8000,3.0,0,self.lpffreq[1]),0,3)
+  local blinkState2=util.clamp(util.explin(80,8000,3.0,0,self.lpffreq[2]),0,3)
   local volume=util.linlin(0,1,10,100,params:get("monosaw_amp"))
   local brightness=10
+  self:eyes(irisSize,blinkState,blinkState2,volume,brightness)
+  
 
+  if self.message_level>0 and self.message~="" then
+    self.message_level=self.message_level-1
+    screen.aa(0)
+    screen.move(96,8)
+    screen.level(self.message_level)
+    screen.text_center(self.message)
+  end
+end
+
+
+function Monosaw:eyes(irisSize,blinkState,blinkState2,volume,brightness)
   local eye={
     ltr=true,
     edge={60,40},
@@ -177,7 +191,7 @@ function Monosaw:draw()
     ltr=false,
     edge={44,40},
   size={73,32}}
-  blinkState=util.clamp(util.explin(80,8000,3.0,0,self.lpffreq[2]),0,3)
+  blinkState=blinkState2
 
   irisX=eye.edge[1]+util.round(((eye.ltr and 1 or-1)*eye.size[1])/2+(irisSize/1.5))
   irisY=eye.edge[2]-util.round(eye.size[2]*0.6)
@@ -229,15 +243,6 @@ function Monosaw:draw()
     util.linexp(0,3,util.linlin(1,100,6,3,volume),3,blinkState))
     screen.fill()
   end
-
-  if self.message_level>0 and self.message~="" then
-    self.message_level=self.message_level-1
-    screen.aa(0)
-    screen.move(96,8)
-    screen.level(self.message_level)
-    screen.text_center(self.message)
-  end
-
 end
 
 return Monosaw
