@@ -117,7 +117,7 @@ function Acrostic:init(o)
   end
 
   -- setup softcut
-  self:softcut_init()
+  -- self:softcut_init()
 
   -- setup lattices
   if self.lattice~=nil then
@@ -163,7 +163,7 @@ function Acrostic:init(o)
       if self.first_beat then
         self.first_beat=false
         for i=1,6 do
-          softcut.position(i,self.o.minmax[i][2])
+          --softcut.position(i,self.o.minmax[i][2])
         end
       end
       if not table.is_empty(self.rec_queue) then
@@ -354,7 +354,7 @@ function Acrostic:softcut_init()
   }
   self.o.pos={}
 
-  softcut.reset()
+  --softcut.reset()
   audio.level_cut(1)
   audio.level_adc_cut(1)
   audio.level_eng_cut(1)
@@ -823,7 +823,7 @@ function Acrostic:draw()
       end
     end
     -- draw waveform positions
-    local pos=util.linlin(0,self.loop_length*clock.get_beat_sec(),1,53,self.o.pos[j])
+    local pos=0 --util.linlin(0,self.loop_length*clock.get_beat_sec(),1,53,self.o.pos[j])
     local xx=x+(pos-1)
     if params:get("sel_cut")==j and params:get("sel_selection")==4 then
       screen.level(0)
