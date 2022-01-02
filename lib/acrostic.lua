@@ -33,19 +33,6 @@ function Acrostic:init(o)
     self.midis[name].conn=midi.connect(dev.port)
   end
 
-  -- setup parameters
-  params:add{type="number",id="root_note",name="root note",min=0,max=127,default=48,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
-  params:set_action("root_note",function(x)
-    self:update_chords()
-  end)
-  self.available_chords={"I","ii","iii","IV","V","vi","VII","i","II","III","iv","v","VI","vii"}
-  local available_chords_default={6,4,1,5}
-  for i=1,4 do
-    params:add_option("chord"..i,"chord "..i,self.available_chords,available_chords_default[i])
-    params:set_action("chord"..i,function(x)
-      self:update_chords()
-    end)
-  end
 
   -- setup matrix
   self.matrix_base={}
@@ -65,6 +52,21 @@ function Acrostic:init(o)
     end
   end
 
+  -- setup parameters
+  params:add_group("chords",5)
+  params:add{type="number",id="root_note",name="root note",min=0,max=127,default=48,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
+  params:set_action("root_note",function(x)
+    self.do_update_chords=true
+  end)
+  self.available_chords={"I","ii","iii","IV","V","vi","VII","i","II","III","iv","v","VI","vii"}
+  local available_chords_default={6,4,1,5}
+  for i=1,4 do
+    params:add_option("chord"..i,"chord "..i,self.available_chords,available_chords_default[i])
+    params:set_action("chord"..i,function(x)
+      self.do_update_chords=true
+    end)
+  end
+  
   -- setup selections
   params:add{type="number",id="sel_selection",name="sel_selection",min=1,max=4,default=4}
   params:hide("sel_selection")
@@ -223,10 +225,10 @@ function Acrostic:init(o)
   for i=1,3 do
     self.pattern_measure_inter[i]=self.lattice:new_pattern{
       action=function(t)
-        if params:get("is_playing")==1 and math.random()<(params:get("prob_note2")*params:get("sel_cut")/6) and self.next_note~=nil and self.last_note~=nil then
-          print("next/last",self.next_note,self.last_note)
+        if params:get("is_playing")==1 and math.random()<(params:get("prob_note2")*params:get("sel_note")/6) and self.next_note~=nil and self.last_note~=nil then
+          --print("next/last",self.next_note,self.last_note)
           local note=MusicUtil.snap_note_to_array(util.round(self.next_note/2+self.last_note/2),scale)
-          print("play_note",note)
+          --rint("play_note",note)
           if note<10 then
             do return end
           end
@@ -258,15 +260,8 @@ function Acrostic:init(o)
   end
 
   params.action_read=function(filename,silent)
+    self:toggle_start(true)
     print("read",filename,silent)
-    for i=1,6 do
-      local fname=filename.."_"..i..".wav"
-      if util.file_exists(fname) then
-        print("loading "..fname)
-        softcut.buffer_read_mono(fname,0,self.o.minmax[i][2],-1,1,self.o.minmax[i][1],0,1)
-        self:softcut_render(i)
-      end
-    end
     local fname=filename..".json"
     local f=io.open(fname,"rb")
     local content=f:read("*all")
@@ -277,6 +272,21 @@ function Acrostic:init(o)
     end
     self:softcut_init()
     params:bang()
+    clock.run(function()
+      clock.sleep(0.5)
+      for k,v in pairs(data) do
+        self[k]=json.decode(v)
+      end
+      self:toggle_start()
+    end)
+    for i=1,6 do
+      local fname=filename.."_"..i..".wav"
+      if util.file_exists(fname) then
+        print("loading "..fname)
+        softcut.buffer_read_mono(fname,0,self.o.minmax[i][2],-1,1,self.o.minmax[i][1],0,1)
+        self:softcut_render(i)
+      end
+    end
   end
 
   self:minimize_transposition(true)
@@ -338,7 +348,7 @@ end
 
 function Acrostic:play_note(note)
   -- engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
-  print("play_note",note)
+  -- print("play_note",note)
   local hz=MusicUtil.note_num_to_freq(note)
   if hz~=nil and hz>20 and hz<18000 then
     engine.hz(hz)
@@ -347,7 +357,8 @@ function Acrostic:play_note(note)
   if crow~=nil then
     crow.output[2].action="{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
     crow.output[2]()
-    crow.output[1].volts=0.0372*note+0.527 --(note-24)/12
+    -- crow.output[1].volts=0.0372*note+0.527 --(note-24)/12
+    crow.output[1].volts=(note-24)/12
   end
   for name,m in pairs(self.midis) do
     if m.last_note~=nil then
@@ -756,6 +767,10 @@ function Acrostic:enc(k,d)
 end
 
 function Acrostic:update()
+  if self.do_update_chords~=nil and self.do_update_chords then 
+    self.do_update_chords=nil 
+    self:update_chords()
+  end
   if self.debounce_chord_selection>0 then
     self.debounce_chord_selection=self.debounce_chord_selection-1
   end

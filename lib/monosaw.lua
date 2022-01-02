@@ -110,11 +110,10 @@ end
 -- code generously provided @2994898
 -- original code:  https://github.com/monome-community/nc01-drone/blob/master/three-eyes.lua
 function Monosaw:draw()
-  screen.aa(2)
-
+  
   local irisSize=14
-  local blinkState=util.clamp(util.explin(80,8000,3.0,0,self.lpffreq[1]),0,3)
-  local blinkState2=util.clamp(util.explin(80,8000,3.0,0,self.lpffreq[2]),0,3)
+  local blinkState=util.clamp(util.explin(80,18000,3.0,0,self.lpffreq[1]),0,3.0)
+  local blinkState2=util.clamp(util.explin(80,18000,3.0,0,self.lpffreq[2]),0,3.0)
   local volume=util.linlin(0,1,10,100,params:get("monosaw_amp"))
   local brightness=10
   self:eyes(irisSize,blinkState,blinkState2,volume,brightness)
@@ -131,117 +130,75 @@ end
 
 
 function Monosaw:eyes(irisSize,blinkState,blinkState2,volume,brightness)
-  local eye={
-    ltr=true,
-    edge={60,40},
-  size={72,31}}
+  screen.aa(1)
 
-  irisX=eye.edge[1]+util.round(((eye.ltr and 1 or-1)*eye.size[1])/2+(irisSize/1.5))
-  irisY=eye.edge[2]-util.round(eye.size[2]*0.6)
+  local eyes={
+    {
+      ltr=true,
+      edge={60,40},
+      size={72,31},
+      blinkState=blinkState,
+    },
+    {
+      ltr=false,
+      edge={44,40},
+      size={73,32},
+      blinkState=blinkState2,
+    }
+  }
 
-  -- NOTE: pls disregard about these magics..
-  local magic_four=util.linlin(0,3,0,16,blinkState)
-  local magic_six=util.linlin(0,3,0,8,blinkState)
+  for ii, eye in ipairs(eyes) do 
+    local blinkState=eye.blinkState
+    irisX=eye.edge[1]+util.round(((eye.ltr and 1 or-1)*eye.size[1])/2+(irisSize/1.5))
+    irisY=eye.edge[2]-util.round(eye.size[2]*0.6)
 
-  screen.move(eye.edge[1],eye.edge[2])
-  screen.level(util.round(util.linlin(1,100,0,13,volume)))
-  screen.curve(
-    util.round(eye.edge[1]+((eye.ltr and 0.3 or-0.3)*eye.size[1])),
-    util.round(eye.edge[2]-(eye.size[2]*0.75)+magic_four),
-    util.round(eye.edge[1]+((eye.ltr and 0.75 or-0.75)*eye.size[1])),
-    util.round(eye.edge[2]-(eye.size[2]*0.65)+magic_four),
-    eye.edge[1]+((eye.ltr and 1 or-1)*eye.size[1]),
-  eye.edge[2])
-  screen.curve(
-    util.round(eye.edge[1]+((eye.ltr and 1 or-1)*eye.size[1])+((eye.ltr and-0.65 or 0.65)*eye.size[1])),
-    util.round(eye.edge[2]+(eye.size[2]*0.5625)-magic_six),
-    util.round(eye.edge[1]+((eye.ltr and 1 or-1)*eye.size[1])+((eye.ltr and-0.875 or 0.875)*eye.size[1])),
-    util.round(eye.edge[2]-(eye.size[2]*0.125)+blinkState-magic_six),
-    eye.edge[1],
-  eye.edge[2])
-  screen.stroke()
+    -- NOTE: pls disregard about these magics..
+    local magic_four=util.linlin(0,3.5,0,16,blinkState)
+    local magic_six=util.linlin(0,3.5,0,8,blinkState)
 
-  if blinkState<=2.8 then
-    screen.level(util.round(util.linlin(1,100,0,util.linlin(0,3,8,4,blinkState),volume)))
-    screen.arc(
-      util.round(irisX-(irisSize*0.4))+blinkState,
-      util.round(irisY+(irisSize*0.9))+blinkState,
-      irisSize,
-      -1*math.pi*util.linexp(0,3,0.22,0.01,blinkState),
-    math.pi*util.linexp(0,3,0.4,0.15,blinkState))
-    screen.move_rel(-1*util.linlin(0,3,0.01,20,blinkState),0)
-    screen.arc(
-      util.round(irisX-(irisSize*0.4))+blinkState,
-      util.round(irisY+(irisSize*0.9))+blinkState,
-      irisSize,
-      math.pi*util.linexp(0,3,0.65,0.9,blinkState),
-    math.pi*util.linexp(0,3,1.22,1.00,blinkState))
+    screen.move(eye.edge[1],eye.edge[2])
+    screen.level(util.round(util.linlin(1,100,0,13,volume)))
+    screen.curve(
+      util.round(eye.edge[1]+((eye.ltr and 0.3 or-0.3)*eye.size[1])),
+      util.round(eye.edge[2]-(eye.size[2]*0.75)+magic_four),
+      util.round(eye.edge[1]+((eye.ltr and 0.75 or-0.75)*eye.size[1])),
+      util.round(eye.edge[2]-(eye.size[2]*0.65)+magic_four),
+      eye.edge[1]+((eye.ltr and 1 or-1)*eye.size[1]),
+    eye.edge[2])
+    screen.curve(
+      util.round(eye.edge[1]+((eye.ltr and 1 or-1)*eye.size[1])+((eye.ltr and-0.65 or 0.65)*eye.size[1])),
+      util.round(eye.edge[2]+(eye.size[2]*0.5625)-magic_six),
+      util.round(eye.edge[1]+((eye.ltr and 1 or-1)*eye.size[1])+((eye.ltr and-0.875 or 0.875)*eye.size[1])),
+      util.round(eye.edge[2]-(eye.size[2]*0.125)+blinkState-magic_six),
+      eye.edge[1],
+    eye.edge[2])
     screen.stroke()
-  end
 
-  if blinkState<=2.8 then
-    screen.circle(
-      irisX-util.round(irisSize*0.4)+blinkState-5,
-      irisY+util.round(irisSize*0.85)+blinkState+5,
-    util.linexp(0,3,util.linlin(1,100,6,3,volume),3,blinkState))
-    screen.fill()
-  end
+    if blinkState<=2.8 then
+      screen.level(util.round(util.linlin(1,100,0,util.linlin(0,3,8,4,blinkState),volume)))
+      screen.arc(
+        util.round(irisX-(irisSize*0.4))+blinkState,
+        util.round(irisY+(irisSize*0.9))+blinkState,
+        irisSize,
+        -1*math.pi*util.linexp(0,3,0.22,0.01,blinkState*(ii==2 and 0.75 or 1)),
+      math.pi*util.linexp(0,3,0.4,0.15,blinkState)*(ii==2 and 0.75 or 1))
+      screen.move_rel(-1*util.linlin(0,3,0.01,20,blinkState),0)
+      screen.arc(
+        util.round(irisX-(irisSize*0.4))+blinkState,
+        util.round(irisY+(irisSize*0.9))+blinkState,
+        irisSize,
+        math.pi*util.linexp(0,3,0.65,0.9,blinkState),
+      math.pi*util.linexp(0,3,1.22,1.00,blinkState))
+      screen.stroke()
+    end
 
-  eye={
-    ltr=false,
-    edge={44,40},
-  size={73,32}}
-  blinkState=blinkState2
-
-  irisX=eye.edge[1]+util.round(((eye.ltr and 1 or-1)*eye.size[1])/2+(irisSize/1.5))
-  irisY=eye.edge[2]-util.round(eye.size[2]*0.6)
-
-  -- NOTE: pls disregard about these magics..
-  local magic_four=util.linlin(0,3,0,16,blinkState)
-  local magic_six=util.linlin(0,3,0,8,blinkState)
-
-  screen.move(eye.edge[1],eye.edge[2])
-  screen.level(util.round(util.linlin(1,100,0,13,volume)))
-  screen.curve(
-    util.round(eye.edge[1]+((eye.ltr and 0.3 or-0.3)*eye.size[1])),
-    util.round(eye.edge[2]-(eye.size[2]*0.75)+magic_four),
-    util.round(eye.edge[1]+((eye.ltr and 0.75 or-0.75)*eye.size[1])),
-    util.round(eye.edge[2]-(eye.size[2]*0.65)+magic_four),
-    eye.edge[1]+((eye.ltr and 1 or-1)*eye.size[1]),
-  eye.edge[2])
-  screen.curve(
-    util.round(eye.edge[1]+((eye.ltr and 1 or-1)*eye.size[1])+((eye.ltr and-0.65 or 0.65)*eye.size[1])),
-    util.round(eye.edge[2]+(eye.size[2]*0.5625)-magic_six),
-    util.round(eye.edge[1]+((eye.ltr and 1 or-1)*eye.size[1])+((eye.ltr and-0.875 or 0.875)*eye.size[1])),
-    util.round(eye.edge[2]-(eye.size[2]*0.125)+blinkState-magic_six),
-    eye.edge[1],
-  eye.edge[2])
-  screen.stroke()
-
-  if blinkState<=2.8 then
-    screen.level(util.round(util.linlin(1,100,0,util.linlin(0,3,8,4,blinkState),volume)))
-    screen.arc(
-      util.round(irisX-(irisSize*0.4))+blinkState,
-      util.round(irisY+(irisSize*0.9))+blinkState-2,
-      irisSize,
-      -1*math.pi*util.linexp(0,3,0.22,0.01,blinkState)*0.75,
-    math.pi*util.linexp(0,3,0.4,0.15,blinkState)*0.75)
-    screen.move_rel(-1*util.linlin(0,3,0.01,20,blinkState),3)
-    screen.arc(
-      util.round(irisX-(irisSize*0.4))+blinkState,
-      util.round(irisY+(irisSize*0.9))+blinkState,
-      irisSize,
-      math.pi*util.linexp(0,3,0.65,0.9,blinkState),
-    math.pi*util.linexp(0,3,1.22,1.00,blinkState))
-    screen.stroke()
-  end
-
-  if blinkState<=2.8 then
-    screen.circle(
-      irisX-util.round(irisSize*0.4)+blinkState-5,
-      irisY+util.round(irisSize*0.85)+blinkState+5,
-    util.linexp(0,3,util.linlin(1,100,6,3,volume),3,blinkState))
-    screen.fill()
+    if blinkState<=2.8 then
+      screen.circle(
+        irisX-util.round(irisSize*0.4)+blinkState-5,
+        irisY+util.round(irisSize*0.85)+blinkState+5,
+      util.linexp(0,3,util.linlin(1,100,6,3,volume),3,blinkState))
+      screen.fill()
+    end
   end
 end
 

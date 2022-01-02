@@ -23,9 +23,9 @@ function init()
   monosaw=monosaw_:new()
   monosaw:init()
 
-  params:add{type="number",id="loop_length",name="loop length (requires restart)",min=4,max=64,default=16}
+  params:add{type="number",id="loop_length",name="LOOP BEATS (needs restart)",min=4,max=64,default=16}
   -- write/read the loop length
-  filename_ll=_path.data.."acrostic/loop_length"
+  local filename_ll=_path.data.."acrostic/loop_length"
   params:set_action("loop_length",function(x)
     local file=io.open(filename_ll,"w+")
     io.output(file)
@@ -38,17 +38,17 @@ function init()
     local content=f:read("*all")
     f:close()
     if content~=nil then
-      params:set("loop_length",tonumber(content))
+      params:set("loop_length",tonumber(content),true)
     end
   end
 
   acrostic=acrostic_:new()
   acrostic:init({loop_length=params:get("loop_length")})
-  acrostic:update()
   params:set("chord1",6)
   params:set("chord2",4)
   params:set("chord3",5)
   params:set("chord4",3)
+  acrostic:update()
   acrostic:minimize_transposition(true)
   params:set("monosaw_amp",0.0)
 
@@ -121,12 +121,14 @@ end
 
 function redraw()
   screen.clear()
+  -- monosaw:eyes(14,4,0,100,10)
+  -- screen.update()
+  -- do return end
   if page==1 then
     acrostic:draw()
   elseif page==2 then
     monosaw:draw()
   elseif page==0 then 
-    screen.aa(1)
     monosaw:eyes(startup_eyes.irisSize,startup_eyes.blinkState,startup_eyes.blinkState2,startup_eyes.volume,startup_eyes.brightness)
   end
   screen.update()
