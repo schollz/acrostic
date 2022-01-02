@@ -4,7 +4,7 @@
 engine.name="Acrostic"
 
 global_shift=false
-page=2
+page=1
 
 
 function init()
@@ -35,12 +35,12 @@ function init()
   acrostic=acrostic_:new()
   acrostic:init({loop_length=params:get("loop_length")})
   acrostic:update()
-  params:set("chord1",3)
-  params:set("chord2",6)
-  params:set("chord3",4)
-  params:set("chord4",5)
+  params:set("chord1",6)
+  params:set("chord2",4)
+  params:set("chord3",5)
+  params:set("chord4",3)
   acrostic:minimize_transposition(true)
-
+  params:set("monosaw_amp",0)
 
 
   clock.run(function()
