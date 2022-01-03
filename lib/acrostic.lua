@@ -60,7 +60,7 @@ function Acrostic:init(o)
   end
 
   -- setup parameters
-  params:add_group("chords",9)
+  params:add_group("chords",17)
   params:add{type="number",id="root_note",name="root note",min=0,max=127,default=48,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
   params:set_action("root_note",function(x)
     self.do_update_chords=true
@@ -73,6 +73,11 @@ function Acrostic:init(o)
       params:add_option("chord"..page..i,"chord "..chord_num,self.available_chords,available_chords_default[i])
       params:set_action("chord"..page..i,function(x)
         self.do_update_chords=true
+      end)
+      params:add{type="number",id="beats"..page..i,name="beats ",min=0,max=16,default=4}
+      params:set_action("beats"..page..i,function(x)
+        self.do_update_beats=true
+        self.do_set_cut_to_1=true
       end)
       chord_num=chord_num+1
     end
@@ -87,7 +92,7 @@ function Acrostic:init(o)
   end)
   params:add{type="number",id="sel_chord",name="sel_chord",min=1,max=4,default=1}
   params:hide("sel_chord")
-  params:add{type="number",id="current_chord",name="current_chord",min=1,max=8,default=8,wrap=true}
+  params:add{type="number",id="current_chord",name="current_chord",min=1,max=8,default=1,wrap=true}
   params:hide("current_chord")
   params:add{type="number",id="sel_note",name="sel_note",min=1,max=6,default=1}
   params:hide("sel_note")
@@ -149,6 +154,7 @@ function Acrostic:init(o)
   if self.lattice~=nil then
     self.lattice:destroy()
   end
+  self.current_chord_beat=0
   self.lattice=lattice_:new()
   self.rec_queue={}
   self.recorded={false,false,false,false,false,false}
@@ -208,40 +214,19 @@ function Acrostic:init(o)
 
   self.pattern_measure=self.lattice:new_pattern{
     action=function(t)
-      params:delta("current_chord",params:get("do_reverse")==1 and 1 or -1)
-      --print("current_chord",params:get("current_chord"))
-      if params:get("is_playing")==1 then
-        if self.debounce_chord_selection==0 then
-          local page=self.page 
-          self.page=params:get("current_chord")>4 and 2 or 1
-          if page~=self.page then 
-            self:msg("page "..self.page)
-          end
-          params:set("sel_chord",(params:get("current_chord")-1)%4+1)
+      local result=false
+      local i=0
+      while result==false do 
+        result=self:iterate_chord()
+        i=i+1 
+        if i==8 then 
+          result=true 
         end
-        print(params:get("sel_chord"))
-        local note=self.matrix_final[self.page][params:get("sel_note")][params:get("sel_chord")]
-        if note<10 then
-          do return end
-        end
-        self:play_note(note)
-        if params:get("random_mode")==2 then
-          -- randomize next position
-          params:delta("current_chord",math.random(0,2)-1)
-          params:set("sel_chord",params:get("current_chord"))
-          params:delta("sel_note",math.random(0,2)-1)
-        end
-        local sel_chord_next=params:get("sel_chord")+1
-        if sel_chord_next>4 then
-          sel_chord_next=1
-        end
-        self.next_note=self.matrix_final[self.page][params:get("sel_note")][sel_chord_next]
       end
-      -- engine.bandpass_wet(1)
-      -- engine.bandpass_rq(0.1)
-      -- engine.bandpass_hz(MusicUtil.note_num_to_freq(note))
+      local current_chord_mod4=(params:get("current_chord")-1)%4+1
+      print("current_chord:"..params:get("current_chord")," current beat: "..self.current_chord_beat.."/"..params:get("beats"..self.page..current_chord_mod4))    
     end,
-    division=1*self.loop_length/16,
+    division=1/4,
   }
   self.pattern_measure_inter={}
   local scale=MusicUtil.generate_scale_of_length(params:get("root_note"),"Major",120)
@@ -321,9 +306,59 @@ function Acrostic:init(o)
   self.lattice:start()
 end
 
+function Acrostic:iterate_chord()
+  local current_chord_mod4=(params:get("current_chord")-1)%4+1
+  self.current_chord_beat=self.current_chord_beat+1 
+  if self.current_chord_beat<=params:get("beats"..self.page..current_chord_mod4) then 
+    do return true end
+  end
+  -- iterate chord
+  params:delta("current_chord",params:get("do_reverse")==1 and 1 or -1)
+  self.current_chord_beat=1
+  current_chord_mod4=(params:get("current_chord")-1)%4+1
+  if params:get("is_playing")==1 then
+    if self.debounce_chord_selection==0 then
+      local page=self.page 
+      self.page=params:get("current_chord")>4 and 2 or 1
+      if page~=self.page then 
+        self:msg("page "..self.page)
+      end
+      if self.page==1 and current_chord_mod4==1 and self.do_set_cut_to_1~=nil and self.do_set_cut_to_1 then 
+        self.do_set_cut_to_1=nil
+        print("resetting cuts")
+        for i=1,6 do
+          softcut.position(i,self.o.minmax[i][2])
+        end
+      end
+      params:set("sel_chord",current_chord_mod4)
+    end
+    if params:get("beats"..self.page..current_chord_mod4)==0 then 
+      do return false end 
+    end
+    local note=self.matrix_final[self.page][params:get("sel_note")][params:get("sel_chord")]
+    if note<10 then
+      do return end
+    end
+    self:play_note(note)
+    if params:get("random_mode")==2 then
+      -- randomize next position
+      params:delta("current_chord",math.random(0,2)-1)
+      params:set("sel_chord",params:get("current_chord"))
+      params:delta("sel_note",math.random(0,2)-1)
+    end
+    local sel_chord_next=params:get("sel_chord")+1
+    if sel_chord_next>4 then
+      sel_chord_next=1
+    end
+    self.next_note=self.matrix_final[self.page][params:get("sel_note")][sel_chord_next]
+  end
+  return true
+end
+
 function Acrostic:set_page(p)
   self.page=p 
   self:msg("page "..p)
+  self.debounce_chord_selection=20
 end
 
 function Acrostic:msg(s)
@@ -351,6 +386,7 @@ function Acrostic:toggle_start(stop_all)
     params:set("is_playing",0)
   else
     params:delta("is_playing",1)
+    self.current_chord_beat=100
     if params:get("is_playing")==1 then
       if self.softcut_stopped then
         self:msg("begin all")
@@ -580,6 +616,19 @@ function Acrostic:minimize_transposition(changes)
   self:update_final()
 end
 
+function Acrostic:update_beats()
+  local total_beats=0
+  for page=1,2 do 
+    for chord=1,4 do 
+      total_beats=total_beats+params:get("beats"..page..chord)
+    end
+  end
+  self.loop_length=total_beats
+  for i=1,6 do 
+    softcut.loop_end(i,self.o.minmax[i][2]+self.loop_length*clock.get_beat_sec())
+  end
+end
+
 function Acrostic:update_chords()
   for chord=1,4 do
     local chord_notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..self.page..chord)])
@@ -777,6 +826,7 @@ function Acrostic:enc(k,d)
     if params:get("sel_selection")==1 then
       params:delta("sel_chord",d)
       self.debounce_chord_selection=20
+      self.do_set_cut_to_1=true
     elseif params:get("sel_selection")==4 then
       params:delta("sel_cut",d)
     else
@@ -788,6 +838,7 @@ function Acrostic:enc(k,d)
     if params:get("sel_selection")==1 then
       params:delta("chord"..self.page..params:get("sel_chord"),d)
       self.debounce_chord_selection=20
+      self.do_set_cut_to_1=true
     elseif params:get("sel_selection")==4 then
       params:delta("level"..params:get("sel_cut"),d)
       print("lvl: "..params:get("level"..params:get("sel_cut")))
@@ -796,6 +847,7 @@ function Acrostic:enc(k,d)
       params:delta("sel_chord",d)
       params:set("sel_selection",2)
       self.debounce_chord_selection=20
+      self.do_set_cut_to_1=true
     end
   end
 end
@@ -804,6 +856,10 @@ function Acrostic:update()
   if self.do_update_chords~=nil and self.do_update_chords then 
     self.do_update_chords=nil 
     self:update_chords()
+  end
+  if self.do_update_beats~=nil and self.do_update_beats then 
+    self.do_update_beats=nil 
+    self:update_beats()
   end
   if self.debounce_chord_selection>0 then
     self.debounce_chord_selection=self.debounce_chord_selection-1
@@ -926,7 +982,7 @@ function Acrostic:draw()
 
 
   if self.message_level>0 and self.message~="" then
-    self.message_level=self.message_level-1
+    self.message_level=self.message_level-2
     screen.move(100,8)
     screen.level(self.message_level)
     screen.text_center(self.message)
