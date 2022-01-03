@@ -5,43 +5,71 @@ acrostic.
 ![img](acrostic)
 
 
-## Requirements
+# Requirements
 
 - norns
 
-## Documentation
+# Documentation
 
-- E1 changes page
+
+## installation
+
+requires latest softcut and a unrelease norns build.
+
+installation:
+
+```bash
+~/norns/stop.sh; rm -rf ~/norns; \
+git clone git@github.com:schollz/norns && \
+cd ~/norns && git checkout sc-rec-once && \
+git submodule update --init --recursive && \
+rm -rf ~/norns/crone/softcut && \
+git clone git clone https://github.com/monome/softcut-lib ~/norns/crone/softcut && \
+cd ~/norns/crone/softcut && git submodule update --init --recursive && \
+./waf configure && \
+./waf && \
+cd ~/norns && \
+./waf configure --enable-ableton-link && \
+./waf build
+```
+
+## sequencer
+
+- K1+E1 changes page
 - K1 shifts
+- E1 changes context
 
-### chord selection
+### chord context
 
-- E2 select chord position
+- E2 or K1+E2 select chord position
 - E3 change chord
-- K2 start/stop
-- K3 transpose chords
+- K1+K3 change beats of chord
+- K2 transpose chords
+- K3 start/stop
 
-### chord manipulation
+### note/phrase context
 
-- E2 select chord notes
-- E3 rotate notes
-- K2/K3 lower/raise octave
-- K1+K3 reset octaves
+- E2 select notes in chord
+- E3 select phrase
+- K1+E2 rotate notes in chord
+- K1+E3 rotate phrase
+- K2/K3 lower/raise octave of currently selected
+- K1+K3 reset octaves of currently selected
 
-### sequence arrangement
-
-- E2 select sequence notes
-- E3 rotate notes
-- K2/K3 lower/raise octave
-- K1+K3 reset octaves
-
-### sampling
+### sampling context
 
 - E2 select sample
-- E3 change level
-- K2/K3 queue recording
+- K3 queues recording
+- K3 dequeues recording
 - K1+K2 erase recording
-- K1+K3 queue all recordings
+- K1+K3 queue unrecorded samples
+- E3 change level
+- K1+E2 changes pre
+- K1+E3 chagnes rec
+
+## leshy
+
+???????
 
 ## Install
 

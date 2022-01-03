@@ -64,6 +64,7 @@ function Acrostic:init(o)
   params:add_option("number_of_chords","num chords",{4,8},1)
   params:set_action("number_of_chords",function(x)
     self.do_update_beats=true
+    self.do_set_cut_to_1=true
   end)
   params:add{type="number",id="root_note",name="root note",min=0,max=127,default=48,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
   params:set_action("root_note",function(x)
@@ -194,29 +195,6 @@ function Acrostic:init(o)
     end,
     division=1/4,
   }
-  self.first_beat=true
-  self.pattern_phrase=self.lattice:new_pattern{
-    action=function(t)
-      --print("phrase")
-      if self.first_beat then
-        self.first_beat=false
-        for i=1,6 do
-          softcut.position(i,self.o.minmax[i][2])
-        end
-      end
-      if not table.is_empty(self.rec_queue) then
-        if params:get("sel_note")~=self.rec_queue[1].i then
-          if (self.rec_queue[1].left~=nil and self.rec_queue[1].left>1) or self.rec_queue[1].left==nil then
-            params:set("sel_note",self.rec_queue[1].i)
-          end
-        end
-      end
-      -- if math.random()<0.25 then
-      --   self.softcut_goto0()
-      -- end
-    end,
-    division=4*self.loop_length/16,
-  }
 
   self.pattern_measure=self.lattice:new_pattern{
     action=function(t)
@@ -317,46 +295,57 @@ function Acrostic:iterate_chord()
   params:delta("current_chord",params:get("do_reverse")==1 and 1 or -1)
   self.current_chord_beat=1
   current_chord_mod4=(params:get("current_chord")-1)%4+1
-  if params:get("is_playing")==1 then
-    if self.debounce_chord_selection==0 then
-      local page=self.page 
-      if params:get("number_of_chords")>1 then
-        self.page=params:get("current_chord")>4 and 2 or 1
-      else
-        self.page=1
+  if params:get("is_playing")~=1 then
+    do return true end
+  end
+  if self.debounce_chord_selection==0 then
+    local page=self.page 
+    if params:get("number_of_chords")>1 then
+      self.page=params:get("current_chord")>4 and 2 or 1
+    else
+      self.page=1
+    end
+    if page~=self.page then 
+      self:msg("page "..self.page)
+    end
+    if self.page==1 and current_chord_mod4==1 and self.do_set_cut_to_1~=nil and self.do_set_cut_to_1 then 
+      self.do_set_cut_to_1=nil
+      print("resetting cuts")
+      for i=1,6 do
+        softcut.position(i,self.o.minmax[i][2])
       end
-      if page~=self.page then 
-        self:msg("page "..self.page)
-      end
-      if self.page==1 and current_chord_mod4==1 and self.do_set_cut_to_1~=nil and self.do_set_cut_to_1 then 
-        self.do_set_cut_to_1=nil
-        print("resetting cuts")
-        for i=1,6 do
-          softcut.position(i,self.o.minmax[i][2])
+    end
+    params:set("sel_chord",current_chord_mod4)
+
+    if not table.is_empty(self.rec_queue) then
+      if params:get("sel_note")~=self.rec_queue[1].i then
+        if (self.rec_queue[1].left~=nil and self.rec_queue[1].left>1) or self.rec_queue[1].left==nil then
+          if current_chord_mod4==1 then 
+            params:set("sel_note",self.rec_queue[1].i)
+          end
         end
       end
-      params:set("sel_chord",current_chord_mod4)
     end
-    if params:get("beats"..self.page..current_chord_mod4)==0 then 
-      do return false end 
-    end
-    local note=self.matrix_final[self.page][params:get("sel_note")][params:get("sel_chord")]
-    if note<10 then
-      do return end
-    end
-    self:play_note(note)
-    if params:get("random_mode")==2 then
-      -- randomize next position
-      params:delta("current_chord",math.random(0,2)-1)
-      params:set("sel_chord",params:get("current_chord"))
-      params:delta("sel_note",math.random(0,2)-1)
-    end
-    local sel_chord_next=params:get("sel_chord")+1
-    if sel_chord_next>4 then
-      sel_chord_next=1
-    end
-    self.next_note=self.matrix_final[self.page][params:get("sel_note")][sel_chord_next]
   end
+  if params:get("beats"..self.page..current_chord_mod4)==0 then 
+    do return false end 
+  end
+  local note=self.matrix_final[self.page][params:get("sel_note")][params:get("sel_chord")]
+  if note<10 then
+    do return end
+  end
+  self:play_note(note)
+  if params:get("random_mode")==2 then
+    -- randomize next position
+    params:delta("current_chord",math.random(0,2)-1)
+    params:set("sel_chord",params:get("current_chord"))
+    params:delta("sel_note",math.random(0,2)-1)
+  end
+  local sel_chord_next=params:get("sel_chord")+1
+  if sel_chord_next>4 then
+    sel_chord_next=1
+  end
+  self.next_note=self.matrix_final[self.page][params:get("sel_note")][sel_chord_next]
   return true
 end
 
