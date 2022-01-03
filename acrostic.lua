@@ -4,7 +4,7 @@
 engine.name="Acrostic"
 
 global_shift=false
-page=0
+global_page=0
 startup_eyes={
   irisSize=14,
   blinkState=3,
@@ -68,8 +68,8 @@ function init()
         startup_eyes.volume=util.linlin(0,show_startup_screen_max,10,100,show_startup_screen)
     
         show_startup_screen=show_startup_screen+1 
-        if show_startup_screen==show_startup_screen_max+5 and page==0 then 
-          page=1 
+        if show_startup_screen==show_startup_screen_max+5 and global_page==0 then 
+          global_page=1 
         end
       end
       clock.sleep(1/10)
@@ -105,22 +105,25 @@ function key(k,z)
     end
     do return end
   end
-  if page==1 then
+  if global_page==1 or global_page==2 then
     acrostic:key(k,z)
-  elseif page==2 then
+  elseif global_page==3 then
     monosaw:key(k,d)
   end
 end
 
 function enc(k,d)
   if global_shift and k==1 then
-    -- change page
-    page=util.clamp(page+d,1,2)
+    -- change global_page
+    global_page=util.clamp(global_page+d,1,3)
+    if global_page<3 then 
+      acrostic:set_page(global_page)
+    end
     do return end
   end
-  if page==1 then
+  if global_page==1 or global_page==2 then
     acrostic:enc(k,d)
-  elseif page==2 then
+  elseif global_page==3 then
     monosaw:enc(k,d)
   end
 end
@@ -130,11 +133,11 @@ function redraw()
   -- monosaw:eyes(14,4,0,100,10)
   -- screen.update()
   -- do return end
-  if page==1 then
+  if global_page==1 or global_page==2 then
     acrostic:draw()
-  elseif page==2 then
+  elseif global_page==3 then
     monosaw:draw()
-  elseif page==0 then 
+  elseif global_page==0 then 
     monosaw:eyes(startup_eyes.irisSize,startup_eyes.blinkState,startup_eyes.blinkState2,startup_eyes.volume,startup_eyes.brightness)
   end
   screen.update()

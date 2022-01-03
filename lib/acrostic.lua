@@ -39,32 +39,43 @@ function Acrostic:init(o)
   self.matrix_octave={}
   self.matrix_final={}
   self.matrix_name={}
-  for note=1,6 do
-    self.matrix_base[note]={}
-    self.matrix_octave[note]={}
-    self.matrix_final[note]={}
-    self.matrix_name[note]={}
-    for chord=1,4 do
-      self.matrix_base[note][chord]=0
-      self.matrix_octave[note][chord]=0
-      self.matrix_final[note][chord]=0
-      self.matrix_name[note][chord]=""
+  self.page=1
+  for page=1,2 do 
+    self.matrix_base[page]={}
+    self.matrix_octave[page]={}
+    self.matrix_final[page]={}
+    self.matrix_name[page]={}
+    for note=1,6 do
+      self.matrix_base[page][note]={}
+      self.matrix_octave[page][note]={}
+      self.matrix_final[page][note]={}
+      self.matrix_name[page][note]={}
+      for chord=1,4 do
+        self.matrix_base[page][note][chord]=0
+        self.matrix_octave[page][note][chord]=0
+        self.matrix_final[page][note][chord]=0
+        self.matrix_name[page][note][chord]=""
+      end
     end
   end
 
   -- setup parameters
-  params:add_group("chords",5)
+  params:add_group("chords",9)
   params:add{type="number",id="root_note",name="root note",min=0,max=127,default=48,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
   params:set_action("root_note",function(x)
     self.do_update_chords=true
   end)
   self.available_chords={"I","ii","iii","IV","V","vi","VII","i","II","III","iv","v","VI","vii"}
   local available_chords_default={6,4,1,5}
-  for i=1,4 do
-    params:add_option("chord"..i,"chord "..i,self.available_chords,available_chords_default[i])
-    params:set_action("chord"..i,function(x)
-      self.do_update_chords=true
-    end)
+  local chord_num=1
+  for page=1,2 do
+    for i=1,4 do
+      params:add_option("chord"..page..i,"chord "..chord_num,self.available_chords,available_chords_default[i])
+      params:set_action("chord"..page..i,function(x)
+        self.do_update_chords=true
+      end)
+      chord_num=chord_num+1
+    end
   end
   
   -- setup selections
@@ -76,7 +87,7 @@ function Acrostic:init(o)
   end)
   params:add{type="number",id="sel_chord",name="sel_chord",min=1,max=4,default=1}
   params:hide("sel_chord")
-  params:add{type="number",id="current_chord",name="current_chord",min=1,max=4,default=4,wrap=true}
+  params:add{type="number",id="current_chord",name="current_chord",min=1,max=8,default=8,wrap=true}
   params:hide("current_chord")
   params:add{type="number",id="sel_note",name="sel_note",min=1,max=6,default=1}
   params:hide("sel_note")
@@ -201,9 +212,15 @@ function Acrostic:init(o)
       --print("current_chord",params:get("current_chord"))
       if params:get("is_playing")==1 then
         if self.debounce_chord_selection==0 then
-          params:set("sel_chord",params:get("current_chord"))
+          local page=self.page 
+          self.page=params:get("current_chord")>4 and 2 or 1
+          if page~=self.page then 
+            self:msg("page "..self.page)
+          end
+          params:set("sel_chord",(params:get("current_chord")-1)%4+1)
         end
-        local note=self.matrix_final[params:get("sel_note")][params:get("sel_chord")]
+        print(params:get("sel_chord"))
+        local note=self.matrix_final[self.page][params:get("sel_note")][params:get("sel_chord")]
         if note<10 then
           do return end
         end
@@ -218,7 +235,7 @@ function Acrostic:init(o)
         if sel_chord_next>4 then
           sel_chord_next=1
         end
-        self.next_note=self.matrix_final[params:get("sel_note")][sel_chord_next]
+        self.next_note=self.matrix_final[self.page][params:get("sel_note")][sel_chord_next]
       end
       -- engine.bandpass_wet(1)
       -- engine.bandpass_rq(0.1)
@@ -295,10 +312,18 @@ function Acrostic:init(o)
     end
   end
 
+  self.page=2
+  self:minimize_transposition(true)
+  self.page=1
   self:minimize_transposition(true)
   params:set("is_playing",1)
   self.softcut_stopped=false
   self.lattice:start()
+end
+
+function Acrostic:set_page(p)
+  self.page=p 
+  self:msg("page "..p)
 end
 
 function Acrostic:msg(s)
@@ -474,7 +499,7 @@ function Acrostic:minimize_transposition(changes)
   local chords={}
   local chord_notes={}
   for chord=1,4 do
-    local notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..chord)])
+    local notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..self.page..chord)])
     chord_notes[chord]=table.clone(notes)
     table.rotatex(notes,math.random(0,3))
     table.insert(chords,table.clone(notes))
@@ -501,63 +526,63 @@ function Acrostic:minimize_transposition(changes)
   end
   -- print("chords")
   -- table.print_matrix(chords)
-  self.matrix_octave={}
-  self.matrix_base={}
+  self.matrix_octave[self.page]={}
+  self.matrix_base[self.page]={}
   for note=1,6 do
-    self.matrix_octave[note]={}
-    self.matrix_base[note]={}
+    self.matrix_octave[self.page][note]={}
+    self.matrix_base[self.page][note]={}
     for chord=1,4 do
-      self.matrix_octave[note][chord]=0
-      self.matrix_base[note][chord]=chord_notes[chord][1]%12+36
+      self.matrix_octave[self.page][note][chord]=0
+      self.matrix_base[self.page][note][chord]=chord_notes[chord][1]%12+36
     end
   end
   for chord=1,4 do
     for note,note_midi in ipairs(chords[chord]) do
-      self.matrix_base[note+1][chord]=note_midi
+      self.matrix_base[self.page][note+1][chord]=note_midi
     end
     local undone_note=#chords[chord]+2
     for i=undone_note,6 do
-      self.matrix_base[i][chord]=chords[chord][math.random(1,#chords[chord])]+12
+      self.matrix_base[self.page][i][chord]=chords[chord][math.random(1,#chords[chord])]+12
     end
   end
-  -- print("self.matrix_base")
-  -- table.print_matrix(self.matrix_base)
+  -- print("self.matrix_base[self.page]")
+  -- table.print_matrix(self.matrix_base[self.page])
   self:update_final()
   -- print("update1")
-  -- table.print_matrix(self.matrix_name)
+  -- table.print_matrix(self.matrix_name[self.page])
 
   local averages={}
   for note=1,6 do
     for i=1,4 do
-      self.matrix_base[note][i]=self.matrix_final[note][i]
-      self.matrix_octave[note][i]=0
+      self.matrix_base[self.page][note][i]=self.matrix_final[self.page][note][i]
+      self.matrix_octave[self.page][note][i]=0
     end
-    table.insert(averages,{table.average(self.matrix_final[note]),note})
+    table.insert(averages,{table.average(self.matrix_final[self.page][note]),note})
   end
   table.sort(averages,function(a,b)
     return a[1]<b[1]
   end)
-  local foo=table.clone(self.matrix_base)
+  local foo=table.clone(self.matrix_base[self.page])
   for i,v in ipairs(averages) do
     if i==1 then
       for chord=1,4 do
-        self.matrix_base[i][chord]=chord_notes[chord][1]%12+36
+        self.matrix_base[self.page][i][chord]=chord_notes[chord][1]%12+36
       end
     else
-      self.matrix_base[i]=foo[v[2]]
+      self.matrix_base[self.page][i]=foo[v[2]]
     end
   end
-  self.matrix_octave[2]={12,12,12,12}
-  self.matrix_octave[3]={12,12,12,12}
-  self.matrix_octave[4]={12,12,12,12}
-  self.matrix_octave[5]={12,12,12,12}
-  self.matrix_octave[6]={24,24,24,24}
+  self.matrix_octave[self.page][2]={12,12,12,12}
+  self.matrix_octave[self.page][3]={12,12,12,12}
+  self.matrix_octave[self.page][4]={12,12,12,12}
+  self.matrix_octave[self.page][5]={12,12,12,12}
+  self.matrix_octave[self.page][6]={24,24,24,24}
   self:update_final()
 end
 
 function Acrostic:update_chords()
   for chord=1,4 do
-    local chord_notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..chord)])
+    local chord_notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..self.page..chord)])
     local notes={}
     for _,note in ipairs(chord_notes) do
       table.insert(notes,note)
@@ -573,21 +598,23 @@ function Acrostic:update_chords()
       end
     end
     for i,note in ipairs(notes) do
-      self.matrix_base[i][chord]=note
+      self.matrix_base[self.page][i][chord]=note
     end
   end
   self:update_final()
 end
 
 function Acrostic:update_final()
-  self.matrix_final={}
-  self.matrix_name={}
-  for note=1,6 do
-    self.matrix_final[note]={}
-    self.matrix_name[note]={}
-    for chord=1,4 do
-      self.matrix_final[note][chord]=self.matrix_base[note][chord]+self.matrix_octave[note][chord]
-      self.matrix_name[note][chord]=MusicUtil.note_num_to_name(self.matrix_final[note][chord],true)
+  for page=1,2 do 
+    self.matrix_final[page]={}
+    self.matrix_name[page]={}
+    for note=1,6 do
+      self.matrix_final[page][note]={}
+      self.matrix_name[page][note]={}
+      for chord=1,4 do
+        self.matrix_final[page][note][chord]=self.matrix_base[page][note][chord]+self.matrix_octave[page][note][chord]
+        self.matrix_name[page][note][chord]=MusicUtil.note_num_to_name(self.matrix_final[page][note][chord],true)
+      end
     end
   end
 end
@@ -595,7 +622,7 @@ end
 -- change_octave changes the octave for all four columns
 function Acrostic:change_octave(row,d)
   for chord=1,4 do
-    self.matrix_octave[row][chord]=self.matrix_octave[row][chord]+d*12
+    self.matrix_octave[self.page][row][chord]=self.matrix_octave[self.page][row][chord]+d*12
   end
 
   self:update_final()
@@ -606,13 +633,13 @@ function Acrostic:change_chord(chord,d)
   d=d*-1
   local t={}
   for note=1,6 do
-    table.insert(t,self.matrix_final[note][chord])
+    table.insert(t,self.matrix_final[self.page][note][chord])
   end
 
   table.rotatex(t,d)
   for note=1,6 do
-    self.matrix_base[note][chord]=t[note]
-    self.matrix_octave[note][chord]=0
+    self.matrix_base[self.page][note][chord]=t[note]
+    self.matrix_octave[self.page][note][chord]=0
   end
 
   self:update_final()
@@ -623,13 +650,13 @@ function Acrostic:change_note(note,d)
   d=d*-1
   local t={}
   for chord=1,4 do
-    table.insert(t,self.matrix_final[note][chord])
+    table.insert(t,self.matrix_final[self.page][note][chord])
   end
 
   table.rotatex(t,d)
   for chord=1,4 do
-    self.matrix_base[note][chord]=t[chord]
-    self.matrix_octave[note][chord]=0
+    self.matrix_base[self.page][note][chord]=t[chord]
+    self.matrix_octave[self.page][note][chord]=0
   end
 
   self:update_final()
@@ -655,16 +682,16 @@ function Acrostic:key(k,z)
   if params:get("sel_selection")==2 then
     if global_shift then
       if k==3 then
-        local note=self.matrix_final[1][params:get("sel_chord")]
+        local note=self.matrix_final[self.page][1][params:get("sel_chord")]
         local octave=(note-(note%12))/12
         for note=1,6 do
-          self.matrix_octave[note][params:get("sel_chord")]=0
-          self.matrix_base[note][params:get("sel_chord")]=(self.matrix_base[note][params:get("sel_chord")]%12)+octave*12
+          self.matrix_octave[self.page][note][params:get("sel_chord")]=0
+          self.matrix_base[self.page][note][params:get("sel_chord")]=(self.matrix_base[self.page][note][params:get("sel_chord")]%12)+octave*12
         end
       end
     else
       for note=1,6 do
-        self.matrix_octave[note][params:get("sel_chord")]=self.matrix_octave[note][params:get("sel_chord")]+12*(k*2-5)
+        self.matrix_octave[self.page][note][params:get("sel_chord")]=self.matrix_octave[self.page][note][params:get("sel_chord")]+12*(k*2-5)
       end
     end
     self:update_final()
@@ -672,16 +699,16 @@ function Acrostic:key(k,z)
   if params:get("sel_selection")==3 then
     if global_shift then
       if k==3 then
-        local note=self.matrix_final[params:get("sel_note")][1]
+        local note=self.matrix_final[self.page][params:get("sel_note")][1]
         local octave=(note-(note%12))/12
         for chord=1,4 do
-          self.matrix_octave[params:get("sel_note")][chord]=0
-          self.matrix_base[params:get("sel_note")][chord]=(self.matrix_base[params:get("sel_note")][chord]%12)+octave*12
+          self.matrix_octave[self.page][params:get("sel_note")][chord]=0
+          self.matrix_base[self.page][params:get("sel_note")][chord]=(self.matrix_base[self.page][params:get("sel_note")][chord]%12)+octave*12
         end
       end
     else
       for chord=1,4 do
-        self.matrix_octave[params:get("sel_note")][chord]=self.matrix_octave[params:get("sel_note")][chord]+12*(k*2-5)
+        self.matrix_octave[self.page][params:get("sel_note")][chord]=self.matrix_octave[self.page][params:get("sel_note")][chord]+12*(k*2-5)
       end
     end
     self:update_final()
@@ -759,7 +786,7 @@ function Acrostic:enc(k,d)
     end
   elseif k==3 then
     if params:get("sel_selection")==1 then
-      params:delta("chord"..params:get("sel_chord"),d)
+      params:delta("chord"..self.page..params:get("sel_chord"),d)
       self.debounce_chord_selection=20
     elseif params:get("sel_selection")==4 then
       params:delta("level"..params:get("sel_cut"),d)
@@ -809,7 +836,7 @@ function Acrostic:draw()
     else
       screen.level(3)
     end
-    local chord=self.available_chords[params:get("chord"..i)]
+    local chord=self.available_chords[params:get("chord"..self.page..i)]
     screen.move(8+(i-1)*19,7)
     screen.text_center(chord)
   end
@@ -828,7 +855,7 @@ function Acrostic:draw()
     local yy=8
     local notes={}
     for j=1,6 do
-      table.insert(notes,self.matrix_name[j][i])
+      table.insert(notes,self.matrix_name[self.page][j][i])
     end
     if i==params:get("sel_chord") then
       screen.level(highlight_col and high or 4)
