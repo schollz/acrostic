@@ -34,25 +34,21 @@ Engine_Acrostic : CroneEngine {
 			lpfmin=Lag.kr(lpfmin);
 			lpfadj=Lag.kr(lpfadj);
 			lpflfo=Lag.kr(lpflfo);
-			snd=Pan2.ar(Pulse.ar((note-12).midicps,LinLin.kr(LFTri.kr(0.5),-1,1,0.2,0.8))/12*amp);
-			snd=snd+{
+			snd={
 				var osc1,osc2,env,snd;
-				snd=LFTri.ar((note+(Rand(-1.0,1.0)*detuning)).midicps);
-				//snd=LPF.ar(snd,LinExp.kr(SinOsc.kr(rrand(1/30,1/10),rrand(0,2*pi)),-1,1,200,12000));
+				snd=Saw.ar((note+(Rand(-1.0,1.0)*detuning)).midicps);
 				snd=DelayC.ar(snd, rrand(0.01,0.03), LFNoise1.kr(Rand(5,10),0.01,0.02)/15 );
 				Pan2.ar(snd,VarLag.kr(LFNoise0.kr(1/3),3,warp:\sine))/4
 			};
 			snd=snd+{
 				var osc1,osc2,env,snd;
-				snd=SawDPW.ar((note+(Rand(-1.0,1.0)*detuning)).midicps/2);
-				//snd=LPF.ar(snd,LinExp.kr(SinOsc.kr(rrand(1/30,1/10),rrand(0,2*pi)),-1,1,200,12000));
+				snd=Saw.ar((note+(Rand(-1.0,1.0)*detuning)).midicps/2);
 				snd=DelayC.ar(snd, rrand(0.01,0.03), LFNoise1.kr(Rand(5,10),0.01,0.02)/15 );
 				Pan2.ar(snd,VarLag.kr(LFNoise0.kr(1/3),3,warp:\sine))/12
 			};
 			snd=snd+{
 				var osc1,osc2,env,snd;
-				snd=SawDPW.ar((note+(Rand(-1.0,1.0)*detuning)).midicps*2);
-				//snd=LPF.ar(snd,LinExp.kr(SinOsc.kr(rrand(1/30,1/10),rrand(0,2*pi)),-1,1,200,12000));
+				snd=Saw.ar((note+(Rand(-1.0,1.0)*detuning)).midicps*2);
 				snd=DelayC.ar(snd, rrand(0.01,0.03), LFNoise1.kr(Rand(5,10),0.01,0.02)/15 );
 				Pan2.ar(snd,VarLag.kr(LFNoise0.kr(1/3),3,warp:\sine))/24
 			};
@@ -81,6 +77,8 @@ Engine_Acrostic : CroneEngine {
 			LocalOut.ar(snd*feedback);
 			
 			snd=HPF.ar(snd,20);
+			//snd = snd + (NHHall.ar(snd, 8, modDepth: 1) * -15.dbamp);
+			snd = DelayC.ar(snd, 0.2, SinOsc.ar(0.3, [0, pi]).linlin(-1,1, 0, 0.001));
 			Out.ar(0,snd*amp);
 		}).add;
 
