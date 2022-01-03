@@ -29,15 +29,21 @@ function init()
   -- params:set("chord2",3)
   -- params:set("chord3",6)
   -- params:set("chord4",4)
-  params:set("chord11",1)
-  params:set("chord12",5)
-  params:set("chord13",1)
-  params:set("chord14",5)
-  params:set("chord21",1)
-  params:set("chord22",6)
-  params:set("chord23",4)
-  params:set("chord24",5)
+  params:set("chord11",3,true)
+  params:set("chord12",6,true)
+  params:set("chord13",4,true)
+  params:set("chord14",5,true)
+  params:set("chord21",1,true)
+  params:set("chord22",3,true)
+  params:set("chord23",6,true)
+  params:set("chord24",5,true)
   params:set("monosaw_amp",0.0)
+  acrostic.page=1 
+  acrostic:minimize_transposition(true)
+  acrostic.page=2 
+  acrostic:minimize_transposition(true)
+  acrostic.page=1
+
   acrostic:toggle_start(true)
 
   show_startup_screen_max=10
@@ -48,6 +54,7 @@ function init()
         global_page=1 
         acrostic:toggle_start()
         show_startup_screen=show_startup_screen+1
+        acrostic:msg("k1+k3 records")
       end
       if show_startup_screen<show_startup_screen_max then 
         startup_eyes.blinkState=util.linlin(0,show_startup_screen_max^2,3,0.001,show_startup_screen^2)

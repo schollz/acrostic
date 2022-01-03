@@ -60,7 +60,11 @@ function Acrostic:init(o)
   end
 
   -- setup parameters
-  params:add_group("chords",17)
+  params:add_group("chords",18)
+  params:add_option("number_of_chords","num chords",{4,8},1)
+  params:set_action("number_of_chords",function(x)
+    self.do_update_beats=true
+  end)
   params:add{type="number",id="root_note",name="root note",min=0,max=127,default=48,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
   params:set_action("root_note",function(x)
     self.do_update_chords=true
@@ -238,7 +242,6 @@ function Acrostic:init(o)
         if params:get("is_playing")==1 and math.random()<(params:get("prob_note2")*params:get("sel_note")/6) and self.next_note~=nil and self.last_note~=nil then
           --print("next/last",self.next_note,self.last_note)
           local note=MusicUtil.snap_note_to_array(util.round(self.next_note/2+self.last_note/2),scale)
-          --rint("play_note",note)
           if note<10 then
             do return end
           end
@@ -299,10 +302,6 @@ function Acrostic:init(o)
     end
   end
 
-  self.page=2
-  self:minimize_transposition(true)
-  self.page=1
-  self:minimize_transposition(true)
   params:set("is_playing",1)
   self.softcut_stopped=false
   self.lattice:start()
@@ -321,7 +320,11 @@ function Acrostic:iterate_chord()
   if params:get("is_playing")==1 then
     if self.debounce_chord_selection==0 then
       local page=self.page 
-      self.page=params:get("current_chord")>4 and 2 or 1
+      if params:get("number_of_chords")>1 then
+        self.page=params:get("current_chord")>4 and 2 or 1
+      else
+        self.page=1
+      end
       if page~=self.page then 
         self:msg("page "..self.page)
       end
@@ -358,6 +361,10 @@ function Acrostic:iterate_chord()
 end
 
 function Acrostic:set_page(p)
+  if params:get("number_of_chords")==1 then 
+    self.page=1
+    do return end 
+  end
   self.page=p 
   self:msg("page "..p)
   self.debounce_chord_selection=20
@@ -418,6 +425,7 @@ end
 function Acrostic:play_note(note)
   -- engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
   -- print("play_note",note)
+  print("playing",note,MusicUtil.note_num_to_name(note))
   local hz=MusicUtil.note_num_to_freq(note)
   if hz~=nil and hz>20 and hz<18000 then
     engine.hz(hz)
@@ -620,7 +628,7 @@ end
 
 function Acrostic:update_beats(update_softcut)
   local total_beats=0
-  for page=1,2 do 
+  for page=1,params:get("number_of_chords") do 
     for chord=1,4 do 
       total_beats=total_beats+params:get("beats"..page..chord)
     end
