@@ -22,55 +22,38 @@ function init()
   local monosaw_=include("acrostic/lib/monosaw")
   monosaw=monosaw_:new()
   monosaw:init()
-
-  params:add{type="number",id="loop_length",name="LOOP BEATS (needs restart)",min=4,max=64,default=16}
-  -- write/read the loop length
-  local filename_ll=_path.data.."acrostic/loop_length"
-  params:set_action("loop_length",function(x)
-    local file=io.open(filename_ll,"w+")
-    io.output(file)
-    io.write(x)
-    io.close(file)
-  end)
-  if util.file_exists(filename_ll) then
-    -- TODO: save the number of loops and load it
-    local f=io.open(filename_ll,"rb")
-    local content=f:read("*all")
-    f:close()
-    if content~=nil then
-      params:set("loop_length",tonumber(content),true)
-    end
-  end
-
   acrostic=acrostic_:new()
-  acrostic:init({loop_length=params:get("loop_length")})
+  acrostic:init()
+
   -- params:set("chord1",1)
   -- params:set("chord2",3)
   -- params:set("chord3",6)
   -- params:set("chord4",4)
-  params:set("chord1",6)
-  params:set("chord2",4)
-  params:set("chord3",5)
-  params:set("chord4",3)
-    clock.run(function()
-    clock.sleep(0.2)
-    acrostic:minimize_transposition(true)  
-  end)
+  params:set("chord11",1)
+  params:set("chord12",5)
+  params:set("chord13",1)
+  params:set("chord14",5)
+  params:set("chord21",1)
+  params:set("chord22",6)
+  params:set("chord23",4)
+  params:set("chord24",5)
   params:set("monosaw_amp",0.0)
+  acrostic:toggle_start(true)
 
-  local show_startup_screen_max=10
-  local show_startup_screen=0
+  show_startup_screen_max=10
+  show_startup_screen=0
   clock.run(function()
     while true do
-      if show_startup_screen<show_startup_screen_max+5 then 
+      if show_startup_screen==show_startup_screen_max and global_page==0 then 
+        global_page=1 
+        acrostic:toggle_start()
+        show_startup_screen=show_startup_screen+1
+      end
+      if show_startup_screen<show_startup_screen_max then 
         startup_eyes.blinkState=util.linlin(0,show_startup_screen_max^2,3,0.001,show_startup_screen^2)
         startup_eyes.blinkState2=util.linlin(0,show_startup_screen_max^2,2.9,0.001,show_startup_screen^2)
         startup_eyes.volume=util.linlin(0,show_startup_screen_max,10,100,show_startup_screen)
-    
         show_startup_screen=show_startup_screen+1 
-        if show_startup_screen==show_startup_screen_max+5 and global_page==0 then 
-          global_page=1 
-        end
       end
       clock.sleep(1/10)
       acrostic:update()

@@ -21,7 +21,7 @@ function Acrostic:init(o)
   self.message=""
   self.message_level=0
   self.debounce_chord_selection=0
-  self.loop_length=o.loop_length or 16
+  self.loop_length=16
 
   -- setup midi
   self.midis={}
@@ -74,14 +74,16 @@ function Acrostic:init(o)
       params:set_action("chord"..page..i,function(x)
         self.do_update_chords=true
       end)
-      params:add{type="number",id="beats"..page..i,name="beats ",min=0,max=16,default=4}
+      params:add{type="number",id="beats"..page..i,name="beats "..chord_num,min=0,max=16,default=4}
       params:set_action("beats"..page..i,function(x)
+        print("setting beats"..page..i.." to "..x)
         self.do_update_beats=true
         self.do_set_cut_to_1=true
       end)
       chord_num=chord_num+1
     end
   end
+  self:update_beats(false)
   
   -- setup selections
   params:add{type="number",id="sel_selection",name="sel_selection",min=1,max=4,default=4}
@@ -386,14 +388,14 @@ function Acrostic:toggle_start(stop_all)
     params:set("is_playing",0)
   else
     params:delta("is_playing",1)
-    self.current_chord_beat=100
+    self.current_chord_beat=0
     if params:get("is_playing")==1 then
       if self.softcut_stopped then
         self:msg("begin all")
         print("restting all")
         self.rec_queue={}
         self.softcut_stopped=false
-        params:set("current_chord",params:get("do_reverse")==1 and 4 or 1)
+        params:set("current_chord",params:get("do_reverse")==1 and 1 or 8)
         self.lattice:hard_restart()
         for i=1,6 do
           softcut.play(i,1)
@@ -616,7 +618,7 @@ function Acrostic:minimize_transposition(changes)
   self:update_final()
 end
 
-function Acrostic:update_beats()
+function Acrostic:update_beats(update_softcut)
   local total_beats=0
   for page=1,2 do 
     for chord=1,4 do 
@@ -624,8 +626,10 @@ function Acrostic:update_beats()
     end
   end
   self.loop_length=total_beats
-  for i=1,6 do 
-    softcut.loop_end(i,self.o.minmax[i][2]+self.loop_length*clock.get_beat_sec())
+  if update_softcut==nil or update_softcut then 
+    for i=1,6 do 
+      softcut.loop_end(i,self.o.minmax[i][2]+self.loop_length*clock.get_beat_sec())
+    end
   end
 end
 
@@ -808,9 +812,17 @@ function Acrostic:enc(k,d)
     if k==1 then
     elseif k==2 and (params:get("sel_selection")==2 or params:get("sel_selection")==3) then
       self:change_note(params:get("sel_note"),d)
+      self.debounce_chord_selection=20
     elseif k==3 and (params:get("sel_selection")==2 or params:get("sel_selection")==3) then
       self:change_chord(params:get("sel_chord"),d)
+      self.debounce_chord_selection=20
+    elseif k==2 and params:get("sel_selection")==1 then
+      params:delta("sel_chord",d)
+      self.debounce_chord_selection=20
+      self.do_set_cut_to_1=true
     elseif k==3 and params:get("sel_selection")==1 then
+      params:delta("beats"..self.page..params:get("sel_chord"),d)
+      self.debounce_chord_selection=20
     elseif k==2 and params:get("sel_selection")==4 then
       params:delta("pre_level"..params:get("sel_cut"),d)
       self:msg("pre: "..params:get("pre_level"..params:get("sel_cut")))
@@ -833,6 +845,7 @@ function Acrostic:enc(k,d)
       params:delta("sel_note",d)
       params:set("sel_cut",params:get("sel_note"))
       params:set("sel_selection",3)
+      self.debounce_chord_selection=20
     end
   elseif k==3 then
     if params:get("sel_selection")==1 then
@@ -892,9 +905,14 @@ function Acrostic:draw()
     else
       screen.level(3)
     end
-    local chord=self.available_chords[params:get("chord"..self.page..i)]
+    local chord_text=""
+    if global_shift and params:get("sel_selection")==1 then 
+      chord_text=params:get("beats"..self.page..i)
+    else
+      chord_text=self.available_chords[params:get("chord"..self.page..i)]
+    end
     screen.move(8+(i-1)*19,7)
-    screen.text_center(chord)
+    screen.text_center(chord_text)
   end
 
   -- draw the note matrix
