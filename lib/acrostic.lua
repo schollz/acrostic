@@ -84,7 +84,7 @@ function Acrostic:init(o)
   params:hide("sel_cut")
   params:add{type="number",id="is_playing",name="is_playing",min=0,max=1,default=1,wrap=true}
   params:hide("is_playing")
-  params:add_control("prob_note2","inter-note probability",controlspec.new(0,1,'lin',0.125/4,0.5,'',(0.125/4)/1))
+  params:add_control("prob_note2","inter-note probability",controlspec.new(0,1,'lin',0.125/4,0.25,'',(0.125/4)/1))
   params:add_option("random_mode","random mode",{"off","on"},1)
   params:add_option("do_reverse","reverse mode",{"off","on"},1)
   params:set_action("do_reverse",function(x)
@@ -363,7 +363,7 @@ function Acrostic:play_note(note)
   if crow~=nil then
     crow.output[2].action="{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
     crow.output[2]()
-    -- crow.output[1].volts=0.0372*note+0.527 --(note-24)/12
+    --crow.output[1].volts=0.0372*note+0.527 -- korg monotron!
     crow.output[1].volts=(note-24)/12
   end
   for name,m in pairs(self.midis) do
@@ -547,6 +547,7 @@ function Acrostic:minimize_transposition(changes)
       self.matrix_base[i]=foo[v[2]]
     end
   end
+  self.matrix_octave[2]={12,12,12,12}
   self.matrix_octave[3]={12,12,12,12}
   self.matrix_octave[4]={12,12,12,12}
   self.matrix_octave[5]={12,12,12,12}
