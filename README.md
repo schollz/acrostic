@@ -16,21 +16,32 @@ acrostic.
 
 requires latest softcut and a unrelease norns build.
 
-installation:
+first rebuild norns:
 
 ```bash
-~/norns/stop.sh; rm -rf ~/norns; \
+cd ~; ~/norns/stop.sh; rm -rf ~/norns; \
 git clone git@github.com:schollz/norns && \
 cd ~/norns && git checkout sc-rec-once && \
 git submodule update --init --recursive && \
 rm -rf ~/norns/crone/softcut && \
-git clone git clone https://github.com/monome/softcut-lib ~/norns/crone/softcut && \
+git clone https://github.com/monome/softcut-lib ~/norns/crone/softcut && \
 cd ~/norns/crone/softcut && git submodule update --init --recursive && \
 ./waf configure && \
 ./waf && \
 cd ~/norns && \
 ./waf configure --enable-ableton-link && \
-./waf build
+./waf build && \
+sudo systemctl restart norns-jack.service; \
+sudo systemctl restart norns-matron.service; \
+sudo systemctl restart norns-crone.service
+```
+
+then install acrostic:
+
+```bash
+rm -rf ~/dust/code/acrostic && \
+git clone https://github.com/schollz/acrostic ~/dust/code/acrostic && \
+cd ~/dust/code/acrostic && git checkout beta
 ```
 
 ## sequencer
