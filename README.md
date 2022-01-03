@@ -64,6 +64,9 @@ sudo systemctl restart norns-crone.service
 
 ### chord context
 
+![chord context](https://user-images.githubusercontent.com/6550035/147990903-c156b2e9-6314-4c3c-98dd-cfc29cf04e2b.png)
+
+
 - E2 or K1+E2 select chord position
 - E3 change chord
 - K1+K3 change beats of chord
@@ -71,6 +74,11 @@ sudo systemctl restart norns-crone.service
 - K3 start/stop
 
 ### note/phrase context
+
+![note context](https://user-images.githubusercontent.com/6550035/147990908-f778ed71-577b-43a6-8c74-bceaf99a041a.png)
+
+![phrase context](https://user-images.githubusercontent.com/6550035/147990909-3e52c93c-8d8e-4cb4-adcb-7bd3f9c98163.png)
+
 
 - E2 select notes in chord
 - E3 select phrase
@@ -81,6 +89,8 @@ sudo systemctl restart norns-crone.service
 
 ### sampling context
 
+![sampling context](https://user-images.githubusercontent.com/6550035/147990910-8f22641d-c8c0-4282-a9ff-8ebb26699667.png)
+
 - E2 select sample
 - K3 queues recording
 - K3 dequeues recording
@@ -90,9 +100,10 @@ sudo systemctl restart norns-crone.service
 - K1+E2 changes pre
 - K1+E3 chagnes rec
 
-## the ghost
+when you queue a recording (K3) it will begin recording at the next loop. you can queue multiple samples, even while one is recorindg.
 
-???????
+![queue recording](https://user-images.githubusercontent.com/6550035/147990912-d93653b0-c08a-4d23-ad69-b79303cb9507.png)
+
 
 ## Install
 
