@@ -14,7 +14,7 @@ startup_eyes={
 }
 
 function init()
-  norns.enc.sens(1,6)
+  norns.enc.sens(1,10)
   norns.enc.sens(2,6)
   norns.enc.sens(3,6)
 

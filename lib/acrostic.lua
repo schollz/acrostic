@@ -244,7 +244,7 @@ function Acrostic:init(o)
       action=function(t)
         if params:get("is_playing")==1 and math.random()<(params:get("prob_note2")*params:get("sel_note")/6) and self.next_note~=nil and self.last_note~=nil then
           --print("next/last",self.next_note,self.last_note)
-          local note=MusicUtil.snap_note_to_array(util.round(self.next_note/2+self.last_note/2),scale)
+          local note=MusicUtil.snap_note_to_array(util.round(self.next_note/2+self.last_note/2)+math.random(-2,2),scale)
           if note<10 then
             do return end
           end
