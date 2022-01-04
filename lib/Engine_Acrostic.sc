@@ -79,6 +79,7 @@ Engine_Acrostic : CroneEngine {
 			snd=HPF.ar(snd,20);
 			//snd = snd + (NHHall.ar(snd, 8, modDepth: 1) * -15.dbamp);
 			snd = DelayC.ar(snd, 0.2, SinOsc.ar(0.3, [0, pi]).linlin(-1,1, 0, 0.001));
+			snd = snd * EnvGen.ar(Env.new([0,1],[1]));
 			Out.ar(0,snd*amp);
 		}).add;
 

@@ -107,12 +107,36 @@ function Acrostic:init(o)
   params:hide("sel_cut")
   params:add{type="number",id="is_playing",name="is_playing",min=0,max=1,default=1,wrap=true}
   params:hide("is_playing")
+
+  params:add_group("notes",3)
   params:add_control("prob_note2","inter-note probability",controlspec.new(0,1,'lin',0.125/4,0.25,'',(0.125/4)/1))
   params:add_option("random_mode","random mode",{"off","on"},1)
   params:add_option("do_reverse","reverse mode",{"off","on"},1)
   params:set_action("do_reverse",function(x)
     for i=1,6 do 
       softcut.rate(i,x==1 and 1 or -1)
+    end
+  end)
+
+  params:add_group("crow",5)
+  params:add_option("crow_1_pitch","crow 1 pitch",{"normal","korg monotron"},1)
+  params:add_control("crow 2 gate","crow 2 gate length",controlspec.new(0,100,"lin",1,75,"%",1/100))
+  params:add{type='binary',name="crow 3 clock",id='crow 3 clock',behavior='toggle',
+  action=function(v)
+      if v==1 then
+        self.start_clock_after_phrase=self.current_phrase+1
+      else 
+        self.start_clock_after_phrase=nil
+      end
+    end
+  }
+  params:add_control("crow_3_volts","crow 3 volts",controlspec.new(0,10,'lin',0.1,1,'volts',0.1/10))
+  local option_divisions={"1/32","1/16","1/8","1/4","1/2","1"}
+  local option_divisions_num={1/32,1/16,1/8,1/4,1/2,1}
+  params:add_option("crow 3 division","crow 3 division",option_divisions,3)
+  params:set_action("crow 3 division",function(x)
+    if self.pattern_clock_sync~=nil then 
+      self.pattern_clock_sync:set_division(option_divisions_num[x])
     end
   end)
 
@@ -161,6 +185,7 @@ function Acrostic:init(o)
   if self.lattice~=nil then
     self.lattice:destroy()
   end
+  self.current_phrase=0
   self.current_chord_beat=0
   self.lattice=lattice_:new()
   self.rec_queue={}
@@ -226,10 +251,23 @@ function Acrostic:init(o)
           self:play_note(note)
         end
       end,
-      division=1*self.loop_length/16,
+      division=1/4,
       delay=i*0.25,
     }
   end
+
+  -- crow output 3 is for using a clock
+  crow.output[3].action = "{ to(0,0), to("..params:get("crow_3_volts")..",0.015), to(0,0) }"
+  self.start_clock_after_phrase=nil
+  self.pattern_clock_sync=self.lattice:new_pattern{
+    action=function(x)
+      if  params:get("is_playing")==1 and self.start_clock_after_phrase~=nil and self.current_phrase>=self.start_clock_after_phrase then 
+        crow.output[3]()
+      end
+    end,
+    division=1/8,
+  }
+
 
   params.action_write=function(filename,name)
     print("write",filename,name)
@@ -297,6 +335,9 @@ function Acrostic:iterate_chord()
   current_chord_mod4=(params:get("current_chord")-1)%4+1
   if params:get("is_playing")~=1 then
     do return true end
+  end
+  if current_chord_mod4==1 then
+    self.current_phrase=self.current_phrase+1
   end
   if self.debounce_chord_selection==0 then
     local page=self.page 
@@ -419,12 +460,15 @@ function Acrostic:play_note(note)
   if hz~=nil and hz>20 and hz<18000 then
     engine.hz(hz)
   end
-  local gate_length=clock.get_beat_sec()*50/100
+  local gate_length=clock.get_beat_sec()*params:get("crow 2 gate")/100
   if crow~=nil then
     crow.output[2].action="{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
     crow.output[2]()
-    --crow.output[1].volts=0.0372*note+0.527 -- korg monotron!
-    crow.output[1].volts=(note-24)/12
+    if params:get("crow_1_pitch")==1 then 
+      crow.output[1].volts=(note-24)/12
+    else
+      crow.output[1].volts=0.0372*note+0.527 -- korg monotron!
+    end
   end
   for name,m in pairs(self.midis) do
     if m.last_note~=nil then
