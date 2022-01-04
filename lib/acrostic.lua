@@ -109,7 +109,7 @@ function Acrostic:init(o)
   params:hide("is_playing")
 
   params:add_group("notes",3)
-  params:add_control("prob_note2","inter-note probability",controlspec.new(0,1,'lin',0.125/4,0.25,'',(0.125/4)/1))
+  params:add_control("prob_note2","inter-note probability",controlspec.new(0,1,'lin',0.125/4,0.0,'',(0.125/4)/1))
   params:add_option("random_mode","random mode",{"off","on"},1)
   params:add_option("do_reverse","reverse mode",{"off","on"},1)
   params:set_action("do_reverse",function(x)
@@ -580,7 +580,7 @@ function Acrostic:minimize_transposition(changes)
   for chord=1,4 do
     local notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..self.page..chord)])
     chord_notes[chord]=table.clone(notes)
-    table.rotatex(notes,math.random(0,3))
+    table.rotatex(notes,math.random(0,2))
     table.insert(chords,table.clone(notes))
   end
   local chords_basic=table.clone(chords)
@@ -615,13 +615,16 @@ function Acrostic:minimize_transposition(changes)
       self.matrix_base[self.page][note][chord]=chord_notes[chord][1]%12+36
     end
   end
+  local chords2={}
   for chord=1,4 do
+    local chords2=table.clone(chords[chord])
+    table.rotatex(chords2,math.random(0,2))
     for note,note_midi in ipairs(chords[chord]) do
-      self.matrix_base[self.page][note+1][chord]=note_midi
+      self.matrix_base[self.page][note][chord]=note_midi
     end
-    local undone_note=#chords[chord]+2
+    local undone_note=#chords[chord]+1
     for i=undone_note,6 do
-      self.matrix_base[self.page][i][chord]=chords[chord][math.random(1,#chords[chord])]+12
+      self.matrix_base[self.page][i][chord]=chords2[i-undone_note+1]+12
     end
   end
   -- print("self.matrix_base[self.page]")
@@ -643,18 +646,13 @@ function Acrostic:minimize_transposition(changes)
   end)
   local foo=table.clone(self.matrix_base[self.page])
   for i,v in ipairs(averages) do
-    if i==1 then
-      for chord=1,4 do
-        self.matrix_base[self.page][i][chord]=chord_notes[chord][1]%12+36
-      end
-    else
-      self.matrix_base[self.page][i]=foo[v[2]]
-    end
+    self.matrix_base[self.page][i]=foo[v[2]]
   end
+  self.matrix_octave[self.page][1]={-12,-12,-12,-12}
   self.matrix_octave[self.page][3]={12,12,12,12}
   self.matrix_octave[self.page][4]={12,12,12,12}
   self.matrix_octave[self.page][5]={12,12,12,12}
-  self.matrix_octave[self.page][6]={12,12,12,12}
+  self.matrix_octave[self.page][6]={24,24,24,24}
   self:update_final()
 end
 
