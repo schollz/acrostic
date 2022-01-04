@@ -29,7 +29,7 @@ first rebuild norns:
 
 ```bash
 cd ~; ~/norns/stop.sh; rm -rf ~/norns; \
-git clone git@github.com:schollz/norns && \
+git clone https://github.com/schollz/norns && \
 cd ~/norns && git checkout sc-rec-once && \
 git submodule update --init --recursive && \
 cd ~/norns/crone/softcut && \
