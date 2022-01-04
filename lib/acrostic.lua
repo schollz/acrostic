@@ -607,11 +607,10 @@ function Acrostic:minimize_transposition(changes)
       self.matrix_base[self.page][i]=foo[v[2]]
     end
   end
-  self.matrix_octave[self.page][2]={12,12,12,12}
   self.matrix_octave[self.page][3]={12,12,12,12}
   self.matrix_octave[self.page][4]={12,12,12,12}
   self.matrix_octave[self.page][5]={12,12,12,12}
-  self.matrix_octave[self.page][6]={24,24,24,24}
+  self.matrix_octave[self.page][6]={12,12,12,12}
   self:update_final()
 end
 
@@ -881,7 +880,7 @@ function Acrostic:update()
 
     local vol=params:get(i.."vol lfo amp")*calculate_lfo(ct,params:get(i.."vol lfo period"),params:get(i.."vol lfo offset"))
     vol=vol+params:get("level"..i)
-    softcut.level(i,util.clamp(vol,0,1))
+    softcut.level(i,util.clamp(vol,0.01,0.99))
   end
 end
 

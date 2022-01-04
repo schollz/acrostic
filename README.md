@@ -1,20 +1,29 @@
 # acrostic
 
-acrostic.
+sample and layer chords.
 
-![img](acrostic)
+![img](https://user-images.githubusercontent.com/6550035/147991374-42d4b89b-4141-44c0-9974-806f3dd70392.png)
+
+acrostic lets you stack monophonic sound sources into chords with subtle melodies. basically, it is a sequencer that sends out one note at a time from chords to use the loops to record the entire chord phrase. it's described in more detail [here](https://llllllll.co/t/latest-tracks-videos/25738/3016) and is the basis of [an entire album I recorded](https://infinitedigits.bandcamp.com/album/at-the-place). 
+
+this script was added as an addition to the [norns *oooooo* script](https://llllllll.co/t/oooooo/35828/476?u=infinitedigits) but I've broken it out into its own script. the major benefits in this script are:
+
+- up to 8 chords can be added
+- each chord has six notes that can be rearranged / modified
+- each chord can be set to 0-16 beats long
+- everything is accessible through the UI
 
 
 # Requirements
 
 - norns
+- external synth (midi or cv)
 
 # Documentation
 
-
 ## installation
 
-requires latest softcut and a unrelease norns build.
+requires latest softcut and a unreleased norns build.
 
 first rebuild norns:
 
