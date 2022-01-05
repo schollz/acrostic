@@ -72,7 +72,13 @@ function Acrostic:init(o)
   params:set_action("root_note",function(x)
     self.do_update_chords=true
   end)
-  self.available_chords={"I","ii","iii","IV","V","vi","VII","i","II","III","iv","v","VI","vii"}
+  local basic_chords={"I","ii","iii","IV","V","vi","VII","i","II","III","iv","v","VI","vii"}
+  local available_chords={} 
+  for _,v in ipairs({"","7","6-9"}) do 
+    for _, c in ipairs(basic_chords) do 
+      table.insert(self.available_chords,c..v) 
+    end
+  end
   local available_chords_default={6,4,1,5}
   local chord_num=1
   for page=1,2 do
