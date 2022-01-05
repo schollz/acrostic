@@ -827,6 +827,7 @@ function Acrostic:key(k,z)
     else
       self:queue_recording(params:get("sel_cut"))
     end
+    self.debounce_chord_selection=0
   end
 end
 
