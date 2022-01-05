@@ -4,9 +4,9 @@ if not string.find(package.cpath,"/home/we/dust/code/acrostic/lib/") then
   package.cpath=package.cpath..";/home/we/dust/code/acrostic/lib/?.so"
 end
 local json=require("cjson")
-local MusicUtil=require("musicutil")
 local lattice_=require("lattice")
 local s=require("sequins")
+local MusicUtil=include("acrostic/lib/musicutil2")
 
 local Acrostic={}
 
@@ -572,8 +572,27 @@ function Acrostic:softcut_clear(i)
   end)
 end
 
+function Acrostic:minimize_transposition()
+  local roman_numerals={}
+  for chord=1,4 do 
+    table.insert(roman_numerals,self.available_chords[params:get("chord"..self.page..chord)])
+  end
+  local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{1,2,3,3,4,4})
+  self.matrix_octave[self.page]={}
+  self.matrix_base[self.page]={}
+  for note=1,6 do
+    self.matrix_octave[self.page][note]={}
+    self.matrix_base[self.page][note]={}
+    for chord=1,4 do
+      self.matrix_octave[self.page][note][chord]=0
+      self.matrix_base[self.page][note][chord]=MusicUtil.note_name_to_num(note_name_matrix[note][chord])
+    end
+  end
+  self:update_final()
+end
+
 -- minimize_transposition transposes each chord for minimal distance
-function Acrostic:minimize_transposition(changes)
+function Acrostic:minimize_transposition_old(changes)
   self:msg("regen notes")
   local chords={}
   local chord_notes={}
@@ -603,8 +622,7 @@ function Acrostic:minimize_transposition(changes)
   if changes then
     chords=table.minimize_row_changes(chords)
   end
-  -- print("chords")
-  -- table.print_matrix(chords)
+
   self.matrix_octave[self.page]={}
   self.matrix_base[self.page]={}
   for note=1,6 do
@@ -619,6 +637,7 @@ function Acrostic:minimize_transposition(changes)
   for chord=1,4 do
     local chords2=table.clone(chords[chord])
     table.rotatex(chords2,math.random(0,2))
+    --table.rotatex(chords[chord],math.random(0,3)) -- TODO: is this too randoM?
     for note,note_midi in ipairs(chords[chord]) do
       self.matrix_base[self.page][note][chord]=note_midi
     end
@@ -630,8 +649,8 @@ function Acrostic:minimize_transposition(changes)
   -- print("self.matrix_base[self.page]")
   -- table.print_matrix(self.matrix_base[self.page])
   self:update_final()
-  -- print("update1")
-  -- table.print_matrix(self.matrix_name[self.page])
+  print("update1")
+  table.print_matrix(self.matrix_name[self.page])
 
   local averages={}
   for note=1,6 do
@@ -926,9 +945,12 @@ function Acrostic:update()
     local pan=params:get(i.."pan lfo amp")*calculate_lfo(ct,params:get(i.."pan lfo period"),params:get(i.."pan lfo offset"))
     softcut.pan(i,util.clamp(pan,-1,1))
 
-    local vol=params:get(i.."vol lfo amp")*calculate_lfo(ct,params:get(i.."vol lfo period"),params:get(i.."vol lfo offset"))
-    vol=vol+params:get("level"..i)
+    local vol=util.linlin(-1,1,0,1,params:get(i.."vol lfo amp")*calculate_lfo(ct,params:get(i.."vol lfo period"),params:get(i.."vol lfo offset")))
+    --vol=vol+params:get("level"..i)
     softcut.level(i,util.clamp(vol,0.01,0.99))
+    if i==1 then 
+      print(vol)
+    end
   end
 end
 

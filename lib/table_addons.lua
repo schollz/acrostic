@@ -1,3 +1,10 @@
+function table.merge(t1,t2) 
+  n=#t1
+  for i=1,#t2 do
+    t1[n+i]=t2[i]
+  end
+end
+
 function table.reverse(t)
   local len=#t
   for i=len-1,1,-1 do

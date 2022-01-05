@@ -44,6 +44,11 @@ function init()
   acrostic:minimize_transposition(true)
   acrostic.page=1
 
+  -- testing
+
+  acrostic.start_clock_after_phrase=0
+  params:set("crow_1_pitch",2)
+
   acrostic:toggle_start(true)
 
   show_startup_screen_max=10
