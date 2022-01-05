@@ -1,7 +1,29 @@
+function table.merge(t1,t2) 
+  n=#t1
+  for i=1,#t2 do
+    t1[n+i]=t2[i]
+  end
+end
+
 function table.reverse(t)
   local len=#t
   for i=len-1,1,-1 do
     t[len]=table.remove(t,i)
+  end
+end
+
+function table.permute(t, n, count)
+  n = n or #t
+  for i = 1, count or n do
+    local j = math.random(i, n)
+    t[i], t[j] = t[j], t[i]
+  end
+end
+
+function table.shuffle(tbl)
+  for i = #tbl, 2, -1 do
+    local j = math.random(i)
+    tbl[i], tbl[j] = tbl[j], tbl[i]
   end
 end
 
@@ -118,6 +140,15 @@ function table.minimize_row_changes(m)
   end
   return best_m
   -- table.print_matrix(best_m)
+end
+
+function table.contains(t,x)
+  for _, v in ipairs(t) do 
+    if v==x then 
+      do return true end
+    end
+  end
+  return false 
 end
 
 function table.maximize_row_changes(m)

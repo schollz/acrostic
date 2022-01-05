@@ -4,52 +4,85 @@
 engine.name="Acrostic"
 
 global_shift=false
-page=1
-
+global_page=0
+startup_eyes={
+  irisSize=14,
+  blinkState=3,
+  blinkState2=3,
+  volume=10,
+  brightness=10,
+}
 
 function init()
+  norns.enc.sens(1,10)
+  norns.enc.sens(2,6)
+  norns.enc.sens(3,6)
+
   local acrostic_=include("acrostic/lib/acrostic")
   local monosaw_=include("acrostic/lib/monosaw")
+  local volpan_=include("acrostic/lib/volpan")
+  local notecontrol_=include("acrostic/lib/notecontrol")
   monosaw=monosaw_:new()
   monosaw:init()
-  engine.amp(1)
+  acrostic=acrostic_:new()
+  acrostic:init()
+  volpan=volpan_:new()
+  volpan:init({acrostic=acrostic})
+  notecontrol=notecontrol_:new()
+  notecontrol:init()
 
-  params:add{type="number",id="loop_length",name="loop length (requires restart)",min=4,max=64,default=16}
-  -- write/read the loop length
-  filename_ll=_path.data.."acrostic/loop_length"
-  params:set_action("loop_length",function(x)
-    local file=io.open(filename_ll,"w+")
-    io.output(file)
-    io.write(x)
-    io.close(file)
-  end)
-  if util.file_exists(filename_ll) then
-    -- TODO: save the number of loops and load it
-    local f=io.open(filename_ll,"rb")
-    local content=f:read("*all")
-    f:close()
-    if content~=nil then
-      params:set("loop_length",tonumber(content))
+  -- params:set("chord11",3,true)
+  -- params:set("chord12",6,true)
+  -- params:set("chord13",4,true)
+  -- params:set("chord14",5,true)
+  -- params:set("chord21",1,true)
+  -- params:set("chord22",3,true)
+  -- params:set("chord23",6,true)
+  -- params:set("chord24",5,true)
+  params:set("chord11",1,true)
+  params:set("chord12",47,true)
+  params:set("chord13",6,true)
+  params:set("chord14",6,true)
+  params:set("chord21",2,true)
+  params:set("chord22",2,true)
+  params:set("chord23",4,true)
+  params:set("chord24",4,true)
+  for page=1,2 do
+    for beat=1,4 do
+      params:set("beats"..page..beat,2)
     end
   end
 
-  acrostic=acrostic_:new()
-  acrostic:init({loop_length=params:get("loop_length")})
-  acrostic:update()
-  params:set("chord1",3)
-  params:set("chord2",6)
-  params:set("chord3",4)
-  params:set("chord4",5)
+  params:set("monosaw_amp",0.0)
+  acrostic.page=1
   acrostic:minimize_transposition(true)
+  acrostic.page=2
   acrostic:minimize_transposition(true)
-  acrostic:minimize_transposition(true)
-  acrostic:minimize_transposition(true)
-  acrostic:minimize_transposition(true)
+  acrostic.page=1
 
+  -- testing
 
+  acrostic.start_clock_after_phrase=0
+  -- params:set("crow_1_pitch",2)
 
+  acrostic:toggle_start(true)
+
+  show_startup_screen_max=10
+  show_startup_screen=0
   clock.run(function()
     while true do
+      if show_startup_screen==show_startup_screen_max and global_page==0 then
+        global_page=1
+        acrostic:toggle_start()
+        show_startup_screen=show_startup_screen+1
+        acrostic:msg("k1+k3 records")
+      end
+      if show_startup_screen<show_startup_screen_max then
+        startup_eyes.blinkState=util.linlin(0,show_startup_screen_max^2,3,0.001,show_startup_screen^2)
+        startup_eyes.blinkState2=util.linlin(0,show_startup_screen_max^2,2.9,0.001,show_startup_screen^2)
+        startup_eyes.volume=util.linlin(0,show_startup_screen_max,10,100,show_startup_screen)
+        show_startup_screen=show_startup_screen+1
+      end
       clock.sleep(1/10)
       acrostic:update()
       redraw()
@@ -78,34 +111,63 @@ end
 function key(k,z)
   if k==1 then
     global_shift=z==1
+    if z==1 and (params:get("sel_selection")==2 or params:get("sel_selection")==3) then
+      acrostic:msg("e2/e3 rotates")
+    end
     do return end
   end
-  if page==1 then
+  if global_page==1 or global_page==2 then
     acrostic:key(k,z)
-  elseif page==2 then
+  elseif global_page==3 then
+    volpan:key(k,z)
+  elseif global_page==3 then
+    notecontrol:key(k,z)
+  elseif global_page==5 then
     monosaw:key(k,d)
   end
 end
 
 function enc(k,d)
   if global_shift and k==1 then
-    -- change page
-    page=util.clamp(page+d,1,2)
+    -- change global_page
+    global_page=util.clamp(global_page+d,1,5)
+    if global_page<3 then
+      acrostic:set_page(global_page)
+    end
     do return end
   end
-  if page==1 then
+  if global_page==1 or global_page==2 then
     acrostic:enc(k,d)
-  elseif page==2 then
+  elseif global_page==3 then
+    volpan:enc(k,d)
+  elseif global_page==4 then
+    notecontrol:enc(k,d)
+  elseif global_page==5 then
     monosaw:enc(k,d)
   end
 end
 
 function redraw()
-  screen.clear()
-  if page==1 then
-    acrostic:draw(k,d)
-  elseif page==2 then
-    monosaw:draw(k,d)
+  if global_page==4 then
+    if math.random()<0.6 then
+      screen.clear()
+    end
+  else
+    screen.clear()
+  end
+  -- monosaw:eyes(14,4,0,100,10)
+  -- screen.update()
+  -- do return end
+  if global_page==1 or global_page==2 then
+    acrostic:draw()
+  elseif global_page==3 then
+    volpan:draw()
+  elseif global_page==4 then
+    notecontrol:draw()
+  elseif global_page==5 then
+    monosaw:draw()
+  elseif global_page==0 then
+    monosaw:eyes(startup_eyes.irisSize,startup_eyes.blinkState,startup_eyes.blinkState2,startup_eyes.volume,startup_eyes.brightness)
   end
   screen.update()
 end
