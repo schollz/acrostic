@@ -1,4 +1,5 @@
 local MusicUtil=include("acrostic/lib/musicutil2")
+include("acrostic/lib/table_addons")
 
 function round_time_to_nearest_beat(t)
   seconds_per_qn=60/clock.get_tempo()
@@ -32,9 +33,20 @@ function phrase_generate_low_high(root_note,roman_numerals,octaves)
     chord_notes[chord]=MusicUtil.note_nums_to_names(notes)
   end
 
-  local m1=phrase_repeat_lowest(chord_notes)
-  local m2=phrase_repeat_highest(chord_notes)
+  local m1={}
+  local m2={}
+  if math.random() < 0.5 then
+    m1=phrase_repeat_lowest(chord_notes)
+    m2=phrase_repeat_highest(chord_notes)
+  else 
+    m1=phrase_repeat_highest(chord_notes)
+    m2=phrase_repeat_lowest(chord_notes)
+  end
   table.merge(m1,m2)
+
+  if math.random() < 0.5 then 
+    m1=phrase_find_continuity(m1)
+  end
 
   for note=1,#m1 do 
     local octave=octaves[note]
@@ -48,6 +60,58 @@ function phrase_generate_low_high(root_note,roman_numerals,octaves)
   end
   
   return m1
+end
+
+
+function phrase_find_continuity(m1)
+  -- local m1={
+  --   {"G","C","C","G"},
+  --   {"B","A","A","B"},
+  --   {"E","E","F","D"},
+  --   {"G","E","F","B"},
+  --   {"B","C","A","D"},
+  --   {"E","A","C","G"},
+  -- }
+  local m2={}
+  local rows={}
+  local used={}
+  for i=1,#m1 do 
+    if i==1 then 
+      -- pick a random one to start
+      local rownum=math.random(1,#m1)
+      used[rownum]=true
+      table.insert(rows,rownum)
+    else
+      -- find the first available that starts with what the last
+      -- one ended with
+      local available={1,2,3,4,5,6}
+      table.shuffle(available)
+      local use_rownum=nil
+      for _, rownum in ipairs(available) do 
+        if used[rownum]==nil then 
+          local lastrow=m1[rows[#rows]]
+          if m1[rownum][1]==lastrow[#lastrow] then 
+            use_rownum=rownum 
+          end
+        end
+      end
+      if use_rownum==nil then 
+        for _, rownum in ipairs(available) do 
+          if used[rownum]==nil then 
+            use_rownum=rownum 
+          end
+        end
+      end
+
+      used[use_rownum]=true 
+      table.insert(rows,use_rownum)
+    end
+  end
+
+  for _, row in ipairs(rows) do 
+    table.insert(m2,table.clone(m1[row]))
+  end
+  return m2
 end
 
 function phrase_repeat_lowest(chord_notes)

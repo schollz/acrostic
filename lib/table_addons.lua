@@ -142,6 +142,15 @@ function table.minimize_row_changes(m)
   -- table.print_matrix(best_m)
 end
 
+function table.contains(t,x)
+  for _, v in ipairs(t) do 
+    if v==x then 
+      do return true end
+    end
+  end
+  return false 
+end
+
 function table.maximize_row_changes(m)
   local m_=table.clone(m)
   -- generate random rotations

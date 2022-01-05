@@ -20,10 +20,13 @@ function init()
 
   local acrostic_=include("acrostic/lib/acrostic")
   local monosaw_=include("acrostic/lib/monosaw")
+  local volpan_=include("acrostic/lib/volpan")
   monosaw=monosaw_:new()
   monosaw:init()
   acrostic=acrostic_:new()
   acrostic:init()
+  volpan=volpan_:new()
+  volpan:init({acrostic=acrostic})
 
   -- params:set("chord1",1)
   -- params:set("chord2",3)
@@ -47,7 +50,7 @@ function init()
   -- testing
 
   acrostic.start_clock_after_phrase=0
-  params:set("crow_1_pitch",2)
+  -- params:set("crow_1_pitch",2)
 
   acrostic:toggle_start(true)
 
@@ -102,7 +105,9 @@ function key(k,z)
   end
   if global_page==1 or global_page==2 then
     acrostic:key(k,z)
-  elseif global_page==3 then
+  elseif global_page==3 then 
+    volpan:key(k,z)
+  elseif global_page==4 then
     monosaw:key(k,d)
   end
 end
@@ -110,7 +115,7 @@ end
 function enc(k,d)
   if global_shift and k==1 then
     -- change global_page
-    global_page=util.clamp(global_page+d,1,3)
+    global_page=util.clamp(global_page+d,1,4)
     if global_page<3 then 
       acrostic:set_page(global_page)
     end
@@ -118,19 +123,29 @@ function enc(k,d)
   end
   if global_page==1 or global_page==2 then
     acrostic:enc(k,d)
-  elseif global_page==3 then
+  elseif global_page==3 then 
+    volpan:enc(k,d)
+  elseif global_page==4 then
     monosaw:enc(k,d)
   end
 end
 
 function redraw()
-  screen.clear()
+  if global_page==4 then 
+    if math.random()<0.6 then 
+      screen.clear()
+    end
+  else
+    screen.clear()
+  end
   -- monosaw:eyes(14,4,0,100,10)
   -- screen.update()
   -- do return end
   if global_page==1 or global_page==2 then
     acrostic:draw()
   elseif global_page==3 then
+    volpan:draw()
+  elseif global_page==4 then
     monosaw:draw()
   elseif global_page==0 then 
     monosaw:eyes(startup_eyes.irisSize,startup_eyes.blinkState,startup_eyes.blinkState2,startup_eyes.volume,startup_eyes.brightness)
