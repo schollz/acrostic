@@ -5,6 +5,21 @@ function table.reverse(t)
   end
 end
 
+function table.permute(t, n, count)
+  n = n or #t
+  for i = 1, count or n do
+    local j = math.random(i, n)
+    t[i], t[j] = t[j], t[i]
+  end
+end
+
+function table.shuffle(tbl)
+  for i = #tbl, 2, -1 do
+    local j = math.random(i)
+    tbl[i], tbl[j] = tbl[j], tbl[i]
+  end
+end
+
 function table.add(t,scalar)
   for i,_ in ipairs(t) do
     t[i]=t[i]+scalar
