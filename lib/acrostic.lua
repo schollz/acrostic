@@ -819,10 +819,15 @@ function Acrostic:key(k,z)
   end
   if params:get("sel_selection")==4 and k==3 then
     if global_shift then
+      local foo={}
       for i=1,6 do
         if not self.recorded[i] then
-          self:queue_recording(i)
+          table.insert(foo,i)
         end
+      end
+      table.shuffle(foo)
+      for _, i in ipairs(foo) do 
+        self:queue_recording(i)
       end
     else
       self:queue_recording(params:get("sel_cut"))
