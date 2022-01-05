@@ -27,14 +27,15 @@ function Acrostic:init(o)
 
   -- setup midi
   self.midis={}
+  self.midi_devices={"none"}
   for _,dev in pairs(midi.devices) do
     local name=string.lower(dev.name)
     name=name:gsub("-","")
     print("connected to "..name)
+    table.insert(self.midi_devices,name)
     self.midis[name]={last_note=nil}
     self.midis[name].conn=midi.connect(dev.port)
   end
-
 
   -- setup matrix
   self.matrix_base={}
@@ -42,7 +43,7 @@ function Acrostic:init(o)
   self.matrix_final={}
   self.matrix_name={}
   self.page=1
-  for page=1,2 do 
+  for page=1,2 do
     self.matrix_base[page]={}
     self.matrix_octave[page]={}
     self.matrix_final[page]={}
@@ -73,10 +74,10 @@ function Acrostic:init(o)
     self.do_update_chords=true
   end)
   local basic_chords={"I","ii","iii","IV","V","vi","VII","i","II","III","iv","v","VI","vii"}
-  local available_chords={} 
-  for _,v in ipairs({"","7","6-9"}) do 
-    for _, c in ipairs(basic_chords) do 
-      table.insert(self.available_chords,c..v) 
+  local available_chords={}
+  for _,v in ipairs({"","7","6-9"}) do
+    for _,c in ipairs(basic_chords) do
+      table.insert(self.available_chords,c..v)
     end
   end
   local available_chords_default={6,4,1,5}
@@ -97,7 +98,7 @@ function Acrostic:init(o)
     end
   end
   self:update_beats(false)
-  
+
   -- setup selections
   params:add{type="number",id="sel_selection",name="sel_selection",min=1,max=4,default=4}
   params:hide("sel_selection")
@@ -122,20 +123,21 @@ function Acrostic:init(o)
   params:add_option("random_mode","random mode",{"off","on"},1)
   params:add_option("do_reverse","reverse mode",{"off","on"},1)
   params:set_action("do_reverse",function(x)
-    for i=1,6 do 
-      softcut.rate(i,x==1 and 1 or -1)
+    for i=1,6 do
+      softcut.rate(i,x==1 and 1 or-1)
     end
     self.do_set_cut_to_1=true
   end)
 
-  params:add_group("crow",5)
+  params:add_group("midi/crow",6)
+  params:add_option("midi_in","midi in",self.midi_devices,#self.midi_devices==1 and 1 or 2)
   params:add_option("crow_1_pitch","crow 1 pitch",{"normal","korg monotron"},1)
   params:add_control("crow 2 gate","crow 2 gate length",controlspec.new(0,100,"lin",1,75,"%",1/100))
   params:add{type='binary',name="crow 3 clock",id='crow 3 clock',behavior='toggle',
-  action=function(v)
+    action=function(v)
       if v==1 then
         self.start_clock_after_phrase=self.current_phrase+1
-      else 
+      else
         self.start_clock_after_phrase=nil
       end
     end
@@ -145,7 +147,7 @@ function Acrostic:init(o)
   local option_divisions_num={1/32,1/16,1/8,1/4,1/2,1}
   params:add_option("crow 3 division","crow 3 division",option_divisions,3)
   params:set_action("crow 3 division",function(x)
-    if self.pattern_clock_sync~=nil then 
+    if self.pattern_clock_sync~=nil then
       self.pattern_clock_sync:set_division(option_divisions_num[x])
     end
   end)
@@ -206,16 +208,16 @@ function Acrostic:init(o)
     action=function(t)
       local result=false
       local i=0
-      while result==false do 
+      while result==false do
         local last_phrase=self.current_phrase
         result=self:iterate_chord()
-        i=i+1 
-        if i==8 then 
-          result=true 
+        i=i+1
+        if i==8 then
+          result=true
         end
 
         -- on the first chord of each time, clear the queue and prime the recording
-        if self.current_phrase>last_phrase then 
+        if self.current_phrase>last_phrase then
           print("bumped phrase")
           -- take care of queue
           if not table.is_empty(self.rec_queue) then
@@ -226,28 +228,28 @@ function Acrostic:init(o)
                 self:softcut_render(i)
               end)
               print("dequeing "..self.rec_queue[1].i)
-              table.remove(self.rec_queue,1)              
-            end  
+              table.remove(self.rec_queue,1)
+            end
           end
           if not table.is_empty(self.rec_queue) then
-            if self.rec_queue[1].primed then 
+            if self.rec_queue[1].primed then
               print("setting to record",self.rec_queue[1].i)
               params:set("sel_note",self.rec_queue[1].i)
               self.rec_queue[1].recording=true
             end
           end
-        end  
+        end
 
         -- on every note, check to see if another track needs to be primed
-        if (params:get("current_chord")-1)%4+1==2 or (params:get("current_chord")-1)%4+1==3 then 
+        if (params:get("current_chord")-1)%4+1==2 or (params:get("current_chord")-1)%4+1==3 then
           local do_prime=nil
-          if (not table.is_empty(self.rec_queue)) and (not self.rec_queue[1].primed) then 
+          if (not table.is_empty(self.rec_queue)) and (not self.rec_queue[1].primed) then
             do_prime=1
-          elseif #self.rec_queue>1 and (not self.rec_queue[2].primed) and self.rec_queue[1].recording then 
+          elseif #self.rec_queue>1 and (not self.rec_queue[2].primed) and self.rec_queue[1].recording then
             do_prime=2
           end
-          if do_prime~=nil then 
-            self.rec_queue[do_prime].primed=true 
+          if do_prime~=nil then
+            self.rec_queue[do_prime].primed=true
             print("softcut.rec_once("..self.rec_queue[do_prime].i..")")
             softcut.rec_once(self.rec_queue[do_prime].i)
             self.recorded[self.rec_queue[do_prime].i]=true
@@ -260,13 +262,13 @@ function Acrostic:init(o)
       self:iterate_note()
 
       -- if recording, update the image
-      if not table.is_empty(self.rec_queue) and self.rec_queue[1].recording then 
+      if not table.is_empty(self.rec_queue) and self.rec_queue[1].recording then
         self:softcut_render(self.rec_queue[1].i)
       end
 
       -- print out the current chord/beat
       local current_chord_mod4=(params:get("current_chord")-1)%4+1
-      --print("current_chord:"..params:get("current_chord")," current beat: "..self.current_chord_beat.."/"..params:get("beats"..self.page..current_chord_mod4))    
+      --print("current_chord:"..params:get("current_chord")," current beat: "..self.current_chord_beat.."/"..params:get("beats"..self.page..current_chord_mod4))
     end,
     division=1/4,
   }
@@ -290,17 +292,16 @@ function Acrostic:init(o)
   end
 
   -- crow output 3 is for using a clock
-  crow.output[3].action = "{ to(0,0), to("..params:get("crow_3_volts")..",0.015), to(0,0) }"
+  crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..",0.015), to(0,0) }"
   self.start_clock_after_phrase=nil
   self.pattern_clock_sync=self.lattice:new_pattern{
     action=function(x)
-      if  params:get("is_playing")==1 and self.start_clock_after_phrase~=nil and self.current_phrase>=self.start_clock_after_phrase then 
+      if params:get("is_playing")==1 and self.start_clock_after_phrase~=nil and self.current_phrase>=self.start_clock_after_phrase then
         crow.output[3]()
       end
     end,
     division=1/8,
   }
-
 
   params.action_write=function(filename,name)
     print("write",filename,name)
@@ -358,12 +359,12 @@ end
 
 function Acrostic:iterate_chord()
   local current_chord_mod4=(params:get("current_chord")-1)%4+1
-  self.current_chord_beat=self.current_chord_beat+1 
-  if self.current_chord_beat<=params:get("beats"..self.page..current_chord_mod4) then 
+  self.current_chord_beat=self.current_chord_beat+1
+  if self.current_chord_beat<=params:get("beats"..self.page..current_chord_mod4) then
     do return true end
   end
   -- iterate chord
-  params:delta("current_chord",params:get("do_reverse")==1 and 1 or -1)
+  params:delta("current_chord",params:get("do_reverse")==1 and 1 or-1)
   self.current_chord_beat=1
   current_chord_mod4=(params:get("current_chord")-1)%4+1
   if params:get("is_playing")~=1 then
@@ -373,16 +374,16 @@ function Acrostic:iterate_chord()
     self.current_phrase=self.current_phrase+1
   end
   if self.debounce_chord_selection==0 then
-    local page=self.page 
+    local page=self.page
     if params:get("number_of_chords")>1 then
       self.page=params:get("current_chord")>4 and 2 or 1
     else
       self.page=1
     end
-    if page~=self.page then 
+    if page~=self.page then
       self:msg("page "..self.page)
     end
-    if self.page==1 and current_chord_mod4==1 and self.do_set_cut_to_1~=nil and self.do_set_cut_to_1 then 
+    if self.page==1 and current_chord_mod4==1 and self.do_set_cut_to_1~=nil and self.do_set_cut_to_1 then
       self.do_set_cut_to_1=nil
       print("resetting cuts")
       for i=1,6 do
@@ -393,14 +394,14 @@ function Acrostic:iterate_chord()
 
     if not table.is_empty(self.rec_queue) then
       if params:get("sel_note")~=self.rec_queue[1].i then
-        if current_chord_mod4==1 then 
+        if current_chord_mod4==1 then
           params:set("sel_note",self.rec_queue[1].i)
         end
       end
     end
   end
-  if params:get("beats"..self.page..current_chord_mod4)==0 then 
-    do return false end 
+  if params:get("beats"..self.page..current_chord_mod4)==0 then
+    do return false end
   end
   return true
 end
@@ -422,11 +423,11 @@ function Acrostic:iterate_note()
 end
 
 function Acrostic:set_page(p)
-  if params:get("number_of_chords")==1 then 
+  if params:get("number_of_chords")==1 then
     self.page=1
-    do return end 
+    do return end
   end
-  self.page=p 
+  self.page=p
   self:msg("page "..p)
   self.debounce_chord_selection=20
 end
@@ -467,7 +468,7 @@ function Acrostic:toggle_start(stop_all)
         self.lattice:hard_restart()
         for i=1,6 do
           softcut.play(i,1)
-          softcut.rate(i,params:get("do_reverse")==1 and 1 or -1)
+          softcut.rate(i,params:get("do_reverse")==1 and 1 or-1)
         end
       else
         self:msg("begin phrase")
@@ -484,8 +485,8 @@ function Acrostic:toggle_start(stop_all)
 end
 
 function Acrostic:play_note(note)
-  if math.random()>params:get("gate_prob") then 
-    do return end 
+  if math.random()>params:get("gate_prob") then
+    do return end
   end
 
   -- engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
@@ -499,18 +500,20 @@ function Acrostic:play_note(note)
   if crow~=nil then
     crow.output[2].action="{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
     crow.output[2]()
-    if params:get("crow_1_pitch")==1 then 
+    if params:get("crow_1_pitch")==1 then
       crow.output[1].volts=(note-24)/12
     else
       crow.output[1].volts=0.0372*note+0.527 -- korg monotron!
     end
   end
   for name,m in pairs(self.midis) do
-    if m.last_note~=nil then
-      m.conn:note_off(m.last_note)
+    if name==self.midi_devices[params:get("midi_in")] then
+      if m.last_note~=nil then
+        m.conn:note_off(m.last_note)
+      end
+      m.conn:note_on(note,64)
+      self.midis[name].last_note=note
     end
-    m.conn:note_on(note,64)
-    self.midis[name].last_note=note
   end
   self.last_note=note
 
@@ -611,7 +614,7 @@ end
 
 function Acrostic:minimize_transposition()
   local roman_numerals={}
-  for chord=1,4 do 
+  for chord=1,4 do
     table.insert(roman_numerals,self.available_chords[params:get("chord"..self.page..chord)])
   end
   local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{1,2,3,3,4,4})
@@ -714,14 +717,14 @@ end
 
 function Acrostic:update_beats(update_softcut)
   local total_beats=0
-  for page=1,params:get("number_of_chords") do 
-    for chord=1,4 do 
+  for page=1,params:get("number_of_chords") do
+    for chord=1,4 do
       total_beats=total_beats+params:get("beats"..page..chord)
     end
   end
   self.loop_length=total_beats
-  if update_softcut==nil or update_softcut then 
-    for i=1,6 do 
+  if update_softcut==nil or update_softcut then
+    for i=1,6 do
       softcut.loop_end(i,self.o.minmax[i][2]+self.loop_length*clock.get_beat_sec())
     end
   end
@@ -752,7 +755,7 @@ function Acrostic:update_chords()
 end
 
 function Acrostic:update_final()
-  for page=1,2 do 
+  for page=1,2 do
     self.matrix_final[page]={}
     self.matrix_name[page]={}
     for note=1,6 do
@@ -876,17 +879,17 @@ function Acrostic:key(k,z)
   if params:get("sel_selection")==4 and k==3 then
     if global_shift then
       local queued={}
-      for _, v in ipairs(self.rec_queue) do 
+      for _,v in ipairs(self.rec_queue) do
         table.insert(queued,v.i)
       end
       local foo={}
       for i=1,6 do
-        if not self.recorded[i] and not table.contains(queued, i) then
+        if not self.recorded[i] and not table.contains(queued,i) then
           table.insert(foo,i)
         end
       end
       table.shuffle(foo)
-      for _, i in ipairs(foo) do 
+      for _,i in ipairs(foo) do
         self:queue_recording(i)
       end
     else
@@ -964,12 +967,12 @@ function Acrostic:enc(k,d)
 end
 
 function Acrostic:update()
-  if self.do_update_chords~=nil and self.do_update_chords then 
-    self.do_update_chords=nil 
+  if self.do_update_chords~=nil and self.do_update_chords then
+    self.do_update_chords=nil
     self:update_chords()
   end
-  if self.do_update_beats~=nil and self.do_update_beats then 
-    self.do_update_beats=nil 
+  if self.do_update_beats~=nil and self.do_update_beats then
+    self.do_update_beats=nil
     self:update_beats()
   end
   if self.debounce_chord_selection>0 then
@@ -1005,7 +1008,7 @@ function Acrostic:draw()
       screen.level(3)
     end
     local chord_text=""
-    if global_shift and params:get("sel_selection")==1 then 
+    if global_shift and params:get("sel_selection")==1 then
       chord_text=params:get("beats"..self.page..i)
     else
       chord_text=self.available_chords[params:get("chord"..self.page..i)]
@@ -1096,8 +1099,6 @@ function Acrostic:draw()
     screen.stroke()
   end
 
-
-
   if self.message_level>0 and self.message~="" then
     self.message_level=self.message_level-2
     screen.move(100,8)
@@ -1105,14 +1106,14 @@ function Acrostic:draw()
     screen.text_center(self.message)
   else
     local foo=""
-    for i, q in ipairs(self.rec_queue) do 
+    for i,q in ipairs(self.rec_queue) do
       if i==1 then
-        if q.recording then 
+        if q.recording then
           foo="r"..q.i.." "
-          if #self.rec_queue>1 then 
+          if #self.rec_queue>1 then
             foo=foo.."q"
-          end 
-        else 
+          end
+        else
           foo="q"..q.i.." "
         end
       else
@@ -1122,7 +1123,7 @@ function Acrostic:draw()
     screen.move(96,8)
     screen.level(15)
     screen.text_center(foo)
-  
+
     screen.move(76,7)
     screen.level(15)
     if params:get("is_playing")==1 then
