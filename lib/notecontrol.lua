@@ -20,10 +20,10 @@ end
 function NoteControl:enc(k,d)
   if k==2 then
     params:delta("internote_prob",d)
-    self:msg("other-note prob: "..params:get("internote_prob")*100.."%")
+    self:msg("other-note prob: "..(params:get("internote_prob")*100).."%")
   elseif k==3 then
     params:delta("gate_prob",d)
-    self:msg("gate prob: "..params:get("gate_prob")*100.."%")
+    self:msg("gate prob: "..(params:get("gate_prob")*100).."%")
   end
 end
 

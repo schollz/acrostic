@@ -74,9 +74,10 @@ function Acrostic:init(o)
     self.do_update_chords=true
   end)
   local basic_chords={"I","ii","iii","IV","V","vi","VII","i","II","III","iv","v","VI","vii"}
-  local available_chords={}
+  self.available_chords={}
   for _,v in ipairs({"","7","6-9"}) do
     for _,c in ipairs(basic_chords) do
+      print(c,v)
       table.insert(self.available_chords,c..v)
     end
   end
