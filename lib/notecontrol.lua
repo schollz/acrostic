@@ -20,10 +20,10 @@ end
 function NoteControl:enc(k,d)
   if k==2 then
     params:delta("internote_prob",d)
-    self:msg("other-note prob: "..(params:get("internote_prob")*100).."%")
+    self:msg("other-note prob: "..math.floor(params:get("internote_prob")*100).."%")
   elseif k==3 then
     params:delta("gate_prob",d)
-    self:msg("gate prob: "..(params:get("gate_prob")*100).."%")
+    self:msg("gate prob: "..math.floor(params:get("gate_prob")*100).."%")
   end
 end
 
@@ -95,9 +95,9 @@ function NoteControl:draw()
   if self.message_level>0 and self.message~="" then
     self.message_level=self.message_level-1
     screen.aa(0)
-    screen.move(96,8)
+    screen.move(120,8)
     screen.level(self.message_level)
-    screen.text_center(self.message)
+    screen.text_right(self.message)
   end
 end
 

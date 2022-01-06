@@ -24,7 +24,7 @@ function VolPan:enc(k,d)
   local v={"vol adj","vol lfo amp","vol lfo period","pan adj","pan lfo amp","pan lfo period"}
   local vv=self.shift and v[k+3] or v[k]
   params:delta(self.sel..vv,d)
-  self:msg(vv..": ",params:get(self.sel..vv))
+  self:msg(vv..": "..math.floor(params:get(self.sel..vv)*10)/10)
 end
 
 function VolPan:key(k,z)
@@ -63,9 +63,9 @@ function VolPan:draw()
   if self.message_level>0 and self.message~="" then
     self.message_level=self.message_level-1
     screen.aa(0)
-    screen.move(96,8)
+    screen.move(120,8)
     screen.level(self.message_level)
-    screen.text_center(self.message)
+    screen.text_right(self.message)
   end
 end
 
