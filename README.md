@@ -64,16 +64,33 @@ sudo systemctl restart norns-crone.service
 2. start script, wait for the ghost's eyes to open.
 3. press K1+K3.
 
+## pages
 
-## sequencer
+use K1+E1 to change pages.
 
-- K1+E1 changes page
-- K1 shifts
-- E1 changes context
+there are four pages in acrostic:
+
+1. the matrix
+2. the planets
+3. the bars
+4. the phantom
+
+the matrix does the sequencing and sampling and lets you modulate both. the planets lets you modulate the lfos for the volume and pan of the samples. the bars lets you gate and add interstitial notes. the phantom is a voice that you can use if you have no other voice.
+
+## the matrix page
+
+use E1 to change "context" within this page. in the matrix there are four contexts:
+
+1. chords
+2. notes
+3. phrase
+4. sampling
+
+the chords lets you pick the chords and allocate the beats. the notes context lets you rotate and change octave of notes in a chord. the phrase context lets you rotate notes and change octave in a phrase. the sampling context is where you initiate recording and can do some leveling.
 
 ### chord context
 
-![chord context](https://user-images.githubusercontent.com/6550035/147990903-c156b2e9-6314-4c3c-98dd-cfc29cf04e2b.png)
+![chord context](https://user-images.githubusercontent.com/6550035/148656290-cb6c766c-fa4a-4dc1-932b-4ae5ca171623.png
 
 
 - E2 or K1+E2 select chord position
@@ -84,10 +101,11 @@ sudo systemctl restart norns-crone.service
 
 ### note/phrase context
 
-![note context](https://user-images.githubusercontent.com/6550035/147990908-f778ed71-577b-43a6-8c74-bceaf99a041a.png)
+![note context](https://user-images.githubusercontent.com/6550035/148656287-5b40f2bd-f05d-4bdf-acf9-a0919e54b741.png)
 
-![phrase context](https://user-images.githubusercontent.com/6550035/147990909-3e52c93c-8d8e-4cb4-adcb-7bd3f9c98163.png)
+![phrase context](https://user-images.githubusercontent.com/6550035/148656296-456530cb-76a6-40eb-84a0-9635d7e651a8.png)
 
+both of these contexts have the same controls/share controls.
 
 - E2 select notes in chord
 - E3 select phrase
@@ -98,7 +116,7 @@ sudo systemctl restart norns-crone.service
 
 ### sampling context
 
-![sampling context](https://user-images.githubusercontent.com/6550035/147990910-8f22641d-c8c0-4282-a9ff-8ebb26699667.png)
+![sampling context](https://user-images.githubusercontent.com/6550035/148656295-0fab491c-b5f2-4846-b233-b8b3467d5264.png)
 
 - E2 select sample
 - K3 queues recording
@@ -111,7 +129,18 @@ sudo systemctl restart norns-crone.service
 
 when you queue a recording (K3) it will begin recording at the next loop. you can queue multiple samples, even while one is recorindg.
 
-![queue recording](https://user-images.githubusercontent.com/6550035/147990912-d93653b0-c08a-4d23-ad69-b79303cb9507.png)
+## the planets
+
+![planets](https://user-images.githubusercontent.com/6550035/148656294-ec41728e-35c3-4c1e-ba26-189c3ada703f.png)
+
+## the bars
+
+![planets](https://user-images.githubusercontent.com/6550035/148656293-e2ebfc14-3269-4ab8-a7b4-e84f3615cd14.png)
+
+
+## the phantom
+
+![thephantom](https://user-images.githubusercontent.com/6550035/148656292-7609719b-50be-4d8e-9c9c-a3c4e9c6c90f.png)
 
 
 ## Install
