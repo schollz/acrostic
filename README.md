@@ -12,12 +12,28 @@ this script was added as an addition to the [norns *oooooo* script](https://llll
 - each chord has six notes that can be rearranged / modified
 - each chord can be set to 0-16 beats long
 - everything is accessible through the UI
+- additional controls for gating/adding notes
+
+I recorded a tutorial that includes a demo, a quick start and a in-depth overview: 
+
+https://vimeo.com/663443176
+
+here are a few more details:
+
+https://vimeo.com/663740623
+
+https://vimeo.com/663740704
+
+https://vimeo.com/663740652
+
+I want to express a huge thanks to Takahiro for implementing the eyes in their [wonderful three-eyes norns script](https://github.com/monome-community/nc01-drone/blob/master/three-eyes.lua).
+
 
 
 # Requirements
 
 - norns
-- external synth (midi or cv)
+- external midi or cv synth (optional)
 
 # Documentation
 
@@ -164,11 +180,7 @@ when you queue a recording (K3) it will begin recording at the next loop. you ca
 - K1+E2 adjusts volume
 - K1+E3 adjusts feedback
 
-# thanks
-
-huge thanks to Takahiro for implementing the amazing eyes in their [wonderful three-eyes norns script](https://github.com/monome-community/nc01-drone/blob/master/three-eyes.lua).
-
-## Install
+# Install
 
 install with
 
