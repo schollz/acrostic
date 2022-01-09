@@ -94,6 +94,7 @@ the chords lets you pick the chords and allocate the beats. the notes context le
 
 ![chord context](https://user-images.githubusercontent.com/6550035/148664646-3bd20a3d-628b-4dbe-9d4d-13c317323d69.png)
 
+you are in the "chord context" when the bar around the roman numerals is highlighted.
 
 - E2 or K1+E2 select chord position
 - E3 change chord
@@ -107,7 +108,7 @@ the chords lets you pick the chords and allocate the beats. the notes context le
 
 ![phrase context](https://user-images.githubusercontent.com/6550035/148664643-2e3d9ef8-290f-4fd8-b93a-b8f651d824ef.png)
 
-both of these contexts have the same controls/share controls.
+you are in the "note context" when the columns are highlighted and you are in the "phrase context" when a row is highlighted. both of these contexts have the same controls/share controls.
 
 - E2 select notes in chord
 - E3 select phrase
@@ -119,6 +120,8 @@ both of these contexts have the same controls/share controls.
 ### sampling context
 
 ![sampling context](https://user-images.githubusercontent.com/6550035/148664642-74596b94-a29d-4efe-9038-68993d8addb1.png)
+
+you are in the "sampling context" when the sample area is highlighted.
 
 - E2 select sample
 - K3 queues recording
