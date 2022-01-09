@@ -2,7 +2,7 @@
 
 sample and layer chords.
 
-![img](https://user-images.githubusercontent.com/6550035/147991374-42d4b89b-4141-44c0-9974-806f3dd70392.png)
+![img](https://user-images.githubusercontent.com/6550035/148664651-35ae313d-be73-445a-9c39-1e193d3bd3ba.png)
 
 acrostic lets you stack monophonic sound sources into chords with subtle melodies. basically, it is a sequencer that sends out one note at a time from chords to use the loops to record the entire chord phrase. it's described in more detail [here](https://llllllll.co/t/latest-tracks-videos/25738/3016) and is the basis of [an entire album I recorded](https://infinitedigits.bandcamp.com/album/at-the-place). 
 
@@ -79,6 +79,8 @@ the matrix does the sequencing and sampling and lets you modulate both. the plan
 
 ## the matrix page
 
+![matrix](https://user-images.githubusercontent.com/6550035/148664651-35ae313d-be73-445a-9c39-1e193d3bd3ba.png)
+
 use E1 to change "context" within this page. in the matrix there are four contexts:
 
 1. chords
@@ -90,7 +92,7 @@ the chords lets you pick the chords and allocate the beats. the notes context le
 
 ### chord context
 
-![chord context](https://user-images.githubusercontent.com/6550035/148656290-cb6c766c-fa4a-4dc1-932b-4ae5ca171623.png
+![chord context](https://user-images.githubusercontent.com/6550035/148664646-3bd20a3d-628b-4dbe-9d4d-13c317323d69.png)
 
 
 - E2 or K1+E2 select chord position
@@ -101,9 +103,9 @@ the chords lets you pick the chords and allocate the beats. the notes context le
 
 ### note/phrase context
 
-![note context](https://user-images.githubusercontent.com/6550035/148656287-5b40f2bd-f05d-4bdf-acf9-a0919e54b741.png)
+![note context](https://user-images.githubusercontent.com/6550035/148664645-64678f15-96ff-402a-98e9-c8af371c81f4.png)
 
-![phrase context](https://user-images.githubusercontent.com/6550035/148656296-456530cb-76a6-40eb-84a0-9635d7e651a8.png)
+![phrase context](https://user-images.githubusercontent.com/6550035/148664643-2e3d9ef8-290f-4fd8-b93a-b8f651d824ef.png)
 
 both of these contexts have the same controls/share controls.
 
@@ -116,7 +118,7 @@ both of these contexts have the same controls/share controls.
 
 ### sampling context
 
-![sampling context](https://user-images.githubusercontent.com/6550035/148656295-0fab491c-b5f2-4846-b233-b8b3467d5264.png)
+![sampling context](https://user-images.githubusercontent.com/6550035/148664642-74596b94-a29d-4efe-9038-68993d8addb1.png)
 
 - E2 select sample
 - K3 queues recording
@@ -131,17 +133,37 @@ when you queue a recording (K3) it will begin recording at the next loop. you ca
 
 ## the planets
 
-![planets](https://user-images.githubusercontent.com/6550035/148656294-ec41728e-35c3-4c1e-ba26-189c3ada703f.png)
+![planets](https://user-images.githubusercontent.com/6550035/148664641-5f8c079a-6645-4fa7-8031-1643d886a515.png)
+
+- K3 switches between loops
+- E1 adjusts volume
+- E2 adjust volume lfo amplitude
+- E3 adjusts volume lfo period
+- K2+E1 adjusts pan
+- K2+E2 adjusts pan lfo amplitude
+- K2+E3 adjusts pan lfo period
 
 ## the bars
 
-![planets](https://user-images.githubusercontent.com/6550035/148656293-e2ebfc14-3269-4ab8-a7b4-e84f3615cd14.png)
+![bars](https://user-images.githubusercontent.com/6550035/148664640-f5a7cc94-3de7-4da7-b8d3-c9903ab4735b.png)
+
+- E2 adjusts interstitial note probability
+- E3 adjusts gate probabilty
 
 
 ## the phantom
 
-![thephantom](https://user-images.githubusercontent.com/6550035/148656292-7609719b-50be-4d8e-9c9c-a3c4e9c6c90f.png)
+![thephantom](https://user-images.githubusercontent.com/6550035/148664652-bcafc62b-e460-45de-ad4f-97cd6398c3cc.png)
 
+- E1 adjusts LPF lfo frequency
+- E2 adjusts LPF minimum cutoff
+- E3 adjusts LPF maximum cutoff
+- K1+E2 adjusts volume
+- K1+E3 adjusts feedback
+
+# thanks
+
+huge thanks to Takahiro for implementing the amazing eyes in their [wonderful three-eyes norns script](https://github.com/monome-community/nc01-drone/blob/master/three-eyes.lua).
 
 ## Install
 
