@@ -26,7 +26,7 @@ https://vimeo.com/663740704
 
 https://vimeo.com/663740652
 
-I want to express a huge thanks to Takahiro for implementing the eyes in their [wonderful three-eyes norns script](https://github.com/monome-community/nc01-drone/blob/master/three-eyes.lua).
+I want to express a huge thanks to Takahiro for implementing the eyes in their [wonderful three-eyes norns script](https://github.com/monome-community/nc01-drone/blob/master/three-eyes.lua) and thanks to Ezra for helping me integrate some softcut code to record single loops.
 
 
 
