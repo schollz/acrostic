@@ -18,7 +18,7 @@ I recorded a tutorial that includes a demo, a quick start and a in-depth overvie
 
 https://vimeo.com/663443176
 
-here are a few more details:
+here are a few more demo performances:
 
 https://vimeo.com/663740623
 
