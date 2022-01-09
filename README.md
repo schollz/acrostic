@@ -93,7 +93,7 @@ there are four pages in acrostic:
 
 the matrix does the sequencing and sampling and lets you modulate both. the planets lets you modulate the lfos for the volume and pan of the samples. the bars lets you gate and add interstitial notes. the phantom is a voice that you can use if you have no other voice.
 
-## the matrix page
+## page 1) the matrix
 
 ![matrix](https://user-images.githubusercontent.com/6550035/148664651-35ae313d-be73-445a-9c39-1e193d3bd3ba.png)
 
@@ -150,7 +150,7 @@ you are in the "sampling context" when the sample area is highlighted.
 
 when you queue a recording (K3) it will begin recording at the next loop. you can queue multiple samples, even while one is recorindg.
 
-## the planets
+## page 2) the planets
 
 ![planets](https://user-images.githubusercontent.com/6550035/148664641-5f8c079a-6645-4fa7-8031-1643d886a515.png)
 
@@ -162,7 +162,7 @@ when you queue a recording (K3) it will begin recording at the next loop. you ca
 - K2+E2 adjusts pan lfo amplitude
 - K2+E3 adjusts pan lfo period
 
-## the bars
+## page 3) the bars
 
 ![bars](https://user-images.githubusercontent.com/6550035/148664640-f5a7cc94-3de7-4da7-b8d3-c9903ab4735b.png)
 
@@ -170,7 +170,7 @@ when you queue a recording (K3) it will begin recording at the next loop. you ca
 - E3 adjusts gate probabilty
 
 
-## the phantom
+## page 4) the phantom
 
 ![thephantom](https://user-images.githubusercontent.com/6550035/148664652-bcafc62b-e460-45de-ad4f-97cd6398c3cc.png)
 
