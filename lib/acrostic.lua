@@ -154,7 +154,7 @@ function Acrostic:init(o)
   end)
 
   for i=1,6 do
-    params:add_group("loop "..i,10)
+    params:add_group("loop "..i,11)
     params:add_control("rec_level"..i,"rec level "..i,controlspec.new(0,1,'lin',0.01,1.0,'',0.01/1))
     params:set_action("rec_level"..i,function(x)
       softcut.rec_level(i,x)
@@ -171,6 +171,10 @@ function Acrostic:init(o)
     params:add_control(i.."pan lfo amp","pan lfo amp",controlspec.new(0,1,"lin",0.01,0.2,"",0.01))
     params:add_control(i.."pan lfo period","pan lfo period",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
     params:add_control(i.."pan lfo offset","pan lfo offset",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
+    params:add_control(i.."lpf","lpf",controlspec.new(40,20000,"exp",40,20000,"Hz",40/20000))
+    params:set_action(i.."lpf",function(x)
+	softcut.post_filter_fc(i,x)
+    end)
   end
 
   -- randomize lfo
