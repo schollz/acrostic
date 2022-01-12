@@ -91,14 +91,17 @@ function NoteControl:draw()
   screen.update()
   screen.blend_mode(0)
   screen.aa(0)
-
   if self.message_level>0 and self.message~="" then
+    screen.rect(0,0,128,11)
+    screen.level(0)
+    screen.fill()
     self.message_level=self.message_level-1
     screen.aa(0)
     screen.move(120,8)
     screen.level(self.message_level)
     screen.text_right(self.message)
   end
+  screen.blend_mode(0)
 end
 
 return NoteControl
