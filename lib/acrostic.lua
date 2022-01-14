@@ -161,7 +161,7 @@ function Acrostic:init(o)
     params:set_action("rec_level"..i,function(x)
       softcut.rec_level(i,x)
     end)
-    params:add_control("pre_level"..i,"pre level "..i,controlspec.new(0,1,'lin',0.01,1.0,'',0.01/1))
+    params:add_control("pre_level"..i,"pre level "..i,controlspec.new(0,1,'lin',0.01,0.5,'',0.01/1))
     params:set_action("pre_level"..i,function(x)
       softcut.pre_level(i,x)
     end)
@@ -414,6 +414,22 @@ function Acrostic:iterate_chord()
 end
 
 function Acrostic:iterate_note()
+  -- enunciate phrases
+  local chord=params:get("current_chord")
+  local page=1
+  if chord>4 then
+    chord=chord-4
+    page=2
+  end
+  local chord_roman=params:get("chord"..page..chord)
+  if chord_roman~=self.last_chord_roman then 
+    crow.output[4].action = "{ to(0,0), to(10,"..(clock.get_beat_sec()*math.random(50,200)/100).."), to(7,"..(clock.get_beat_sec()/1.5)..") }"
+    crow.output[4]()
+  end
+  self.last_chord_roman=chord_roman
+
+  -- iterate note
+  self.last_sel_chord=params:get("sel_chord")
   local note=self.matrix_final[self.page][params:get("sel_note")][params:get("sel_chord")]
   self:play_note(note)
   if params:get("random_mode")==2 then
