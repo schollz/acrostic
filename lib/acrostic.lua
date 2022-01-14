@@ -63,13 +63,15 @@ function Acrostic:init(o)
   end
 
   -- setup parameters
-  params:add_group("chords",18)
+  params:add_group("chords",19)
   params:add_option("number_of_chords","num chords",{4,8},1)
   params:set_action("number_of_chords",function(x)
     self.do_update_beats=true
     self.do_set_cut_to_1=true
   end)
   params:add{type="number",id="root_note",name="root note",min=0,max=127,default=48,formatter=function(param) return MusicUtil.note_num_to_name(param:get(),true) end}
+  self.scales_available={"Major","Minor"}
+  params:add_option("scale","scale",self.scales_available,1)
   params:set_action("root_note",function(x)
     self.do_update_chords=true
   end)
@@ -278,7 +280,7 @@ function Acrostic:init(o)
     division=1/4,
   }
   self.pattern_measure_inter={}
-  local scale=MusicUtil.generate_scale_of_length(params:get("root_note"),"Major",120)
+  local scale=MusicUtil.generate_scale_of_length(params:get("root_note"),params:get("scale"),120)
   for i=1,3 do
     self.pattern_measure_inter[i]=self.lattice:new_pattern{
       action=function(t)
@@ -642,7 +644,7 @@ function Acrostic:minimize_transposition_old(changes)
   local chords={}
   local chord_notes={}
   for chord=1,4 do
-    local notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..self.page..chord)])
+    local notes=MusicUtil.generate_chord_roman(params:get("root_note"),params:get("scale"),self.available_chords[params:get("chord"..self.page..chord)])
     chord_notes[chord]=table.clone(notes)
     table.rotatex(notes,math.random(0,2))
     table.insert(chords,table.clone(notes))
@@ -737,7 +739,7 @@ end
 
 function Acrostic:update_chords()
   for chord=1,4 do
-    local chord_notes=MusicUtil.generate_chord_roman(params:get("root_note"),"Major",self.available_chords[params:get("chord"..self.page..chord)])
+    local chord_notes=MusicUtil.generate_chord_roman(params:get("root_note"),params:get("scale"),self.available_chords[params:get("chord"..self.page..chord)])
     local notes={}
     for _,note in ipairs(chord_notes) do
       table.insert(notes,note)
