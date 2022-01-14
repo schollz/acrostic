@@ -414,6 +414,10 @@ function Acrostic:iterate_chord()
 end
 
 function Acrostic:iterate_note()
+  -- iterate note
+  self.last_sel_chord=params:get("sel_chord")
+  local note=self.matrix_final[self.page][params:get("sel_note")][params:get("sel_chord")]
+
   -- enunciate phrases
   local chord=params:get("current_chord")
   local page=1
@@ -422,15 +426,14 @@ function Acrostic:iterate_note()
     page=2
   end
   local chord_roman=params:get("chord"..page..chord)
-  if chord_roman~=self.last_chord_roman then 
+  if chord_roman~=self.last_chord_roman and note~=self.last_note then 
     crow.output[4].action = "{ to(0,0), to(10,"..(clock.get_beat_sec()*math.random(50,200)/100).."), to(7,"..(clock.get_beat_sec()/1.5)..") }"
     crow.output[4]()
   end
   self.last_chord_roman=chord_roman
+  self.last_note=note
 
-  -- iterate note
-  self.last_sel_chord=params:get("sel_chord")
-  local note=self.matrix_final[self.page][params:get("sel_note")][params:get("sel_chord")]
+  -- play note
   self:play_note(note)
   if params:get("random_mode")==2 then
     -- randomize next position
