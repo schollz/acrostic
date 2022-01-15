@@ -39,6 +39,17 @@ function init()
   params:set("chord22",3,true)
   params:set("chord23",6,true)
   params:set("chord24",5,true)
+
+  params:set("chord11",1,true)
+  params:set("chord12",3,true)
+  params:set("chord13",4,true)
+  params:set("chord14",1,true)
+  params:set("chord21",4,true)
+  params:set("chord22",5,true)
+  params:set("chord23",3,true)
+  params:set("chord24",1,true)
+  params:set("number_of_chords",2)
+
   -- params:set("chord11",1+7,true)
   -- params:set("chord12",4+7,true)
   -- params:set("chord13",3+7,true)
@@ -62,8 +73,8 @@ function init()
   --     params:set("beats"..page..beat,4)
   --   end
   -- end
-  
-  -- for i=1,6 do 
+
+  -- for i=1,6 do
   --   softcut.post_filter_dry(i,1)
   --   softcut.post_filter_hp(i,0)
   --   softcut.post_filter_lp(i,0)
