@@ -132,7 +132,7 @@ function Acrostic:init(o)
     self.do_set_cut_to_1=true
   end)
 
-  params:add_group("midi/crow",6)
+  params:add_group("midi/crow",11)
   params:add_option("midi_in","midi in",self.midi_devices,#self.midi_devices==1 and 1 or 2)
   params:add_option("crow_1_pitch","crow 1 pitch",{"normal","korg monotron"},1)
   params:add_control("crow 2 gate","crow 2 gate length",controlspec.new(0,100,"lin",1,75,"%",1/100))
@@ -154,6 +154,10 @@ function Acrostic:init(o)
       self.pattern_clock_sync:set_division(option_divisions_num[x])
     end
   end)
+  params:add_control("crow_4_level","crow 4 sustain",controlspec.new(0,10,'lin',0.1,10,'volts',0.1/10))
+  params:add_control("crow_4_attack","crow 4 attack",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
+  params:add_control("crow_4_sustain","crow 4 sustain",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
+  params:add_control("crow_4_decay","crow 4 decay",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
 
   for i=1,6 do
     params:add_group("loop "..i,11)
@@ -175,7 +179,7 @@ function Acrostic:init(o)
     params:add_control(i.."pan lfo offset","pan lfo offset",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
     params:add_control(i.."lpf","lpf",controlspec.new(40,20000,"exp",40,20000,"Hz",40/20000))
     params:set_action(i.."lpf",function(x)
-	softcut.post_filter_fc(i,x)
+      softcut.post_filter_fc(i,x)
     end)
   end
 
@@ -426,8 +430,10 @@ function Acrostic:iterate_note()
     page=2
   end
   local chord_roman=params:get("chord"..page..chord)
-  if chord_roman~=self.last_chord_roman and note~=self.last_note then 
-    crow.output[4].action = "{ to(0,0), to(10,"..(clock.get_beat_sec()*math.random(50,200)/100).."), to(7,"..(clock.get_beat_sec()/1.5)..") }"
+  if chord_roman~=self.last_chord_roman and note~=self.last_note then
+    crow.output[4].action="{ to(0,0), to("..params:get("crow_4_level")..
+    ","..(clock.get_beat_sec()*params:get("crow_4_attack"))..
+    "), to("..params:get("crow_4_sustain")..","..(clock.get_beat_sec()*params:get("crow_4_decay"))..") }"
     crow.output[4]()
   end
   self.last_chord_roman=chord_roman
@@ -502,7 +508,7 @@ function Acrostic:toggle_start(stop_all)
       end
     else
       self:msg("stop phrase")
-	clock.link.stop()
+      clock.link.stop()
     end
   end
   if params:get("is_playing")==0 then

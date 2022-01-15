@@ -180,6 +180,15 @@ when you queue a recording (K3) it will begin recording at the next loop. you ca
 - K1+E2 adjusts volume
 - K1+E3 adjusts feedback
 
+## crow
+
+the crow outputs are used for expression with CV instruments:
+
+- crow output 1 is pitch
+- crow output 2 is the note gate 
+- crow output 3 is clock
+- crow output 4 is a chord change gate
+
 # Install
 
 install with
