@@ -485,6 +485,7 @@ function Acrostic:toggle_start(stop_all)
     params:delta("is_playing",1)
     self.current_chord_beat=0
     if params:get("is_playing")==1 then
+      clock.link.start()
       if self.softcut_stopped then
         self:msg("begin all")
         print("restting all")
@@ -501,6 +502,7 @@ function Acrostic:toggle_start(stop_all)
       end
     else
       self:msg("stop phrase")
+	clock.link.stop()
     end
   end
   if params:get("is_playing")==0 then
