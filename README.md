@@ -44,26 +44,28 @@ requires latest softcut and a unreleased norns build.
 first rebuild norns:
 
 ```bash
+sudo systemctl stop norns-jack.service; sudo systemctl stop norns-matron.service; sudo systemctl stop norns-crone.service && \
 cd ~; ~/norns/stop.sh; rm -rf ~/norns; \
 git clone https://github.com/schollz/norns && \
-cd ~/norns && git checkout sc-rec-once && \
+cd ~/norns && git checkout id && \
 git submodule update --init --recursive && \
-cd ~/norns/crone/softcut && \
-git checkout main && \
+cd ~/norns/crone/ && rm -rf softcut && \
+git clone https://github.com/schollz/softcut-lib softcut && \
+cd softcut && git checkout id && \
 cd ~/norns/crone/softcut/softcut-lib && \
 ./waf configure && \
 ./waf && \
 cd ~/norns && \
 ./waf configure --enable-ableton-link && \
-./waf build
+./waf build && \
+sudo systemctl restart norns-jack.service; sudo systemctl restart norns-matron.service; sudo systemctl restart norns-crone.service
 ```
 
 then install acrostic:
 
 ```bash
 rm -rf ~/dust/code/acrostic && \
-git clone https://github.com/schollz/acrostic ~/dust/code/acrostic && \
-cd ~/dust/code/acrostic && git checkout beta
+git clone https://github.com/schollz/acrostic ~/dust/code/acrostic
 ```
 
 then restart norns:
