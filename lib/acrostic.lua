@@ -132,7 +132,7 @@ function Acrostic:init(o)
     self.do_set_cut_to_1=true
   end)
 
-  params:add_group("midi/crow",11)
+  params:add_group("midi/crow",10)
   params:add_option("midi_in","midi in",self.midi_devices,#self.midi_devices==1 and 1 or 2)
   params:add_option("crow_1_pitch","crow 1 pitch",{"normal","korg monotron"},1)
   params:add_control("crow 2 gate","crow 2 gate length",controlspec.new(0,100,"lin",1,75,"%",1/100))
@@ -187,8 +187,8 @@ function Acrostic:init(o)
   for i=1,6 do
     params:set(i.."vol lfo period",round_time_to_nearest_beat(math.random()*10+10))
     params:set(i.."vol lfo offset",round_time_to_nearest_beat(math.random()*60))
-    params:set(i.."vol lfo amp",math.random()*0.75+0.25)
-    params:set(i.."pan lfo amp",math.random()*0.8+0.2)
+    params:set(i.."vol lfo amp",math.random()*0.3+0.7)
+    params:set(i.."pan lfo amp",math.random()*0.5+0.5)
     params:set(i.."pan lfo period",round_time_to_nearest_beat(math.random()*15+10))
     params:set(i.."pan lfo offset",round_time_to_nearest_beat(math.random()*60))
   end
@@ -922,7 +922,7 @@ function Acrostic:key(k,z)
           table.insert(foo,i)
         end
       end
-      table.shuffle(foo)
+      --table.shuffle(foo) -- TODO: maybe allow shuffling as an option?
       for _,i in ipairs(foo) do
         self:queue_recording(i)
       end

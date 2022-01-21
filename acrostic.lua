@@ -31,30 +31,48 @@ function init()
   notecontrol=notecontrol_:new()
   notecontrol:init()
 
-  params:set("chord11",3,true)
-  params:set("chord12",6,true)
-  params:set("chord13",4,true)
+  -- params:set("chord11",3,true)
+  -- params:set("chord12",6,true)
+  -- params:set("chord13",4,true)
+  -- params:set("chord14",5,true)
+  -- params:set("chord21",1,true)
+  -- params:set("chord22",3,true)
+  -- params:set("chord23",6,true)
+  -- params:set("chord24",5,true)
+  -- params:set("number_of_chords",2)
+
+  -- 
+  -- params:set("chord11",1,true)
+  -- params:set("chord12",3,true)
+  -- params:set("chord13",4,true)
+  -- params:set("chord14",1,true)
+  -- params:set("chord21",4,true)
+  -- params:set("chord22",5,true)
+  -- params:set("chord23",3,true)
+  -- params:set("chord24",1,true)
+  -- params:set("number_of_chords",2)
+
+  -- -- slts
+  -- params:set("chord11",3,true)
+  -- params:set("chord12",6,true)
+  -- params:set("chord13",5,true)
+  -- params:set("chord14",1,true)
+
+  -- philipglass
+  params:set("clock_tempo",110)
+  params:set("chord11",6,true)
+  params:set("chord12",4,true)
+  params:set("chord13",3+7,true)
   params:set("chord14",5,true)
-  params:set("chord21",1,true)
-  params:set("chord22",3,true)
-  params:set("chord23",6,true)
-  params:set("chord24",5,true)
-
-  params:set("chord11",1,true)
-  params:set("chord12",3,true)
-  params:set("chord13",4,true)
-  params:set("chord14",1,true)
-  params:set("chord21",4,true)
-  params:set("chord22",5,true)
+  params:set("chord21",6,true)
+  params:set("chord22",4,true)
   params:set("chord23",3,true)
-  params:set("chord24",1,true)
+  params:set("chord24",5,true)
   params:set("number_of_chords",2)
+  params:set("beats13",6)
+  params:set("beats21",6)
 
-  -- params:set("chord11",1+7,true)
-  -- params:set("chord12",4+7,true)
-  -- params:set("chord13",3+7,true)
-  -- params:set("chord14",6+7,true)
-  -- params:set("scale",2)
+  -- sp
   -- params:set("chord11",6,true)
   -- params:set("chord12",4,true)
   -- params:set("chord13",5,true)
@@ -68,11 +86,9 @@ function init()
   -- params:set("chord23",4,true)
   -- params:set("chord24",4,true)
   -- params:set("number_of_chords",2)
-  -- for page=1,2 do
-  --   for beat=1,4 do
-  --     params:set("beats"..page..beat,4)
-  --   end
-  -- end
+  -- params:set("beats11",3)
+  -- params:set("beats12",3)
+  
 
   -- for i=1,6 do
   --   softcut.post_filter_dry(i,1)
