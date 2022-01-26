@@ -59,7 +59,7 @@ function init()
   -- params:set("chord14",1,true)
 
   -- philipglass
-  params:set("clock_tempo",110)
+  -- params:set("clock_tempo",110)
   params:set("chord11",6,true)
   params:set("chord12",4,true)
   params:set("chord13",3+7,true)
@@ -71,6 +71,28 @@ function init()
   params:set("number_of_chords",2)
   params:set("beats13",6)
   params:set("beats21",6)
+
+
+  -- brande
+  params:set("clock_tempo",90)
+  params:set("chord11",6,true)
+  params:set("chord12",3,true)
+  params:set("chord13",1,true)
+  params:set("chord14",4,true)
+  params:set("chord21",6,true)
+  params:set("chord22",3,true)
+  params:set("chord23",4,true)
+  params:set("chord24",1,true)
+  params:set("number_of_chords",2)
+  params:set("beats11",4)
+  params:set("beats12",2)
+  params:set("beats13",2)
+  params:set("beats14",6)
+  params:set("beats21",4)
+  params:set("beats22",3)
+  params:set("beats23",3)
+  params:set("beats24",6)
+ 
 
   -- sp
   -- params:set("chord11",6,true)
