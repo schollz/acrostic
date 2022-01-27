@@ -31,6 +31,7 @@ function init()
   notecontrol=notecontrol_:new()
   notecontrol:init()
 
+  
   -- params:set("chord11",3,true)
   -- params:set("chord12",6,true)
   -- params:set("chord13",4,true)
@@ -40,7 +41,28 @@ function init()
   -- params:set("chord23",6,true)
   -- params:set("chord24",5,true)
   -- params:set("number_of_chords",2)
-
+  -- params:set("beats11",3)
+  -- params:set("beats12",5)
+  
+  -- dunnno 
+  -- params:set("chord11",4,true)
+  -- params:set("chord12",5,true)
+  -- params:set("chord13",1,true)
+  -- params:set("chord14",6,true)
+  -- params:set("chord21",4,true)
+  -- params:set("chord22",1,true)
+  -- params:set("chord23",5,true)
+  -- params:set("chord24",3,true)
+  -- params:set("number_of_chords",2)
+  -- params:set("beats11",3)
+  -- params:set("beats12",3)
+  -- params:set("beats13",3)
+  -- params:set("beats14",7)
+  -- params:set("beats21",4)
+  -- params:set("beats22",4)
+  -- params:set("beats23",7)
+  -- params:set("beats24",1)
+  
   -- 
   -- params:set("chord11",1,true)
   -- params:set("chord12",3,true)
@@ -57,24 +79,51 @@ function init()
   -- params:set("chord12",6,true)
   -- params:set("chord13",5,true)
   -- params:set("chord14",1,true)
+  
+  -- vi V IV iiim7
+  -- params:set("chord11",6,true)
+  -- params:set("chord12",5,true)
+  -- params:set("chord13",4,true)
+  -- params:set("chord14",3+14,true)
+  
+  -- vi iii IV V
+  -- params:set("chord11",6,true)
+  -- params:set("chord12",3,true)
+  -- params:set("chord13",4,true)
+  -- params:set("chord14",5,true)
+
+  -- ?? basic 
+  -- params:set("chord11",4,true)
+  -- params:set("chord12",5,true)
+  -- params:set("chord13",1,true)
+  -- params:set("chord14",1,true)
+  -- params:set("chord21",6,true)
+  -- params:set("chord22",6,true)
+  -- params:set("chord23",3,true)
+  -- params:set("chord24",3,true)
+  -- params:set("number_of_chords",2)
+
 
   -- philipglass
   -- params:set("clock_tempo",110)
-  params:set("chord11",6,true)
-  params:set("chord12",4,true)
-  params:set("chord13",3+7,true)
-  params:set("chord14",5,true)
-  params:set("chord21",6,true)
-  params:set("chord22",4,true)
-  params:set("chord23",3,true)
-  params:set("chord24",5,true)
-  params:set("number_of_chords",2)
-  params:set("beats13",6)
-  params:set("beats21",6)
+  -- params:set("chord11",6,true)
+  -- params:set("chord12",4,true)
+  -- params:set("chord13",3+7,true)
+  -- params:set("chord14",5,true)
+  -- params:set("chord21",6,true)
+  -- params:set("chord22",4,true)
+  -- params:set("chord23",3,true)
+  -- params:set("chord24",5,true)
+  -- params:set("number_of_chords",2)
+  -- params:set("beats11",6)
+  -- params:set("beats13",8)
+  -- params:set("beats14",2)
+  -- params:set("beats21",6)
+  -- params:set("beats23",6)
 
 
   -- brande
-  params:set("clock_tempo",90)
+  params:set("clock_tempo",115)
   params:set("chord11",6,true)
   params:set("chord12",3,true)
   params:set("chord13",1,true)
@@ -110,6 +159,11 @@ function init()
   -- params:set("number_of_chords",2)
   -- params:set("beats11",3)
   -- params:set("beats12",3)
+  -- params:set("beats13",6)
+  -- params:set("beats21",3)
+  -- params:set("beats22",3)
+  -- params:set("beats23",3)
+  -- params:set("beats24",3)
   
 
   -- for i=1,6 do

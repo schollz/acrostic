@@ -77,7 +77,7 @@ function Acrostic:init(o)
   end)
   local basic_chords={"I","ii","iii","IV","V","vi","VII","i","II","III","iv","v","VI","vii"}
   self.available_chords={}
-  for _,v in ipairs({"","7","6-9"}) do
+  for _,v in ipairs({"","7","6-9","+7"}) do
     for _,c in ipairs(basic_chords) do
       print(c,v)
       table.insert(self.available_chords,c..v)
@@ -185,11 +185,18 @@ function Acrostic:init(o)
 
   -- randomize lfo
   for i=1,6 do
-    params:set(i.."vol lfo period",round_time_to_nearest_beat(math.random()*10+10))
+    -- params:set(i.."vol lfo period",round_time_to_nearest_beat(math.random()*10+10))
+    -- params:set(i.."vol lfo offset",round_time_to_nearest_beat(math.random()*60))
+    -- params:set(i.."vol lfo amp",math.random()*0.3+0.7)
+    -- params:set(i.."pan lfo amp",math.random()*0.5+0.5)
+    -- params:set(i.."pan lfo period",round_time_to_nearest_beat(math.random()*15+10))
+    -- params:set(i.."pan lfo offset",round_time_to_nearest_beat(math.random()*60))
+    -- oooooo v1.11.0
+    params:set(i.."vol lfo period",round_time_to_nearest_beat(math.random()*20+2))
     params:set(i.."vol lfo offset",round_time_to_nearest_beat(math.random()*60))
-    params:set(i.."vol lfo amp",math.random()*0.3+0.7)
-    params:set(i.."pan lfo amp",math.random()*0.5+0.5)
-    params:set(i.."pan lfo period",round_time_to_nearest_beat(math.random()*15+10))
+    params:set(i.."vol lfo amp",math.random()*0.25+0.1)
+    params:set(i.."pan lfo amp",math.random()*0.6+0.2)
+    params:set(i.."pan lfo period",round_time_to_nearest_beat(math.random()*20+2))
     params:set(i.."pan lfo offset",round_time_to_nearest_beat(math.random()*60))
   end
 
@@ -647,19 +654,21 @@ function Acrostic:softcut_clear(i)
 end
 
 function Acrostic:minimize_transposition()
-  local roman_numerals={}
-  for chord=1,4 do
-    table.insert(roman_numerals,self.available_chords[params:get("chord"..self.page..chord)])
-  end
-  local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{1,2,3,3,4,4})
-  self.matrix_octave[self.page]={}
-  self.matrix_base[self.page]={}
-  for note=1,6 do
-    self.matrix_octave[self.page][note]={}
-    self.matrix_base[self.page][note]={}
+  for ppage=1,2 do 
+    local roman_numerals={}
     for chord=1,4 do
-      self.matrix_octave[self.page][note][chord]=0
-      self.matrix_base[self.page][note][chord]=MusicUtil.note_name_to_num(note_name_matrix[note][chord])
+      table.insert(roman_numerals,self.available_chords[params:get("chord"..ppage..chord)])
+    end
+    local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{1,2,3,3,3,4})
+    self.matrix_octave[ppage]={}
+    self.matrix_base[ppage]={}
+    for note=1,6 do
+      self.matrix_octave[ppage][note]={}
+      self.matrix_base[ppage][note]={}
+      for chord=1,4 do
+        self.matrix_octave[ppage][note][chord]=0
+        self.matrix_base[ppage][note][chord]=MusicUtil.note_name_to_num(note_name_matrix[note][chord])
+      end
     end
   end
   self:update_final()
@@ -917,9 +926,10 @@ function Acrostic:key(k,z)
         table.insert(queued,v.i)
       end
       local foo={}
+      local oooooo_ordering={5,2,1,6,4,3}
       for i=1,6 do
         if not self.recorded[i] and not table.contains(queued,i) then
-          table.insert(foo,i)
+          table.insert(foo,oooooo_ordering[i])
         end
       end
       --table.shuffle(foo) -- TODO: maybe allow shuffling as an option?

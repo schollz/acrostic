@@ -44,9 +44,9 @@ function phrase_generate_low_high(root_note,roman_numerals,octaves)
   end
   table.merge(m1,m2)
 
-  if math.random() < 0.5 then 
-    m1=phrase_find_continuity(m1)
-  end
+  -- if math.random() < 0.5 then 
+  --   m1=phrase_find_continuity(m1)
+  -- end
 
   for note=1,#m1 do 
     local octave=octaves[note]
