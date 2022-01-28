@@ -654,6 +654,10 @@ function Acrostic:softcut_clear(i)
 end
 
 function Acrostic:minimize_transposition()
+  local chord_octaves={
+    {0,0,0,0},
+    {0,0,0,0},
+  }
   for ppage=1,2 do 
     local roman_numerals={}
     for chord=1,4 do
@@ -666,7 +670,7 @@ function Acrostic:minimize_transposition()
       self.matrix_octave[ppage][note]={}
       self.matrix_base[ppage][note]={}
       for chord=1,4 do
-        self.matrix_octave[ppage][note][chord]=0
+        self.matrix_octave[ppage][note][chord]=12*chord_octaves[ppage][chord]
         self.matrix_base[ppage][note][chord]=MusicUtil.note_name_to_num(note_name_matrix[note][chord])
       end
     end
@@ -892,12 +896,7 @@ function Acrostic:key(k,z)
   if params:get("sel_selection")==3 then
     if global_shift then
       if k==3 then
-        local note=self.matrix_final[self.page][params:get("sel_note")][1]
-        local octave=(note-(note%12))/12
-        for chord=1,4 do
-          self.matrix_octave[self.page][params:get("sel_note")][chord]=0
-          self.matrix_base[self.page][params:get("sel_note")][chord]=(self.matrix_base[self.page][params:get("sel_note")][chord]%12)+octave*12
-        end
+        self:copy_octave_to_all(self.page,params:get("sel_note"))
       end
     else
       for chord=1,4 do
@@ -950,6 +949,16 @@ end
 
 function Acrostic:beats_left(i)
   return math.ceil(self.loop_length*(1-(self.o.pos[i]/(self.loop_length*clock.get_beat_sec()))))
+end
+
+function Acrostic:copy_octave_to_all(ppage,sel_note)
+  print("copy_octave_to_all",sel_note)
+  local note=self.matrix_final[ppage][sel_note][1]
+  local octave=(note-(note%12))/12
+  for chord=1,4 do
+    self.matrix_octave[ppage][sel_note][chord]=0
+    self.matrix_base[ppage][sel_note][chord]=(self.matrix_base[ppage][sel_note][chord]%12)+octave*12
+  end
 end
 
 function Acrostic:enc(k,d)
