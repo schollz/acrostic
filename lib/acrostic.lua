@@ -310,15 +310,16 @@ function Acrostic:init(o)
   end
 
   -- crow output 3 is for using a clock
-  crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..",0.015), to(0,0) }"
   self.start_clock_after_phrase=nil
   self.pattern_clock_sync=self.lattice:new_pattern{
     action=function(x)
-      if params:get("is_playing")==1 and self.start_clock_after_phrase~=nil and self.current_phrase>=self.start_clock_after_phrase then
-        crow.output[3]()
-      end
+      crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(clock.get_beat_sec()/2).."), to(0,0) }"
+      -- crow.output[3].action="{ to("..params:get("crow_3_volts")..",0), to(0,0.015), to("..params:get("crow_3_volts")..",0) }"
+      crow.output[3]()
+      -- if params:get("is_playing")==1 and self.start_clock_after_phrase~=nil and self.current_phrase>=self.start_clock_after_phrase then
+      -- end
     end,
-    division=1/8,
+    division=1/4,
   }
 
   params.action_write=function(filename,name)
@@ -887,9 +888,7 @@ function Acrostic:key(k,z)
         end
       end
     else
-      for note=1,6 do
-        self.matrix_octave[self.page][note][params:get("sel_chord")]=self.matrix_octave[self.page][note][params:get("sel_chord")]+12*(k*2-5)
-      end
+      self:mod_octave_chord(self.page,params:get("sel_chord"),k*2-5)
     end
     self:update_final()
   end
@@ -899,9 +898,7 @@ function Acrostic:key(k,z)
         self:copy_octave_to_all(self.page,params:get("sel_note"))
       end
     else
-      for chord=1,4 do
-        self.matrix_octave[self.page][params:get("sel_note")][chord]=self.matrix_octave[self.page][params:get("sel_note")][chord]+12*(k*2-5)
-      end
+      self:mod_octave(self.page,params:get("sel_note"),k*2-5)
     end
     self:update_final()
   end
@@ -920,12 +917,34 @@ function Acrostic:key(k,z)
   end
   if params:get("sel_selection")==4 and k==3 then
     if global_shift then
+      self:initiate_recording()
+    else
+      self:queue_recording(params:get("sel_cut"))
+    end
+    self.debounce_chord_selection=0
+  end
+end
+
+function Acrostic:mod_octave_chord(ppage,sel_chord,val)
+  for note=1,6 do
+    self.matrix_octave[ppage][note][sel_chord]=self.matrix_octave[ppage][note][sel_chord]+12*val
+  end
+end
+
+function Acrostic:mod_octave(ppage,nnote,val)
+  for chord=1,4 do
+       self.matrix_octave[ppage][nnote][chord]=self.matrix_octave[ppage][nnote][chord]+12*val
+  end
+end
+
+function Acrostic:initiate_recording()
       local queued={}
       for _,v in ipairs(self.rec_queue) do
         table.insert(queued,v.i)
       end
       local foo={}
       local oooooo_ordering={5,2,1,6,4,3}
+      -- oooooo_ordering={3,2,1,5,4,6}
       for i=1,6 do
         if not self.recorded[i] and not table.contains(queued,i) then
           table.insert(foo,oooooo_ordering[i])
@@ -935,11 +954,6 @@ function Acrostic:key(k,z)
       for _,i in ipairs(foo) do
         self:queue_recording(i)
       end
-    else
-      self:queue_recording(params:get("sel_cut"))
-    end
-    self.debounce_chord_selection=0
-  end
 end
 
 function Acrostic:queue_recording(i)

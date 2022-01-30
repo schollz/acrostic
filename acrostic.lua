@@ -74,18 +74,69 @@ function init()
   -- params:set("chord24",1,true)
   -- params:set("number_of_chords",2)
 
-  -- -- slts
-  params:set("chord11",3,true)
+
+  params:set("chord11",5,true)
   params:set("chord12",6,true)
-  params:set("chord13",5,true)
+  params:set("chord13",4,true)
   params:set("chord14",1,true)
-  acrostic:change_chord(3,-1)
-  acrostic:change_chord(4,-1)
-  acrostic:copy_octave_to_all(1,6)
-  -- acrostic:copy_octave_to_all(1,5)
-  acrostic:update_final()
-  params:set("beats11",5)
-  params:set("beats12",3)
+  -- params:set("chord21",1+14,true)
+  -- params:set("chord22",3+14,true)
+  -- params:set("chord23",1,true)
+  -- params:set("chord24",4+14,true)
+  -- params:set("number_of_chords",2)
+
+  -- -- slts
+  -- params:set("chord11",1,true)
+  -- params:set("chord12",3,true)
+  -- params:set("chord13",6,true)
+  -- params:set("chord14",4,true)
+  -- acrostic:change_chord(3,-1)
+  -- acrostic:change_chord(4,-1)
+  -- acrostic:copy_octave_to_all(1,6)
+  -- -- acrostic:copy_octave_to_all(1,5)
+  -- acrostic:update_final()
+  -- params:set("beats11",5)
+  -- params:set("beats12",3)
+  -- params:set("beats13",3)
+  -- params:set("beats14",5)
+
+  -- -- wall of kiev
+  -- params:set("clock_tempo",125)
+  -- params:set("chord11",1,true)
+  -- params:set("chord12",5,true)
+  -- params:set("chord13",1,true)
+  -- params:set("chord14",5,true)
+  -- params:set("chord21",6,true)
+  -- params:set("chord22",4,true)
+  -- params:set("chord23",6,true)
+  -- params:set("chord24",5,true)
+  -- params:set("beats14",6)
+  -- params:set("beats24",6)
+  -- params:set("number_of_chords",2)
+  -- clock.run(function()
+  --   clock.sleep(1)
+  --   -- acrostic:mod_octave_chord(1,2,1)
+  --   -- acrostic:mod_octave_chord(2,2,1)
+  --   -- acrostic:mod_octave_chord(2,4,1)
+  --   acrostic:change_chord(2,-1)
+  --   -- acrostic:change_chord(3,-1)
+  --   -- acrostic:change_chord(4,-2)
+  --   -- acrostic:copy_octave_to_all(1,5)
+  --   acrostic:copy_octave_to_all(1,6)
+  --   acrostic:update_final()
+  --   acrostic.page=2
+  --   acrostic:change_chord(2,-1)
+  --   acrostic:change_chord(4,-1)
+  --   acrostic:copy_octave_to_all(2,6)
+  --   acrostic:update_final()
+  --   -- for ppage=1,2 do 
+  --   --   for nnote=1,1 do 
+  --   --     acrostic:mod_octave(ppage,nnote,-1)
+  --   --   end
+  --   -- end
+  --   acrostic:update_final()
+  --   acrostic:initiate_recording() -- TODO: remove
+  -- end)
   
   
   -- vi V IV iiim7
@@ -217,6 +268,7 @@ function init()
       redraw()
     end
   end)
+  
 end
 
 function cleanup()
