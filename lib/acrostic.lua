@@ -31,10 +31,12 @@ function Acrostic:init(o)
   for _,dev in pairs(midi.devices) do
     local name=string.lower(dev.name)
     name=name:gsub("-","")
-    print("connected to "..name)
-    table.insert(self.midi_devices,name)
-    self.midis[name]={last_note=nil}
-    self.midis[name].conn=midi.connect(dev.port)
+    if name~="virtual" then
+      print("connected to "..name)
+      table.insert(self.midi_devices,name)
+      self.midis[name]={last_note=nil}
+      self.midis[name].conn=midi.connect(dev.port)
+    end
   end
 
   -- setup matrix
@@ -659,7 +661,7 @@ function Acrostic:minimize_transposition()
     {0,0,0,0},
     {0,0,0,0},
   }
-  for ppage=1,2 do 
+  for ppage=1,2 do
     local roman_numerals={}
     for chord=1,4 do
       table.insert(roman_numerals,self.available_chords[params:get("chord"..ppage..chord)])
@@ -933,27 +935,27 @@ end
 
 function Acrostic:mod_octave(ppage,nnote,val)
   for chord=1,4 do
-       self.matrix_octave[ppage][nnote][chord]=self.matrix_octave[ppage][nnote][chord]+12*val
+    self.matrix_octave[ppage][nnote][chord]=self.matrix_octave[ppage][nnote][chord]+12*val
   end
 end
 
 function Acrostic:initiate_recording()
-      local queued={}
-      for _,v in ipairs(self.rec_queue) do
-        table.insert(queued,v.i)
-      end
-      local foo={}
-      local oooooo_ordering={5,2,1,6,4,3}
-      -- oooooo_ordering={3,2,1,5,4,6}
-      for i=1,6 do
-        if not self.recorded[i] and not table.contains(queued,i) then
-          table.insert(foo,oooooo_ordering[i])
-        end
-      end
-      --table.shuffle(foo) -- TODO: maybe allow shuffling as an option?
-      for _,i in ipairs(foo) do
-        self:queue_recording(i)
-      end
+  local queued={}
+  for _,v in ipairs(self.rec_queue) do
+    table.insert(queued,v.i)
+  end
+  local foo={}
+  local oooooo_ordering={5,2,1,6,4,3}
+  -- oooooo_ordering={3,2,1,5,4,6}
+  for i=1,6 do
+    if not self.recorded[i] and not table.contains(queued,i) then
+      table.insert(foo,oooooo_ordering[i])
+    end
+  end
+  --table.shuffle(foo) -- TODO: maybe allow shuffling as an option?
+  for _,i in ipairs(foo) do
+    self:queue_recording(i)
+  end
 end
 
 function Acrostic:queue_recording(i)
