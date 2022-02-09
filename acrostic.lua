@@ -186,11 +186,11 @@ function init()
 
 
   -- philipglass
-  params:set("clock_tempo",110)
-  params:set("chord11",6,true)
-  params:set("chord12",4,true)
-  params:set("chord13",3+7,true)
-  params:set("chord14",5,true)
+  -- params:set("clock_tempo",110)
+  -- params:set("chord11",6,true)
+  -- params:set("chord12",4,true)
+  -- params:set("chord13",3+7,true)
+  -- params:set("chord14",5,true)
   -- params:set("chord21",6,true)
   -- params:set("chord22",4,true)
   -- params:set("chord23",3,true)
@@ -245,7 +245,12 @@ function init()
   -- params:set("beats22",3)
   -- params:set("beats23",3)
   -- params:set("beats24",3)
-  
+
+  params:set("chord11",6,true)
+  params:set("chord12",1,true)
+  params:set("chord13",4,true)
+  params:set("chord14",5,true)
+
 
   -- for i=1,6 do
   --   softcut.post_filter_dry(i,1)

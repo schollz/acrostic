@@ -551,10 +551,11 @@ function Acrostic:play_note(note)
     end
   end
   for name,m in pairs(self.midis) do
-    if name==self.midi_devices[params:get("midi_in")] and self.last_note~=note then
+    if name==self.midi_devices[params:get("midi_in")] then
       if m.last_note~=nil then
         m.conn:note_off(m.last_note)
       end
+      print(name,note)
       m.conn:note_on(note,64)
       self.midis[name].last_note=note
     end
