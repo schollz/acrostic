@@ -561,7 +561,6 @@ function Acrostic:play_note(note)
     end
   end
   self.last_note=note
-
 end
 
 function Acrostic:softcut_goto0()
@@ -607,7 +606,7 @@ function Acrostic:softcut_init()
     softcut.level_slew_time(i,0.2)
     softcut.rate_slew_time(i,0.2)
     softcut.recpre_slew_time(i,0.1)
-    softcut.fade_time(i,0.2)
+    softcut.fade_time(i,2)
 
     softcut.rec_level(i,params:get("rec_level"..i))
     softcut.pre_level(i,params:get("pre_level"..i))

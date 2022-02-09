@@ -6,7 +6,12 @@ Engine_Acrostic : CroneEngine {
 	var paramsMonosaw;
 	var osfun;
 
+	var encoder,decoder;
+
 	alloc { 
+
+		decoder = FoaDecoderMatrix.newStereo((131/2).degrad, 0.5);
+		encoder = FoaEncoderMatrix.newOmni;
 
 		SynthDef("autotune", {
 			arg hz=220,amp=0.0,mix=0.0,amplitudeMin=1;
@@ -127,6 +132,8 @@ Engine_Acrostic : CroneEngine {
 		synthAutotune.free;
 		synthMonosaw.free;
 		osfun.free;
+		encoder.free;
+		decoder.free;
 	}
 
 }
