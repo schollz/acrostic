@@ -172,17 +172,25 @@ Engine_Acrostic : CroneEngine {
 			});
 		});
 
-		this.addCommand("testing","",{ arg msg;
+		this.addCommand("load_tracks","ff",{ arg msg;
 			synthSphere.do({ arg v,i;
 				if (v.notNil,{
 					v.set(\kill_trig,1);
 				});
 			});
 			(1..6).do({arg i;
-				Buffer.read(Server.default,"/home/we/dust/data/acrostic/acrostic-02.pset_"++i++".wav",action:{ arg buf;
-					synthSphere.put(i-1,Synth("crossfadingLooper2",[\bufnum,buf,\rate,1,\fadetime,2.0,\duration,60/90*16,\amp,0.5]));
+				Buffer.read(Server.default,"/home/we/dust/data/acrostic/acrostic-01.pset_"++i++".wav",action:{ arg buf;
+					synthSphere.put(i-1,Synth("crossfadingLooper2",[\bufnum,buf,\rate,1,\duration,msg[1],\fadetime,msg[2],\amp,1.0]));
 				});
 			})
+		});
+
+		this.addCommand("unload_tracks","",{ arg msg;
+			synthSphere.do({ arg v,i;
+				if (v.notNil,{
+					v.set(\kill_trig,1);
+				});
+			});
 		});
 
 	}

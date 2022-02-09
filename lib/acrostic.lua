@@ -24,6 +24,7 @@ function Acrostic:init(o)
   self.message_level=0
   self.debounce_chord_selection=0
   self.loop_length=16
+  self.fadetime=2
 
   -- setup midi
   self.midis={}
@@ -479,6 +480,14 @@ function Acrostic:msg(s)
   self.message_level=15
 end
 
+function Acrostic:engine_start()
+  -- params:write() must be done first
+  engine.load_tracks(self.loop_length*clock.get_beat_sec(),self.fadetime)
+end
+function Acrostic:engine_stop()
+  engine.load_tracks()
+end
+
 function Acrostic:toggle_start(stop_all)
   if stop_all then
     self:msg("stop all")
@@ -606,7 +615,7 @@ function Acrostic:softcut_init()
     softcut.level_slew_time(i,0.2)
     softcut.rate_slew_time(i,0.2)
     softcut.recpre_slew_time(i,0.1)
-    softcut.fade_time(i,2)
+    softcut.fade_time(i,self.fadetime)
 
     softcut.rec_level(i,params:get("rec_level"..i))
     softcut.pre_level(i,params:get("pre_level"..i))
