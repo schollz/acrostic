@@ -283,6 +283,7 @@ function init()
         acrostic:toggle_start()
         show_startup_screen=show_startup_screen+1
         acrostic:msg("k1+k3 records")
+        engine.testing()
       end
       if show_startup_screen<show_startup_screen_max then
         startup_eyes.blinkState=util.linlin(0,show_startup_screen_max^2,3,0.001,show_startup_screen^2)

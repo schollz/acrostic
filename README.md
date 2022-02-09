@@ -68,6 +68,27 @@ rm -rf ~/dust/code/acrostic && \
 git clone https://github.com/schollz/acrostic ~/dust/code/acrostic
 ```
 
+the install ambisonics. open maiden and *in the supercollider tab* enter:
+
+```
+# from supercollider temrinal
+Quarks.install("https://github.com/florian-grond/SC-HOA")
+```
+
+then remove offending packages:
+
+```
+cd ~/.local/share/SuperCollider/downloaded-quarks && \
+rm -rf wslib PointView
+```
+
+then back into supercollider terminal:
+
+```
+Atk.downloadKernels;
+Atk.downloadMatrices;
+```
+
 then restart norns:
 
 ```bash

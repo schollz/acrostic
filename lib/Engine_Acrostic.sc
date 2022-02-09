@@ -7,11 +7,57 @@ Engine_Acrostic : CroneEngine {
 	var osfun;
 
 	var encoder,decoder;
+	var synthSphere;
 
 	alloc { 
 
+		synthSphere=Array.newClear(6);
 		decoder = FoaDecoderMatrix.newStereo((131/2).degrad, 0.5);
 		encoder = FoaEncoderMatrix.newOmni;
+
+		SynthDef("crossfadingLooper2", {
+			arg out=0, bufnum=0, rate=1, start=0, duration=1, amp=0.5, kill_trig=0;
+			var snd,sndA,sndB,triggerSwap;
+			var azim, angle, proxim, foa;
+
+			rate=BufRateScale.ir(rate);
+			triggerSwap=Trig.kr(Impulse.kr(1/duration/2),duration);
+
+			sndA=PlayBuf.ar(1,bufnum,rate,triggerSwap,start,loop:0);
+			sndB=PlayBuf.ar(1,bufnum,rate,(1-triggerSwap),start,loop:0);
+			sndB=sndB*EnvGen.ar(Env.new([0,0,1,1],[duration,0.01,inf]));
+			snd=sndA+sndB;
+
+			snd = snd*amp;
+
+			// for the 'push' transform later
+			// see FoaPush help for details
+			// angle ---> top           = push to plane wave (0)
+			//            bottom        = omni-directional (pi/2)
+			angle = pi/2;
+
+			// Encode into our foa signal
+			foa = FoaEncode.ar(snd, encoder);
+
+			// push transform using angle
+			foa = FoaTransform.ar(foa, 'pushX', angle);
+
+			foa = FoaTransform.ar(foa, 'rtt',
+				SinOsc.kr(Rand(1/60,1/30),Rand(0,pi)).range(Rand(-2*pi,0),Rand(0,2*pi)),
+				SinOsc.kr(Rand(1/60,1/30),Rand(0,pi)).range(Rand(-2*pi,0),Rand(0,2*pi)),
+				SinOsc.kr(Rand(1/60,1/30),Rand(0,pi)).range(Rand(-2*pi,0),Rand(0,2*pi)),
+			);
+
+			// decode our signal
+			snd = FoaDecode.ar(foa, decoder);
+
+			// start signal
+			snd = snd*EnvGen.ar(Env.new([0,1,1],[1,inf]),1);
+			// kill signal
+			snd = snd*EnvGen.ar(Env.new([1,0],[1]),kill_trig,doneAction:2);
+
+			Out.ar(out,snd);
+		}).add;
 
 		SynthDef("autotune", {
 			arg hz=220,amp=0.0,mix=0.0,amplitudeMin=1;
@@ -126,6 +172,19 @@ Engine_Acrostic : CroneEngine {
 			});
 		});
 
+		this.addCommand("testing","",{ arg msg;
+			synthSphere.do({ arg v,i;
+				if (v.notNil,{
+					v.set(\kill_trig,1);
+				});
+			});
+			(1..6).do({arg i;
+				Buffer.read(Server.default,"/home/we/dust/data/acrostic/acrostic-02.pset_"++i++".wav",action:{ arg buf;
+					synthSphere.put(i-1,Synth("crossfadingLooper2",[\bufnum,buf,\rate,1,\fadetime,2.0,\duration,60/90*16,\amp,0.5]));
+				});
+			})
+		});
+
 	}
 
 	free {
@@ -134,6 +193,11 @@ Engine_Acrostic : CroneEngine {
 		osfun.free;
 		encoder.free;
 		decoder.free;
+		synthSphere.do({ arg v,i;
+			if (v.notNil,{
+				v.set(\kill_trig,1);
+			});
+		});
 	}
 
 }
