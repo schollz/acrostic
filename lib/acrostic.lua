@@ -122,9 +122,10 @@ function Acrostic:init(o)
   params:add{type="number",id="is_playing",name="is_playing",min=0,max=1,default=1,wrap=true}
   params:hide("is_playing")
 
-  params:add_group("notes",4)
+  params:add_group("notes",5)
   params:add_control("internote_prob","inter-note probability",controlspec.new(0,1,'lin',0.125/4,0.0,'',(0.125/4)/1))
   params:add_control("gate_prob","note gate probability",controlspec.new(0,1,'lin',0.125/4,1,'',(0.125/4)/1))
+  params:add_option("melody_generator","melody generator",{"off","on"},1)
   params:add_option("random_mode","random mode",{"off","on"},1)
   params:add_option("do_reverse","reverse mode",{"off","on"},1)
   params:set_action("do_reverse",function(x)
@@ -585,7 +586,6 @@ function Acrostic:toggle_start(stop_all)
   end
 end
 
-use_note_lfos=false
 
 function Acrostic:play_note(note,origin)
   if math.random()>params:get("gate_prob") then
@@ -598,6 +598,7 @@ function Acrostic:play_note(note,origin)
 	{math.random(20,30),math.random(0,60),0.6},
 	{math.random(20,30),math.random(0,60),0.4},
   }
+local use_note_lfos=params:get("melody_generator")==2 
   if use_note_lfos then 
 	  local note_lfo=note_lfos[origin]
 	  local rmin=(calculate_lfo(clock.get_beats()*clock.get_beat_sec(),
