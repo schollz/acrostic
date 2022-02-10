@@ -310,6 +310,21 @@ function Acrostic:init(o)
       delay=i*0.25,
     }
   end
+  self.pattern_up_note=self.lattice:new_pattern{
+    action=function(t)
+      if params:get("is_playing")==1 then
+        print("up note")
+        --print("next/last",self.next_note,self.last_note)
+        -- local note=MusicUtil.snap_note_to_array(util.round(self.next_note/2+self.last_note/2)+math.random(-2,2),scale)
+        -- if note<10 then
+        --   do return end
+        -- end
+        -- self:play_note(note)
+      end
+    end,
+    division=1/4,
+    delay=3/4,
+  }
 
   -- crow output 3 is for using a clock
   self.start_clock_after_phrase=nil
