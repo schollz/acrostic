@@ -303,38 +303,30 @@ function Acrostic:init(o)
           if note<10 then
             do return end
           end
-          self:play_note(note)
+          self:play_note(note,2)
         end
       end,
       division=1/4,
       delay=i*0.25,
     }
   end
-  self.pattern_up_note=self.lattice:new_pattern{
+  self.pattern_upnote=self.lattice:new_pattern{
     action=function(t)
       if params:get("is_playing")==1 then
-        --print("next/last",self.next_note,self.last_note)
-        -- local note=MusicUtil.snap_note_to_array(util.round(self.next_note/2+self.last_note/2)+math.random(-2,2),scale)
-        -- if note<10 then
-        --   do return end
-        -- end
-        local note=self:get_random_note(self:get_current_octave()+1)
-        self:play_note(note)
+        local note=self:get_random_note(self:get_current_octave()+2)
+	print("up note: ",note)
+        self:play_note(note,3)
       end
     end,
     division=1,
-    delay=7/8,
+    delay=3/4,
   }
-  self.pattern_mid_note=self.lattice:new_pattern{
+  self.pattern_midnote=self.lattice:new_pattern{
     action=function(t)
       if params:get("is_playing")==1 then
-        --print("next/last",self.next_note,self.last_note)
-        -- local note=MusicUtil.snap_note_to_array(util.round(self.next_note/2+self.last_note/2)+math.random(-2,2),scale)
-        -- if note<10 then
-        --   do return end
-        -- end
-        local note=self:get_random_note(self:get_current_octave())
-        self:play_note(note)
+        local note=self:get_random_note(self:get_current_octave()+2)
+	print("midnote: ",note)
+        self:play_note(note,4)
       end
     end,
     division=1,
@@ -515,7 +507,7 @@ function Acrostic:iterate_note()
   self.last_note=note
 
   -- play note
-  self:play_note(note)
+  self:play_note(note,1)
   if params:get("random_mode")==2 then
     -- randomize next position
     params:delta("current_chord",math.random(0,2)-1)
@@ -593,9 +585,32 @@ function Acrostic:toggle_start(stop_all)
   end
 end
 
-function Acrostic:play_note(note)
+use_note_lfos=false
+
+function Acrostic:play_note(note,origin)
   if math.random()>params:get("gate_prob") then
     do return end
+  end
+
+  local note_lfos={
+	{math.random(20,30),math.random(0,60),1.0},
+	{math.random(20,30),math.random(0,60),0.5},
+	{math.random(20,30),math.random(0,60),0.6},
+	{math.random(20,30),math.random(0,60),0.4},
+  }
+  if use_note_lfos then 
+	  local note_lfo=note_lfos[origin]
+	  local rmin=(calculate_lfo(clock.get_beats()*clock.get_beat_sec(),
+	  	note_lfo[1],note_lfo[2])+1)*50 -- generates number 0-100
+	  rmin=math.floor(rmin*note_lfo[3])
+	  local rtarget=math.random(rmin,100)
+	  local r=math.random(0,100)
+	  if r>rtarget then 
+		  print("skip note from origin "..origin)
+		  do return end 
+	  end
+  elseif not use_note_lfos and origin>1 then 
+	  do return end
   end
 
   -- engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
@@ -732,7 +747,7 @@ function Acrostic:minimize_transposition()
     for chord=1,4 do
       table.insert(roman_numerals,self.available_chords[params:get("chord"..ppage..chord)])
     end
-    local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{1,2,3,3,3,4})
+    local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{2,2,3,3,3,4})
     self.matrix_octave[ppage]={}
     self.matrix_base[ppage]={}
     for note=1,6 do
