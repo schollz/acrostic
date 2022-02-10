@@ -122,9 +122,10 @@ function Acrostic:init(o)
   params:add{type="number",id="is_playing",name="is_playing",min=0,max=1,default=1,wrap=true}
   params:hide("is_playing")
 
-  params:add_group("notes",4)
+  params:add_group("notes",5)
   params:add_control("internote_prob","inter-note probability",controlspec.new(0,1,'lin',0.125/4,0.0,'',(0.125/4)/1))
   params:add_control("gate_prob","note gate probability",controlspec.new(0,1,'lin',0.125/4,1,'',(0.125/4)/1))
+  params:add_option("melody_generator","melody generator",{"off","on"},1)
   params:add_option("random_mode","random mode",{"off","on"},1)
   params:add_option("do_reverse","reverse mode",{"off","on"},1)
   params:set_action("do_reverse",function(x)
@@ -303,13 +304,35 @@ function Acrostic:init(o)
           if note<10 then
             do return end
           end
-          self:play_note(note)
+          self:play_note(note,2)
         end
       end,
       division=1/4,
       delay=i*0.25,
     }
   end
+  self.pattern_upnote=self.lattice:new_pattern{
+    action=function(t)
+      if params:get("is_playing")==1 then
+        local note=self:get_random_note(self:get_current_octave()+2)
+	print("up note: ",note)
+        self:play_note(note,3)
+      end
+    end,
+    division=1,
+    delay=3/4,
+  }
+  self.pattern_midnote=self.lattice:new_pattern{
+    action=function(t)
+      if params:get("is_playing")==1 then
+        local note=self:get_random_note(self:get_current_octave()+2)
+	print("midnote: ",note)
+        self:play_note(note,4)
+      end
+    end,
+    division=1,
+    delay=1/2,
+  }
 
   -- crow output 3 is for using a clock
   self.start_clock_after_phrase=nil
@@ -427,6 +450,41 @@ function Acrostic:iterate_chord()
   return true
 end
 
+function Acrostic:get_current_octave()
+  local octave=0
+  for chord=1,4 do
+    octave=octave+(self.matrix_final[self.page][params:get("sel_note")][chord])
+  end
+  octave=util.round(octave/4/12-2.5)
+  return octave
+end
+
+function Acrostic:get_random_note(octave)
+  -- compute weights
+  local notes={}
+  local total_weight=0
+  for page=1,2 do
+    for note=1,6 do
+      for chord=1,4 do
+        local n=self.matrix_final[page][note][chord]%12
+        if notes[n]==nil then
+          notes[n]=0
+        end
+        notes[n]=notes[n]+1
+        total_weight=total_weight+1
+      end
+    end
+  end
+  local r=math.random(0,total_weight-1)
+  for n,w in pairs(notes) do
+    if r<w then
+      do return (octave and (n+12*octave) or n) end
+    end
+    r=r-w
+  end
+  print("should never get here")
+end
+
 function Acrostic:iterate_note()
   -- iterate note
   self.last_sel_chord=params:get("sel_chord")
@@ -450,7 +508,7 @@ function Acrostic:iterate_note()
   self.last_note=note
 
   -- play note
-  self:play_note(note)
+  self:play_note(note,1)
   if params:get("random_mode")==2 then
     -- randomize next position
     params:delta("current_chord",math.random(0,2)-1)
@@ -528,9 +586,32 @@ function Acrostic:toggle_start(stop_all)
   end
 end
 
-function Acrostic:play_note(note)
+
+function Acrostic:play_note(note,origin)
   if math.random()>params:get("gate_prob") then
     do return end
+  end
+
+  local note_lfos={
+	{math.random(20,30),math.random(0,60),1.0},
+	{math.random(20,30),math.random(0,60),0.5},
+	{math.random(20,30),math.random(0,60),0.6},
+	{math.random(20,30),math.random(0,60),0.4},
+  }
+local use_note_lfos=params:get("melody_generator")==2 
+  if use_note_lfos then 
+	  local note_lfo=note_lfos[origin]
+	  local rmin=(calculate_lfo(clock.get_beats()*clock.get_beat_sec(),
+	  	note_lfo[1],note_lfo[2])+1)*50 -- generates number 0-100
+	  rmin=math.floor(rmin*note_lfo[3])
+	  local rtarget=math.random(rmin,100)
+	  local r=math.random(0,100)
+	  if r>rtarget then 
+		  print("skip note from origin "..origin)
+		  do return end 
+	  end
+  elseif not use_note_lfos and origin>1 then 
+	  do return end
   end
 
   -- engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
@@ -667,7 +748,7 @@ function Acrostic:minimize_transposition()
     for chord=1,4 do
       table.insert(roman_numerals,self.available_chords[params:get("chord"..ppage..chord)])
     end
-    local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{1,2,3,3,3,4})
+    local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{2,2,3,3,3,4})
     self.matrix_octave[ppage]={}
     self.matrix_base[ppage]={}
     for note=1,6 do
