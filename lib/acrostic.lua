@@ -313,17 +313,32 @@ function Acrostic:init(o)
   self.pattern_up_note=self.lattice:new_pattern{
     action=function(t)
       if params:get("is_playing")==1 then
-        print("up note")
         --print("next/last",self.next_note,self.last_note)
         -- local note=MusicUtil.snap_note_to_array(util.round(self.next_note/2+self.last_note/2)+math.random(-2,2),scale)
         -- if note<10 then
         --   do return end
         -- end
-        -- self:play_note(note)
+        local note=self:get_random_note(self:get_current_octave()+1)
+        self:play_note(note)
       end
     end,
-    division=1/4,
-    delay=3/4,
+    division=1,
+    delay=7/8,
+  }
+  self.pattern_mid_note=self.lattice:new_pattern{
+    action=function(t)
+      if params:get("is_playing")==1 then
+        --print("next/last",self.next_note,self.last_note)
+        -- local note=MusicUtil.snap_note_to_array(util.round(self.next_note/2+self.last_note/2)+math.random(-2,2),scale)
+        -- if note<10 then
+        --   do return end
+        -- end
+        local note=self:get_random_note(self:get_current_octave())
+        self:play_note(note)
+      end
+    end,
+    division=1,
+    delay=1/2,
   }
 
   -- crow output 3 is for using a clock
@@ -440,6 +455,41 @@ function Acrostic:iterate_chord()
     do return false end
   end
   return true
+end
+
+function Acrostic:get_current_octave()
+  local octave=0
+  for chord=1,4 do
+    octave=octave+(self.matrix_final[self.page][params:get("sel_note")][chord])
+  end
+  octave=util.round(octave/4/12-2.5)
+  return octave
+end
+
+function Acrostic:get_random_note(octave)
+  -- compute weights
+  local notes={}
+  local total_weight=0
+  for page=1,2 do
+    for note=1,6 do
+      for chord=1,4 do
+        local n=self.matrix_final[page][note][chord]%12
+        if notes[n]==nil then
+          notes[n]=0
+        end
+        notes[n]=notes[n]+1
+        total_weight=total_weight+1
+      end
+    end
+  end
+  local r=math.random(0,total_weight-1)
+  for n,w in pairs(notes) do
+    if r<w then
+      do return (octave and (n+12*octave) or n) end
+    end
+    r=r-w
+  end
+  print("should never get here")
 end
 
 function Acrostic:iterate_note()
