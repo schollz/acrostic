@@ -128,7 +128,7 @@ function Acrostic:init(o)
   params:add_option("random_mode","random mode",{"off","on"},1)
   params:add_option("do_reverse","reverse mode",{"off","on"},1)
   params:set_action("do_reverse",function(x)
-    for i=1,6 do
+    for i=1,12 do
       softcut.rate(i,x==1 and 1 or-1)
     end
     self.do_set_cut_to_1=true
@@ -161,7 +161,7 @@ function Acrostic:init(o)
   params:add_control("crow_4_sustain","crow 4 sustain",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
   params:add_control("crow_4_decay","crow 4 decay",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
 
-  for i=1,6 do
+  for i=1,12 do
     params:add_group("loop "..i,11)
     params:add_control("rec_level"..i,"rec level "..i,controlspec.new(0,1,'lin',0.01,1.0,'',0.01/1))
     params:set_action("rec_level"..i,function(x)
@@ -186,7 +186,7 @@ function Acrostic:init(o)
   end
 
   -- randomize lfo
-  for i=1,6 do
+  for i=1,12 do
     -- params:set(i.."vol lfo period",round_time_to_nearest_beat(math.random()*10+10))
     -- params:set(i.."vol lfo offset",round_time_to_nearest_beat(math.random()*60))
     -- params:set(i.."vol lfo amp",math.random()*0.3+0.7)
@@ -204,7 +204,7 @@ function Acrostic:init(o)
 
   -- setup the waveforms
   self.waveforms={}
-  for i=1,6 do
+  for i=1,12 do
     self.waveforms[i]={}
     for j=1,55 do
       self.waveforms[i][j]=0
@@ -326,7 +326,7 @@ function Acrostic:init(o)
 
   params.action_write=function(filename,name)
     print("write",filename,name)
-    for i=1,6 do
+    for i=1,12 do
       local fname=filename.."_"..i..".wav"
       print("saving "..fname)
       softcut.buffer_write_mono(fname,self.o.minmax[i][2],self.loop_length*clock.get_beat_sec()+2,self.o.minmax[i][1])
@@ -363,7 +363,7 @@ function Acrostic:init(o)
       end
       self:toggle_start()
     end)
-    for i=1,6 do
+    for i=1,12 do
       local fname=filename.."_"..i..".wav"
       if util.file_exists(fname) then
         print("loading "..fname)
@@ -407,7 +407,7 @@ function Acrostic:iterate_chord()
     if self.page==1 and current_chord_mod4==1 and self.do_set_cut_to_1~=nil and self.do_set_cut_to_1 then
       self.do_set_cut_to_1=nil
       print("resetting cuts")
-      for i=1,6 do
+      for i=1,12 do
         softcut.position(i,self.o.minmax[i][2])
       end
     end
@@ -484,14 +484,14 @@ function Acrostic:toggle_start(stop_all)
     self:msg("stop all")
     print("stop all")
     self.softcut_stopped=true
-    for i=1,6 do
+    for i=1,12 do
       softcut.level(i,0)
       softcut.rate(i,0)
       softcut.rec(i,0)
     end
     clock.run(function()
       clock.sleep(0.5)
-      for i=1,6 do
+      for i=1,12 do
         softcut.play(i,0)
         softcut.position(i,self.o.minmax[i][2])
       end
@@ -509,7 +509,7 @@ function Acrostic:toggle_start(stop_all)
         self.softcut_stopped=false
         params:set("current_chord",params:get("do_reverse")==1 and 1 or 8)
         self.lattice:hard_restart()
-        for i=1,6 do
+        for i=1,12 do
           softcut.play(i,1)
           softcut.rate(i,params:get("do_reverse")==1 and 1 or-1)
         end
@@ -566,7 +566,7 @@ end
 
 function Acrostic:softcut_goto0()
   print("syncing samples")
-  for i=1,6 do
+  for i=1,12 do
     softcut.position(i,self.o.minmax[i][2])
   end
 end
@@ -574,12 +574,18 @@ end
 function Acrostic:softcut_init()
   self.o={}
   self.o.minmax={
-    {1,1,80},
-    {1,82,161},
-    {1,163,243},
-    {2,1,80},
-    {2,82,161},
-    {2,163,243},
+    {1,1,40},
+    {1,41,80},
+    {1,81,120},
+    {1,121,160},
+    {1,161,200},
+    {1,201,243},
+    {2,1,40},
+    {2,41,80},
+    {2,81,120},
+    {2,121,160},
+    {2,161,200},
+    {2,201,243},
   }
   self.o.pos={}
 
@@ -588,7 +594,7 @@ function Acrostic:softcut_init()
   audio.level_adc_cut(1)
   audio.level_eng_cut(1)
   audio.level_tape_cut(1)
-  for i=1,6 do
+  for i=1,12 do
     softcut.enable(i,1)
     softcut.play(i,1)
 
@@ -637,7 +643,7 @@ function Acrostic:softcut_init()
     self.o.pos[i]=pos-self.o.minmax[i][2]
   end)
   softcut.poll_start_phase()
-  for i=1,6 do
+  for i=1,12 do
     -- self:softcut_render(i)
     self:softcut_clear(i)
   end
@@ -775,7 +781,7 @@ function Acrostic:update_beats(update_softcut)
   end
   self.loop_length=total_beats
   if update_softcut==nil or update_softcut then
-    for i=1,6 do
+    for i=1,12 do
       softcut.loop_end(i,self.o.minmax[i][2]+self.loop_length*clock.get_beat_sec())
     end
   end
@@ -948,7 +954,7 @@ function Acrostic:initiate_recording()
   local foo={}
   local oooooo_ordering={5,2,1,6,4,3}
   -- oooooo_ordering={3,2,1,5,4,6}
-  for i=1,6 do
+  for i=1,12 do
     if not self.recorded[i] and not table.contains(queued,i) then
       table.insert(foo,oooooo_ordering[i])
     end
@@ -1049,7 +1055,7 @@ function Acrostic:update()
     self.debounce_chord_selection=self.debounce_chord_selection-1
   end
   local ct=clock.get_beat_sec()*clock.get_beats()
-  for i=1,6 do
+  for i=1,12 do
     self.pan[i]=params:get(i.."pan lfo amp")*calculate_lfo(ct,params:get(i.."pan lfo period"),params:get(i.."pan lfo offset"))
     self.pan[i]=util.clamp(params:get(i.."pan adj")+self.pan[i],-1,1)
     softcut.pan(i,self.pan[i])
