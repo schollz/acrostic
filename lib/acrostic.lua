@@ -315,7 +315,7 @@ function Acrostic:init(o)
     action=function(t)
       if params:get("is_playing")==1 then
         local note=self:get_random_note(self:get_current_octave()+2)
-	print("up note: ",note)
+      	--print("up note: ",note)
         self:play_note(note,3)
       end
     end,
@@ -326,7 +326,7 @@ function Acrostic:init(o)
     action=function(t)
       if params:get("is_playing")==1 then
         local note=self:get_random_note(self:get_current_octave()+2)
-	print("midnote: ",note)
+        -- print("midnote: ",note)
         self:play_note(note,4)
       end
     end,
@@ -632,14 +632,14 @@ local use_note_lfos=params:get("melody_generator")==2
     end
   end
   for name,m in pairs(self.midis) do
-    if name==self.midi_devices[params:get("midi_in")] then
-      if m.last_note~=nil then
-        m.conn:note_off(m.last_note)
-      end
-      print(name,note)
-      m.conn:note_on(note,64)
-      self.midis[name].last_note=note
-    end
+    -- if name==self.midi_devices[params:get("midi_in")] then
+    --   if m.last_note~=nil then
+    --     m.conn:note_off(m.last_note)
+    --   end
+    --   print(name,note)
+    --   m.conn:note_on(note,64)
+    --   self.midis[name].last_note=note
+    -- end
   end
   self.last_note=note
 
@@ -715,7 +715,9 @@ function Acrostic:softcut_init()
     end
   end)
   softcut.event_phase(function(i,pos)
-    self.o.pos[i]=pos-self.o.minmax[i][2]
+    if i<7 then 
+      self.o.pos[i]=pos-self.o.minmax[i][2]
+    end
   end)
   softcut.poll_start_phase()
   for i=1,6 do
