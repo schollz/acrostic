@@ -7,8 +7,12 @@ local json=require("cjson")
 local lattice_=require("lattice")
 local s=require("sequins")
 local MusicUtil=include("acrostic/lib/musicutil2")
+local acrosticgrid_=include("acrostic/lib/acrosticgrid")
 
 local Acrostic={}
+
+
+
 
 function Acrostic:new (o)
   o=o or {} -- create object if user does not provide one
@@ -24,6 +28,38 @@ function Acrostic:init(o)
   self.message_level=0
   self.debounce_chord_selection=0
   self.loop_length=16
+
+  -- setup grid 
+  crow.output[4].action="adsr(0.01,0.5,0,0.1,'linear')"
+  self.ag=acrosticgrid_:new{
+    note_on=function(row,gate,note_adjust)
+      if self.scale_full==nil or self.matrix_final==nil then 
+        do return end 
+      end
+      local chord=params:get("current_chord")
+      local page=1
+      if chord>4 then
+        chord=chord-4
+        page=2
+      end
+      local note=self.matrix_final[page][row][chord]
+      if note_adjust>0 then
+        note=MusicUtil.snap_note_to_array(note+note_adjust,self.scale_full)
+      end
+      self.grid_last_note=note
+      local hz=MusicUtil.note_num_to_freq(note)
+      print("note on",note,gate)
+      crow.output[3].volts=(note-12)/12
+      crow.output[4](true)
+    end,
+    note_off=function()
+      if self.grid_last_note==nil then 
+        do return end
+      end
+      print("note off",self.grid_last_note)
+      crow.output[4](false)
+    end
+  }
 
   -- setup midi
   self.midis={}
@@ -135,32 +171,15 @@ function Acrostic:init(o)
     self.do_set_cut_to_1=true
   end)
 
-  params:add_group("midi/crow",10)
+  params:add_group("midi/crow",6)
   params:add_option("midi_in","midi in",self.midi_devices,#self.midi_devices==1 and 1 or 2)
   params:add_option("crow_1_pitch","crow 1 pitch",{"normal","korg monotron"},1)
-  params:add_control("crow 2 gate","crow 2 gate length",controlspec.new(0,100,"lin",1,75,"%",1/100))
-  params:add{type='binary',name="crow 3 clock",id='crow 3 clock',behavior='toggle',
-    action=function(v)
-      if v==1 then
-        self.start_clock_after_phrase=self.current_phrase+1
-      else
-        self.start_clock_after_phrase=nil
-      end
-    end
-  }
-  params:add_control("crow_3_volts","crow 3 volts",controlspec.new(0,10,'lin',0.1,1,'volts',0.1/10))
   local option_divisions={"1/32","1/16","1/8","1/4","1/2","1"}
   local option_divisions_num={1/32,1/16,1/8,1/4,1/2,1}
-  params:add_option("crow 3 division","crow 3 division",option_divisions,3)
-  params:set_action("crow 3 division",function(x)
-    if self.pattern_clock_sync~=nil then
-      self.pattern_clock_sync:set_division(option_divisions_num[x])
-    end
-  end)
-  params:add_control("crow_4_level","crow 4 sustain",controlspec.new(0,10,'lin',0.1,10,'volts',0.1/10))
-  params:add_control("crow_4_attack","crow 4 attack",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
-  params:add_control("crow_4_sustain","crow 4 sustain",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
-  params:add_control("crow_4_decay","crow 4 decay",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
+  params:add_control("crow_2_level","crow 2 sustain",controlspec.new(0,10,'lin',0.1,10,'volts',0.1/10))
+  params:add_control("crow_2_attack","crow 2 attack",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
+  params:add_control("crow_2_sustain","crow 2 sustain",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
+  params:add_control("crow_2_decay","crow 2 decay",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
 
   for i=1,6 do
     params:add_group("loop "..i,11)
@@ -295,6 +314,7 @@ function Acrostic:init(o)
   }
   self.pattern_measure_inter={}
   local scale=MusicUtil.generate_scale_of_length(params:get("root_note"),params:get("scale"),120)
+  self.scale_full=scale
   for i=1,3 do
     self.pattern_measure_inter[i]=self.lattice:new_pattern{
       action=function(t)
@@ -333,18 +353,11 @@ function Acrostic:init(o)
     division=1,
     delay=1/2,
   }
-
-  -- crow output 3 is for using a clock
-  self.start_clock_after_phrase=nil
-  self.pattern_clock_sync=self.lattice:new_pattern{
-    action=function(x)
-      crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(clock.get_beat_sec()/2).."), to(0,0) }"
-      -- crow.output[3].action="{ to("..params:get("crow_3_volts")..",0), to(0,0.015), to("..params:get("crow_3_volts")..",0) }"
-      crow.output[3]()
-      -- if params:get("is_playing")==1 and self.start_clock_after_phrase~=nil and self.current_phrase>=self.start_clock_after_phrase then
-      -- end
+  self.pattern_gridnote=self.lattice:new_pattern{
+    action=function(t)
+      self.ag:emit()
     end,
-    division=1/4,
+    division=1/16,
   }
 
   params.action_write=function(filename,name)
@@ -499,13 +512,17 @@ function Acrostic:iterate_note()
   end
   local chord_roman=params:get("chord"..page..chord)
   if chord_roman~=self.last_chord_roman and note~=self.last_note then
-    crow.output[4].action="{ to(0,0), to("..params:get("crow_4_level")..
-    ","..(clock.get_beat_sec()*params:get("crow_4_attack"))..
-    "), to("..params:get("crow_4_sustain")..","..(clock.get_beat_sec()*params:get("crow_4_decay"))..") }"
-    crow.output[4]()
+    crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
+    ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
+    "), to("..params:get("crow_2_sustain")..","..(clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
+    crow.output[2]()
   end
   self.last_chord_roman=chord_roman
   self.last_note=note
+
+  -- TODO: emit note from the grid
+
+
 
   -- play note
   self:play_note(note,1)
@@ -621,10 +638,7 @@ local use_note_lfos=params:get("melody_generator")==2
   if hz~=nil and hz>20 and hz<18000 then
     engine.hz(hz)
   end
-  local gate_length=clock.get_beat_sec()*params:get("crow 2 gate")/100
   if crow~=nil then
-    crow.output[2].action="{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
-    crow.output[2]()
     if params:get("crow_1_pitch")==1 then
       crow.output[1].volts=(note-24)/12
     else
