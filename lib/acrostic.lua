@@ -11,9 +11,6 @@ local acrosticgrid_=include("acrostic/lib/acrosticgrid")
 
 local Acrostic={}
 
-
-
-
 function Acrostic:new (o)
   o=o or {} -- create object if user does not provide one
   setmetatable(o,self)
@@ -29,12 +26,12 @@ function Acrostic:init(o)
   self.debounce_chord_selection=0
   self.loop_length=16
 
-  -- setup grid 
+  -- setup grid
   crow.output[4].action="adsr(0.01,0.5,0,0.1,'linear')"
   self.ag=acrosticgrid_:new{
-    note_on=function(row,gate,note_adjust)
-      if self.scale_full==nil or self.matrix_final==nil then 
-        do return end 
+    note_on=function(step,row,gate,note_adjust,note_hold)
+      if self.scale_full==nil or self.matrix_final==nil then
+        do return end
       end
       local chord=params:get("current_chord")
       local page=1
@@ -43,8 +40,16 @@ function Acrostic:init(o)
         page=2
       end
       local note=self.matrix_final[page][row][chord]
-      if note_adjust>0 then
+      if note_hold==true then
+        if self.note_held[step]~=nil then
+          note=self.note_held[step]
+        end
+      end
+      if note_adjust>0 and (note_hold==false or self.note_held[step]==nil) then
         note=MusicUtil.snap_note_to_array(note+note_adjust,self.scale_full)
+      end
+      if note_hold==true then
+        self.note_held[step]=note
       end
       self.grid_last_note=note
       local hz=MusicUtil.note_num_to_freq(note)
@@ -53,7 +58,7 @@ function Acrostic:init(o)
       crow.output[4](true)
     end,
     note_off=function()
-      if self.grid_last_note==nil then 
+      if self.grid_last_note==nil then
         do return end
       end
       print("note off",self.grid_last_note)
@@ -335,7 +340,7 @@ function Acrostic:init(o)
     action=function(t)
       if params:get("is_playing")==1 then
         local note=self:get_random_note(self:get_current_octave()+2)
-      	--print("up note: ",note)
+        --print("up note: ",note)
         self:play_note(note,3)
       end
     end,
@@ -522,8 +527,6 @@ function Acrostic:iterate_note()
 
   -- TODO: emit note from the grid
 
-
-
   -- play note
   self:play_note(note,1)
   if params:get("random_mode")==2 then
@@ -603,32 +606,31 @@ function Acrostic:toggle_start(stop_all)
   end
 end
 
-
 function Acrostic:play_note(note,origin)
   if math.random()>params:get("gate_prob") then
     do return end
   end
 
   local note_lfos={
-	{math.random(20,30),math.random(0,60),1.0},
-	{math.random(20,30),math.random(0,60),0.5},
-	{math.random(20,30),math.random(0,60),0.6},
-	{math.random(20,30),math.random(0,60),0.4},
+    {math.random(20,30),math.random(0,60),1.0},
+    {math.random(20,30),math.random(0,60),0.5},
+    {math.random(20,30),math.random(0,60),0.6},
+    {math.random(20,30),math.random(0,60),0.4},
   }
-local use_note_lfos=params:get("melody_generator")==2 
-  if use_note_lfos then 
-	  local note_lfo=note_lfos[origin]
-	  local rmin=(calculate_lfo(clock.get_beats()*clock.get_beat_sec(),
-	  	note_lfo[1],note_lfo[2])+1)*50 -- generates number 0-100
-	  rmin=math.floor(rmin*note_lfo[3])
-	  local rtarget=math.random(rmin,100)
-	  local r=math.random(0,100)
-	  if r>rtarget then 
-		  print("skip note from origin "..origin)
-		  do return end 
-	  end
-  elseif not use_note_lfos and origin>1 then 
-	  do return end
+  local use_note_lfos=params:get("melody_generator")==2
+  if use_note_lfos then
+    local note_lfo=note_lfos[origin]
+    local rmin=(calculate_lfo(clock.get_beats()*clock.get_beat_sec(),
+    note_lfo[1],note_lfo[2])+1)*50 -- generates number 0-100
+    rmin=math.floor(rmin*note_lfo[3])
+    local rtarget=math.random(rmin,100)
+    local r=math.random(0,100)
+    if r>rtarget then
+      print("skip note from origin "..origin)
+      do return end
+    end
+  elseif not use_note_lfos and origin>1 then
+    do return end
   end
 
   -- engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
@@ -729,7 +731,7 @@ function Acrostic:softcut_init()
     end
   end)
   softcut.event_phase(function(i,pos)
-    if i<7 then 
+    if i<7 then
       self.o.pos[i]=pos-self.o.minmax[i][2]
     end
   end)

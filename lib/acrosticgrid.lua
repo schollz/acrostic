@@ -51,14 +51,13 @@ function AcrosticGrid:new(args)
   m.fingers_on_notes=nil
   m.fingers_on_sequence=nil
   m.fingers_on_transpose=nil
-  m.cur={0,0,0}
+  m.cur={0,0,0,false}
   m.seq=s{m.cur}
   m.scale=musicutil.generate_scale (0,'major',90)
   m.transpose_options={1,-1,2,-2}
 
   return m
 end
-
 
 function AcrosticGrid:grid_key(x,y,z)
   self:key_press(y,x,z==1)
@@ -71,38 +70,38 @@ function AcrosticGrid:key_press(row,col,on)
   else
     self.pressed_buttons[row..","..col]=nil
   end
-  if not on then 
-    if self.fingers_on_notes~=nil and self.fingers_on_notes[1]==row and self.fingers_on_notes[2]==col then 
-        self.fingers_on_notes=nil 
+  if not on then
+    if self.fingers_on_notes~=nil and self.fingers_on_notes[1]==row and self.fingers_on_notes[2]==col then
+      self.fingers_on_notes=nil
     end
-    if self.fingers_on_sequence~=nil and self.fingers_on_sequence[1]==row and self.fingers_on_sequence[2]==col then 
-        self.fingers_on_sequence=nil 
+    if self.fingers_on_sequence~=nil and self.fingers_on_sequence[1]==row and self.fingers_on_sequence[2]==col then
+      self.fingers_on_sequence=nil
     end
-    if self.fingers_on_transpose~=nil and self.fingers_on_transpose[1]==row and self.fingers_on_transpose[2]==col then 
-        self.fingers_on_transpose=nil 
+    if self.fingers_on_transpose~=nil and self.fingers_on_transpose[1]==row and self.fingers_on_transpose[2]==col then
+      self.fingers_on_transpose=nil
     end
-    do return end 
+    do return end
   end
-  if row<=6 then 
-    if self.fingers_on_notes~=nil then 
-        self:toggle_note_from_to(self.fingers_on_notes[1],self.fingers_on_notes[2],row,col)
+  if row<=6 then
+    if self.fingers_on_notes~=nil then
+      self:toggle_note_from_to(self.fingers_on_notes[1],self.fingers_on_notes[2],row,col)
     else
-        self.fingers_on_notes={row,col}
-        self:toggle_note(row,col)
+      self.fingers_on_notes={row,col}
+      self:toggle_note(row,col)
     end
-  elseif row==7 then 
-    if self.fingers_on_sequence~=nil then 
-        self:toggle_note_from_to(self.fingers_on_sequence[1],self.fingers_on_sequence[2],row,col)
+  elseif row==7 then
+    if self.fingers_on_sequence~=nil then
+      self:toggle_note_from_to(self.fingers_on_sequence[1],self.fingers_on_sequence[2],row,col)
     else
-        self.fingers_on_sequence={row,col}
-        self:toggle_note(row,col)
+      self.fingers_on_sequence={row,col}
+      self:toggle_note(row,col)
     end
   elseif row==8 then
-    if self.fingers_on_transpose~=nil then 
+    if self.fingers_on_transpose~=nil then
       self:toggle_note_from_to(self.fingers_on_transpose[1],self.fingers_on_transpose[2],row,col)
     else
-        self.fingers_on_transpose={row,col}
-        self:toggle_note(row,col)
+      self.fingers_on_transpose={row,col}
+      self:toggle_note(row,col)
     end
   end
 end
@@ -112,16 +111,17 @@ function AcrosticGrid:emit()
   local row=self.cur[2]
   local col=self.cur[1]
   local gate=self.cur[3]
+  local hold=self.cur[4]
   if gate==0 or gate==2 then
     -- do note off
     if self.note_off~=nil then
       self.note_off()
     end
   end
-  if row < 1 or row > 6 or gate==0 then
+  if row<1 or row>6 or gate==0 then
     do return end
   end
-  if self.note_on~=nil  then
+  if self.note_on~=nil then
     local transpose_note=0
     if self.toggles[8][col]>0 then
       transpose_note=self.transpose_options[self.toggles[8][col]]*2
@@ -129,45 +129,42 @@ function AcrosticGrid:emit()
         transpose_note=nil
       end
     end
-    if row~=nil and transpose_note~=nil then 
-      self.note_on(row,gate==2,transpose_note)
+    if row~=nil and transpose_note~=nil then
+      self.note_on(col,row,gate==2,transpose_note,hold)
     end
   end
-  -- local hz=musicutil.note_num_to_freq(note)
-  -- engine.amp(0.5)
-  -- engine.hz(hz)
 end
 
 function AcrosticGrid:update_sequence()
   local step_length=clock.get_beat_sec()/4
   local seq={}
-  for col=1,16 do 
-    if self.toggles[7][col]>0 then 
-      local found_note={col,0,0}
-      for row=1,6 do 
+  for col=1,16 do
+    if self.toggles[7][col]>0 then
+      --               col,row,gate,hold
+      local found_note={col,0,0,false}
+      for row=1,6 do
         if self.toggles[row][col]>0 then
           -- this is a step in the sequence
-          found_note={col,row,self.toggles[row][col]} -- 2=gate + note off, 1=sustain, 0=note off
+          found_note={col,row,self.toggles[row][col],self.toggles[row][col]==2} -- 2=gate + note off, 1=sustain, 0=note off
         end
       end
       table.insert(seq,found_note)
     end
   end
   if next(seq)==nil then
-    seq={{0,0,0}}
+    seq={{0,0,0,false}}
   end
   self.seq:settable(seq)
 end
 
-
 function AcrosticGrid:toggle_note(row,col)
-  if row==8 then 
-    self.toggles[row][col]=self.toggles[row][col]+1 
+  if row==8 then
+    self.toggles[row][col]=self.toggles[row][col]+1
     if self.toggles[row][col]>#self.transpose_options then
       self.toggles[row][col]=0
     end
-  elseif row<7 then 
-    for r=1,6 do 
+  elseif row<7 then
+    for r=1,6 do
       if r~=row then
         self.toggles[r][col]=0
       end
@@ -175,31 +172,34 @@ function AcrosticGrid:toggle_note(row,col)
     if self.toggles[row][col]==0 then
       self.toggles[row][col]=2
     elseif self.toggles[row][col]==2 then
-      self.toggles[row][col]=1        
+      self.toggles[row][col]=1
     else
       self.toggles[row][col]=0
     end
     self:update_sequence()
-  elseif row==7 then 
-    self.toggles[row][col]=1-self.toggles[row][col]
+  elseif row==7 then
+    self.toggles[row][col]=self.toggles[row][col]+1
+    if self.toggles[row][col]>2 then
+      self.toggles[row][col]=0
+    end
     self:update_sequence()
   end
 end
 
 function AcrosticGrid:toggle_note_from_to(row1,col1,row2,col2,toggle_note_from)
-    if col2==col1 then 
-        do return end
-    end
-    local m=(row2-row1)/(col2-col1)
-    local b=row2-(m*col2)
-    local startcol=col1+1 
-    if toggle_note_from~=nil and toggle_note_from==true then 
-        startcol=col1
-    end
-    for col=startcol,col2 do 
-        row=util.round(m*col+b)
-        self:toggle_note(row,col)
-    end
+  if col2==col1 then
+    do return end
+  end
+  local m=(row2-row1)/(col2-col1)
+  local b=row2-(m*col2)
+  local startcol=col1+1
+  if toggle_note_from~=nil and toggle_note_from==true then
+    startcol=col1
+  end
+  for col=startcol,col2 do
+    row=util.round(m*col+b)
+    self:toggle_note(row,col)
+  end
 end
 
 function AcrosticGrid:get_visual()
@@ -212,17 +212,17 @@ function AcrosticGrid:get_visual()
       end
       if row<8 then
         self.visual[row][col]=self.toggles[row][col]*5
-      else        
+      else
         self.visual[row][col]=self.toggles[row][col]*3
       end
     end
   end
 
-  -- illuminate current played 
+  -- illuminate current played
   if self.cur[1]>0 then
     self.visual[7][self.cur[1]]=self.visual[7][self.cur[1]]+5
-    if self.cur[2]>0 then 
-      for r=1,8 do 
+    if self.cur[2]>0 then
+      for r=1,8 do
         if r~=self.cur[2] then
           self.visual[r][self.cur[1]]=2
         end
