@@ -203,6 +203,13 @@ function AcrosticGrid:toggle_note_from_to(row1,col1,row2,col2,toggle_note_from)
   if toggle_note_from~=nil and toggle_note_from==true then
     startcol=col1
   end
+  if row1==7 and row2==7 then
+    -- special case: two fingers on sequence will clear everything
+    -- sequences must be entered one at a time to change divisions
+    for col=1,16 do
+      self.toggles[7][col]=0
+    end
+  end
   for col=startcol,col2 do
     row=util.round(m*col+b)
     self:toggle_note(row,col)
