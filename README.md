@@ -188,8 +188,17 @@ the crow outputs are used for expression with CV instruments:
 
 - crow output 1 is pitch
 - crow output 2 is the note gate 
-- crow output 3 is clock
-- crow output 4 is a chord change gate
+- crow output 3 is grid pitch
+- crow output 4 is grid pitch adsr
+
+## grid
+
+![Screenshot 2022-02-20 at 07-42-14 GridStation](https://user-images.githubusercontent.com/6550035/154850845-43dd6218-c10b-4701-ba29-94952c7a435f.png)
+
+- rows 1-6 control then notes. you can use two finger gestures to draw shapes. pressing a step twice (dimmer) will cause that note not to gate. the note shapes are applied the note matrix.
+- row 7 controls which steps will sequence. pressing a step twice (brighter) will cause that note to hold.
+- row 8 controls which steps have tranpose, transposition alternates between positive and negative. 
+
 
 # Install
 

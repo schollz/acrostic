@@ -27,7 +27,6 @@ function Acrostic:init(o)
   self.loop_length=16
 
   -- setup grid
-  crow.output[4].action="adsr(0.01,0.5,0,0.1,'linear')"
   self.ag=acrosticgrid_:new{
     note_on=function(step,row,gate,note_adjust,note_hold)
       if self.scale_full==nil or self.matrix_final==nil then
@@ -176,7 +175,7 @@ function Acrostic:init(o)
     self.do_set_cut_to_1=true
   end)
 
-  params:add_group("midi/crow",6)
+  params:add_group("midi/crow",11)
   params:add_option("midi_in","midi in",self.midi_devices,#self.midi_devices==1 and 1 or 2)
   params:add_option("crow_1_pitch","crow 1 pitch",{"normal","korg monotron"},1)
   local option_divisions={"1/32","1/16","1/8","1/4","1/2","1"}
@@ -185,6 +184,21 @@ function Acrostic:init(o)
   params:add_control("crow_2_attack","crow 2 attack",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
   params:add_control("crow_2_sustain","crow 2 sustain",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
   params:add_control("crow_2_decay","crow 2 decay",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
+  params:add_option("crow_3_pitch","crow 3 pitch",{"normal","korg monotron"},1)
+  params:add_control("crow_4_attack","crow 4 attack",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
+  params:add_control("crow_4_sustain","crow 4 sustain",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
+  params:add_control("crow_4_decay","crow 4 decay",controlspec.new(0,4,'lin',0.01,0.5,'sn',0.01/4))
+  params:add_control("crow_4_release","crow 4 release",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
+  for _,name in ipairs({"attack","sustain","decay","release"}) do
+    params:set_action("crow_4_"..name,function(x)
+      crow.output[4].action="adsr("..
+      (clock.get_beat_sec()/4*params:get("crow_4_attack"))..","..
+      (clock.get_beat_sec()/4*params:get("crow_4_decay"))..","..
+      params:get("crow_4_sustain")..","..
+      (clock.get_beat_sec()/4*params:get("crow_4_release"))..
+      ",'linear')"
+    end)
+  end
 
   for i=1,6 do
     params:add_group("loop "..i,11)
@@ -358,6 +372,7 @@ function Acrostic:init(o)
     division=1,
     delay=1/2,
   }
+  params:set("crow_4_attack",0.1) -- initialize attack
   self.pattern_gridnote=self.lattice:new_pattern{
     action=function(t)
       self.ag:emit()
