@@ -38,9 +38,25 @@ function Acrostic:init(o)
         chord=chord-4
         page=2
       end
-      local note=self.matrix_final[page][row][chord]
-      if note_adjust>0 then
-        note=MusicUtil.snap_note_to_array(note+note_adjust,self.scale_full)
+      local notes=MusicUtil.generate_chord_roman(params:get("root_note")-12,params:get("scale"),self.available_chords[params:get("chord"..page..chord)])
+      for i=1,3 do 
+        table.insert(notes,notes[i]+12)
+      end
+      -- local note=self.matrix_final[page][row][chord]
+      local note=notes[row]
+      if note_adjust~=0 and note_adjust~=nil then
+        local idx=0 
+        for i, n in ipairs(self.scale_full) do 
+          if n==note then
+            idx=i
+          end
+        end
+
+        if idx+note_adjust>0 and idx+note_adjust<#self.scale_full then
+          print(note_adjust..": "..note.." -> "..self.scale_full[idx+note_adjust])
+          note=self.scale_full[idx+note_adjust]
+        end
+        --note=MusicUtil.snap_note_to_array(note+note_adjust,self.scale_full)
       end
       self.grid_last_note=note
       local hz=MusicUtil.note_num_to_freq(note)
@@ -324,7 +340,7 @@ function Acrostic:init(o)
   }
   self.pattern_measure_inter={}
   local scale=MusicUtil.generate_scale_of_length(params:get("root_note"),params:get("scale"),120)
-  self.scale_full=scale
+  self.scale_full=MusicUtil.generate_scale_of_length(params:get("root_note")%12,params:get("scale"),120)
   for i=1,3 do
     self.pattern_measure_inter[i]=self.lattice:new_pattern{
       action=function(t)
@@ -524,6 +540,8 @@ function Acrostic:iterate_note()
   end
   local chord_roman=params:get("chord"..page..chord)
   if chord_roman~=self.last_chord_roman and note~=self.last_note then
+    -- TODO: make this resetting optional
+    self.ag:reset()
     crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
     ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
     "), to("..params:get("crow_2_sustain")..","..(clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
