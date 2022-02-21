@@ -28,11 +28,10 @@ function Acrostic:init(o)
 
   -- setup grid
   self.ag=acrosticgrid_:new{
-    note_on=function(step,row,gate,note_adjust,div)
+    note_on=function(step,row,gate,note_adjust)
       if self.scale_full==nil or self.matrix_final==nil then
         do return end
       end
-      self.div_ag=div
       local chord=params:get("current_chord")
       local page=1
       if chord>4 then
@@ -53,7 +52,6 @@ function Acrostic:init(o)
       if self.grid_last_note==nil then
         do return end
       end
-      self.div_ag=div
       print("note off",self.grid_last_note)
       crow.output[4](false)
     end
@@ -370,9 +368,6 @@ function Acrostic:init(o)
   params:set("crow_4_attack",0.1) -- initialize attack
   self.pattern_gridnote=self.lattice:new_pattern{
     action=function(t)
-      if self.div_ag~=nil and self.div_ag~=self.pattern_gridnote.division then
-        self.pattern_gridnote:set_division(self.div_ag)
-      end
       self.ag:emit()
     end,
     division=1/16,-- TODO: try making the step part change the division?

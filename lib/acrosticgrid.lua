@@ -53,7 +53,6 @@ function AcrosticGrid:new(args)
   m.fingers_on_transpose=nil
   m.cur={0,0,0,false}
   m.seq=s{m.cur}
-  m.seqdiv=s{1/16}
   m.scale=musicutil.generate_scale (0,'major',90)
   m.transpose_options={1,-1,2,-2}
   m.division_options={1/16,1/12,1/8,1/6,1/4,1/2,1,2,4,8}
@@ -113,7 +112,6 @@ function AcrosticGrid:emit()
   local row=self.cur[2]
   local col=self.cur[1]
   local gate=self.cur[3]
-  local div=self.seqdiv()
   if gate==0 or gate==2 then
     -- do note off
     if self.note_off~=nil then
@@ -132,7 +130,7 @@ function AcrosticGrid:emit()
       end
     end
     if row~=nil and transpose_note~=nil then
-      self.note_on(col,row,gate==2,transpose_note,div)
+      self.note_on(col,row,gate==2,transpose_note)
     end
   end
 end
@@ -140,7 +138,6 @@ end
 function AcrosticGrid:update_sequence()
   local step_length=clock.get_beat_sec()/4
   local seq={}
-  local seqdiv={}
   for col=1,16 do
     if self.toggles[7][col]>0 then
       --               col,row,gate
@@ -151,19 +148,15 @@ function AcrosticGrid:update_sequence()
           found_note={col,row,self.toggles[row][col]} -- 2=gate + note off, 1=sustain, 0=note off
         end
       end
-      table.insert(seq,found_note)
-      table.insert(seqdiv,self.division_options[self.toggles[7][col]])
+      for i=1,self.toggles[7][col] do
+        table.insert(seq,found_note)
+      end
     end
   end
   if next(seq)==nil then
     seq={{0,0,0,false}}
-    seqdiv={1/16}
   end
   self.seq:settable(seq)
-  self.seqdiv:settable(seqdiv)
-  for i=1,#seq-1 do
-    self.seqdiv() -- make sure the divisions are one ahead  
-  end
 end
 
 function AcrosticGrid:toggle_note(row,col)
@@ -187,8 +180,12 @@ function AcrosticGrid:toggle_note(row,col)
     end
     self:update_sequence()
   elseif row==7 then
-    self.toggles[row][col]=self.toggles[row][col]+1
-    if self.toggles[row][col]>#self.division_options then
+    if self.toggles[row][col]<=1 then
+      self.toggles[row][col]=self.toggles[row][col]+1
+    else
+      self.toggles[row][col]=self.toggles[row][col]+2
+    end
+    if self.toggles[row][col]>15 then
       self.toggles[row][col]=0
     end
     self:update_sequence()
