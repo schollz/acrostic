@@ -28,7 +28,7 @@ function Acrostic:init(o)
 
   -- setup grid
   self.ag=acrosticgrid_:new{
-    note_on=function(step,row,gate,note_adjust)
+    note_on=function(step,row,note_adjust)
       if self.scale_full==nil or self.matrix_final==nil then
         do return end
       end
@@ -44,16 +44,15 @@ function Acrostic:init(o)
       end
       self.grid_last_note=note
       local hz=MusicUtil.note_num_to_freq(note)
-      print("note on",note,gate)
       crow.output[3].volts=(note-12)/12
-      crow.output[4](true)
+      -- crow.output[4](true)
     end,
-    note_off=function(div)
-      if self.grid_last_note==nil then
-        do return end
-      end
-      print("note off",self.grid_last_note)
-      crow.output[4](false)
+    note_off=function()
+      -- if self.grid_last_note==nil then
+      --   do return end
+      -- end
+      -- print("note off",self.grid_last_note)
+      -- crow.output[4](false)
     end
   }
 

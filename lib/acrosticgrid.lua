@@ -54,8 +54,7 @@ function AcrosticGrid:new(args)
   m.cur={0,0,0,false}
   m.seq=s{m.cur}
   m.scale=musicutil.generate_scale (0,'major',90)
-  m.transpose_options={1,-1,2,-2}
-  m.division_options={1/16,1/12,1/8,1/6,1/4,1/2,1,2,4,8}
+  m.transpose_options={0,1,-1,2,-2}
 
   return m
 end
@@ -109,76 +108,56 @@ end
 
 function AcrosticGrid:emit()
   self.cur=self.seq()
-  local row=self.cur[2]
-  local col=self.cur[1]
-  local gate=self.cur[3]
-  if gate==0 or gate==2 then
-    -- do note off
-    if self.note_off~=nil then
-      self.note_off(div)
-    end
-  end
-  if row<1 or row>6 or gate==0 then
+  local row=self.cur[1]
+  local col=self.cur[2]
+  if row<1 or row>6 then
     do return end
   end
   if self.note_on~=nil then
-    local transpose_note=0
-    if self.toggles[8][col]>0 then
-      transpose_note=self.transpose_options[self.toggles[8][col]]*2
-      if transpose_note==0 then
-        transpose_note=nil
-      end
+    local transpose_note=nil
+    if self.toggles[row][col]>0 then 
+      transpose_note=self.transpose_options[self.toggles[row][col]]
     end
     if row~=nil and transpose_note~=nil then
-      self.note_on(col,row,gate==2,transpose_note)
+      self.note_on(col,row,transpose_note)
     end
   end
 end
 
 function AcrosticGrid:update_sequence()
-  local step_length=clock.get_beat_sec()/4
   local seq={}
   for col=1,16 do
-    if self.toggles[7][col]>0 then
-      --               col,row,gate
-      local found_note={col,0,0}
+    if self.toggles[8][col]>0 then
+      local found_note={0,col}
       for row=1,6 do
         if self.toggles[row][col]>0 then
-          -- this is a step in the sequence
-          found_note={col,row,self.toggles[row][col]} -- 2=gate + note off, 1=sustain, 0=note off
+          found_note={row,col}
         end
       end
-      for i=1,self.toggles[7][col] do
+      for i=1,(self.toggles[7][col]+1) do
         table.insert(seq,found_note)
       end
     end
   end
   if next(seq)==nil then
-    seq={{0,0,0,false}}
+    seq={{0,0}}
   end
   self.seq:settable(seq)
 end
 
 function AcrosticGrid:toggle_note(row,col)
   if row==8 then
-    self.toggles[row][col]=self.toggles[row][col]+1
-    if self.toggles[row][col]>#self.transpose_options then
-      self.toggles[row][col]=0
-    end
-  elseif row<7 then
+    self.toggles[row][col]=1-self.toggles[row][col]
+  elseif row<=6 then
     for r=1,6 do
       if r~=row then
         self.toggles[r][col]=0
       end
     end
-    if self.toggles[row][col]==0 then
-      self.toggles[row][col]=2
-    elseif self.toggles[row][col]==2 then
-      self.toggles[row][col]=1
-    else
+    self.toggles[row][col]=self.toggles[row][col]+1
+    if self.toggles[row][col]>#self.transpose_options then
       self.toggles[row][col]=0
     end
-    self:update_sequence()
   elseif row==7 then
     if self.toggles[row][col]<=1 then
       self.toggles[row][col]=self.toggles[row][col]+1
@@ -188,8 +167,8 @@ function AcrosticGrid:toggle_note(row,col)
     if self.toggles[row][col]>15 then
       self.toggles[row][col]=0
     end
-    self:update_sequence()
   end
+  self:update_sequence()
 end
 
 function AcrosticGrid:toggle_note_from_to(row1,col1,row2,col2,toggle_note_from)
@@ -205,9 +184,11 @@ function AcrosticGrid:toggle_note_from_to(row1,col1,row2,col2,toggle_note_from)
   if row1==7 and row2==7 then
     -- special case: two fingers on sequence will clear everything
     -- sequences must be entered one at a time to change divisions
-    for col=1,16 do
+    for col=col1,col2 do
       self.toggles[7][col]=0
     end
+    self:update_sequence()
+    do return end
   end
   for col=startcol,col2 do
     row=util.round(m*col+b)
@@ -224,25 +205,25 @@ function AcrosticGrid:get_visual()
         self.visual[row][col]=0
       end
       if row<=6 then
-        self.visual[row][col]=self.toggles[row][col]*5
+        self.visual[row][col]=self.toggles[row][col]*3
       elseif row==7 then
         self.visual[row][col]=self.toggles[row][col]*1
       elseif row==8 then
-        self.visual[row][col]=self.toggles[row][col]*3
+        self.visual[row][col]=self.toggles[row][col]*5
       end
     end
   end
 
   -- illuminate current played
-  if self.cur[1]>0 then
-    self.visual[7][self.cur[1]]=self.visual[7][self.cur[1]]+5
-    if self.visual[7][self.cur[1]]>15 then
-      self.visual[7][self.cur[1]]=15
+  if self.cur[2]>0 then
+    self.visual[8][self.cur[2]]=self.visual[8][self.cur[2]]+5
+    if self.visual[8][self.cur[2]]>15 then
+      self.visual[8][self.cur[2]]=15
     end
-    if self.cur[2]>0 then
+    if self.cur[1]>0 then
       for r=1,6 do
-        if r~=self.cur[2] and self.visual[r][self.cur[1]]==0 then
-          self.visual[r][self.cur[1]]=2
+        if r~=self.cur[1] and self.visual[r][self.cur[2]]==0 then
+          self.visual[r][self.cur[2]]=2
         end
       end
     end
