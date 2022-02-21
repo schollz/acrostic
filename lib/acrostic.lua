@@ -8,13 +8,14 @@ local lattice_=include("acrostic/lib/lattice")
 local s=require("sequins")
 local MusicUtil=include("acrostic/lib/musicutil2")
 local acrosticgrid_=include("acrostic/lib/acrosticgrid")
-
+local has_rec_once=false -- TODO: softcut.rec_once~=nil
 local Acrostic={}
 
 function Acrostic:new (o)
   o=o or {} -- create object if user does not provide one
   setmetatable(o,self)
   self.__index=self
+  print("has rec_once: ".."yes" and has_rec_once or "no")
   return o
 end
 
@@ -121,7 +122,6 @@ function Acrostic:init(o)
   self.available_chords={}
   for _,v in ipairs({"","7","6-9","+7"}) do
     for _,c in ipairs(basic_chords) do
-      print(c,v)
       table.insert(self.available_chords,c..v)
     end
   end
@@ -204,11 +204,15 @@ function Acrostic:init(o)
     params:add_group("loop "..i,11)
     params:add_control("rec_level"..i,"rec level "..i,controlspec.new(0,1,'lin',0.01,1.0,'',0.01/1))
     params:set_action("rec_level"..i,function(x)
-      softcut.rec_level(i,x)
+      if has_rec_once then 
+        softcut.rec_level(i,x)
+      end
     end)
     params:add_control("pre_level"..i,"pre level "..i,controlspec.new(0,1,'lin',0.01,0.5,'',0.01/1))
     params:set_action("pre_level"..i,function(x)
-      softcut.pre_level(i,x)
+      if has_rec_once then 
+        softcut.pre_level(i,x)
+      end
     end)
     params:add_control(i.."vol adj","vol adj",controlspec.new(-1,1,"lin",0.1,0,"",0.1/2))
     params:add_control(i.."vol lfo amp","vol lfo amp",controlspec.new(0,1,"lin",0.01,0.25,"",0.01))
@@ -287,6 +291,15 @@ function Acrostic:init(o)
                 self:softcut_render(i)
               end)
               print("dequeing "..self.rec_queue[1].i)
+              if not has_rec_once then
+                -- stop recording
+                local i=self.rec_queue[1].i
+                softcut.rec_level(i,0)
+                clock.run(function()
+                  clock.sleep(0.4)
+                  softcut.rec(i,0)
+                end)
+              end
               table.remove(self.rec_queue,1)
             end
           end
@@ -294,6 +307,15 @@ function Acrostic:init(o)
             if self.rec_queue[1].primed then
               print("setting to record",self.rec_queue[1].i)
               params:set("sel_note",self.rec_queue[1].i)
+              if not has_rec_once then
+                -- do record
+                clock.run(function()
+                  local i=self.rec_queue[1].i
+                  softcut.rec(i,1)
+                  clock.sleep(0.1)
+                  softcut.rec_level(i,params:get("rec_level"..i))
+                end)
+              end
               self.rec_queue[1].recording=true
             end
           end
@@ -309,8 +331,13 @@ function Acrostic:init(o)
           end
           if do_prime~=nil then
             self.rec_queue[do_prime].primed=true
-            print("softcut.rec_once("..self.rec_queue[do_prime].i..")")
-            softcut.rec_once(self.rec_queue[do_prime].i)
+            if has_rec_once then 
+              print("softcut.rec_once("..self.rec_queue[do_prime].i..")")
+              softcut.rec_once(self.rec_queue[do_prime].i)
+            else
+              softcut.rec(self.rec_queue[do_prime].i,0)
+              softcut.rec_level(self.rec_queue[do_prime].i,0)
+            end
             self.recorded[self.rec_queue[do_prime].i]=true
           end
         end
@@ -378,7 +405,7 @@ function Acrostic:init(o)
     action=function(t)
       self.ag:emit()
     end,
-    division=1/16,-- TODO: try making the step part change the division?
+    division=1/64,
   }
 
   params.action_write=function(filename,name)
@@ -534,7 +561,7 @@ function Acrostic:iterate_note()
   local chord_roman=params:get("chord"..page..chord)
   if chord_roman~=self.last_chord_roman and note~=self.last_note then
     -- TODO: make this resetting optional
-    self.ag:reset()
+    --self.ag:reset()
     crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
     ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
     "), to("..params:get("crow_2_sustain")..","..(clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
@@ -587,6 +614,7 @@ function Acrostic:toggle_start(stop_all)
     end
     clock.run(function()
       clock.sleep(0.5)
+      print("playing all")
       for i=1,6 do
         softcut.play(i,0)
         softcut.position(i,self.o.minmax[i][2])
@@ -627,6 +655,11 @@ end
 function Acrostic:play_note(note,origin)
   if origin==5 then
     self:trigger_note(note)
+    self.had_origin5=true
+    do return end
+  end
+  if self.had_origin5 then 
+    self.had_origin5=false 
     do return end
   end
   if math.random()>params:get("gate_prob") then
@@ -724,11 +757,11 @@ function Acrostic:softcut_init()
 
     softcut.level_slew_time(i,0.2)
     softcut.rate_slew_time(i,0.2)
-    softcut.recpre_slew_time(i,0.1)
+    softcut.recpre_slew_time(i,0.4)
     softcut.fade_time(i,0.2)
 
-    softcut.rec_level(i,params:get("rec_level"..i))
-    softcut.pre_level(i,params:get("pre_level"..i))
+    softcut.rec_level(i,has_rec_once and params:get("rec_level"..i) or 0)
+    softcut.pre_level(i,has_rec_once and params:get("pre_level"..i) or 1.0)
     softcut.phase_quant(i,0.025)
 
     softcut.post_filter_dry(i,0.0)

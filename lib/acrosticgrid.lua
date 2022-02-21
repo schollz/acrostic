@@ -55,8 +55,8 @@ function AcrosticGrid:new(args)
   m.seq=s{m.cur}
   m.scale=musicutil.generate_scale (0,'major',90)
   m.transpose_options={0,1,-1,2,-2}
-  m.repeat_options={1,2,4,6,8,12,16,16,18,20,22,24,26,28,30,32}
-
+  m.repeat_options={4,6,8,10,12,14,16,24,32,48,64,72,96,128,2,1}
+ 
   return m
 end
 
