@@ -39,6 +39,8 @@ function Acrostic:init(o)
         chord=chord-4
         page=2
       end
+      page=1 -- TODO: remove this
+      chord=1 -- TODO: remove this
       local note=self.matrix_final[page][row][chord]
       -- local note=notes[row]
       if note_adjust~=0 and note_adjust~=nil then
@@ -52,10 +54,7 @@ function Acrostic:init(o)
           note=self.scale_full[idx+note_adjust]
         end
       end
-      if self.grid_last_note==nil or note~=self.grid_last_note then 
-        self:play_note(note,5)
-        self.grid_last_note=note
-      end
+      self:play_note(note,5)
     end,
     note_off=function()
       -- if self.grid_last_note==nil then
@@ -655,13 +654,16 @@ end
 function Acrostic:play_note(note,origin)
   if origin==5 then
     self:trigger_note(note)
-    self.had_origin5=true
+    self.had_origin5=5
     do return end
   end
-  if self.had_origin5 then 
-    self.had_origin5=false 
-    do return end
+  if self.had_origin5~=nil and self.had_origin5>0 then 
+    self.had_origin5=self.had_origin5-1
+    if self.had_origin5>0 then
+      do return end    
+    end 
   end
+  print("play_note",note,origin)
   if math.random()>params:get("gate_prob") then
     do return end
   end
