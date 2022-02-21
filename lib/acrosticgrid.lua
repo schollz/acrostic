@@ -56,7 +56,7 @@ function AcrosticGrid:new(args)
   m.seqdiv=s{1/16}
   m.scale=musicutil.generate_scale (0,'major',90)
   m.transpose_options={1,-1,2,-2}
-  m.division_options={1/16,1/12,1/8,1/6,1/4,1/2,1}
+  m.division_options={1/16,1/12,1/8,1/6,1/4,1/2,1,2,4,8}
 
   return m
 end
@@ -93,7 +93,7 @@ function AcrosticGrid:key_press(row,col,on)
     end
   elseif row==7 then
     if self.fingers_on_sequence~=nil then
-      self:toggle_note_from_to(self.fingers_on_sequence[1],self.fingers_on_sequence[2],row,col)
+      self:toggle_note_from_to(self.fingers_on_sequence[1],self.fingers_on_sequence[2],row,col,true)
     else
       self.fingers_on_sequence={row,col}
       self:toggle_note(row,col)
@@ -161,7 +161,9 @@ function AcrosticGrid:update_sequence()
   end
   self.seq:settable(seq)
   self.seqdiv:settable(seqdiv)
-  self.seqdiv() -- make sure the divisions are one ahead
+  for i=1,#seq-1 do
+    self.seqdiv() -- make sure the divisions are one ahead  
+  end
 end
 
 function AcrosticGrid:toggle_note(row,col)
@@ -186,7 +188,7 @@ function AcrosticGrid:toggle_note(row,col)
     self:update_sequence()
   elseif row==7 then
     self.toggles[row][col]=self.toggles[row][col]+1
-    if self.toggles[row][col]>2 then
+    if self.toggles[row][col]>#self.division_options then
       self.toggles[row][col]=0
     end
     self:update_sequence()
@@ -225,8 +227,9 @@ function AcrosticGrid:get_visual()
         self.visual[row][col]=0
       end
       if row<=6 then
+        self.visual[row][col]=self.toggles[row][col]*5
       elseif row==7 then
-        self.visual[row][col]=self.toggles[row][col]*2
+        self.visual[row][col]=self.toggles[row][col]*1
       elseif row==8 then
         self.visual[row][col]=self.toggles[row][col]*3
       end
@@ -240,8 +243,8 @@ function AcrosticGrid:get_visual()
       self.visual[7][self.cur[1]]=15
     end
     if self.cur[2]>0 then
-      for r=1,8 do
-        if r~=self.cur[2] then
+      for r=1,6 do
+        if r~=self.cur[2] and self.visual[r][self.cur[1]]==0 then
           self.visual[r][self.cur[1]]=2
         end
       end

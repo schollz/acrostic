@@ -40,16 +40,8 @@ function Acrostic:init(o)
         page=2
       end
       local note=self.matrix_final[page][row][chord]
-      if note_hold==true then
-        if self.note_held[step]~=nil then
-          note=self.note_held[step]
-        end
-      end
-      if note_adjust>0 and (note_hold==false or self.note_held[step]==nil) then
+      if note_adjust>0 then
         note=MusicUtil.snap_note_to_array(note+note_adjust,self.scale_full)
-      end
-      if note_hold==true then
-        self.note_held[step]=note
       end
       self.grid_last_note=note
       local hz=MusicUtil.note_num_to_freq(note)
