@@ -55,6 +55,7 @@ function AcrosticGrid:new(args)
   m.seq=s{m.cur}
   m.scale=musicutil.generate_scale (0,'major',90)
   m.transpose_options={0,1,-1,2,-2}
+  m.repeat_options={1,2,4,6,8,12,16,16,18,20,22,24,26,28,30,32}
 
   return m
 end
@@ -138,7 +139,7 @@ function AcrosticGrid:update_sequence()
           found_note={row,col}
         end
       end
-      for i=1,(self.toggles[7][col]+1) do
+      for i=1,self.repeat_options[self.toggles[7][col]+1] do
         table.insert(seq,found_note)
       end
     end

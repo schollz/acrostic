@@ -4,7 +4,7 @@ if not string.find(package.cpath,"/home/we/dust/code/acrostic/lib/") then
   package.cpath=package.cpath..";/home/we/dust/code/acrostic/lib/?.so"
 end
 local json=require("cjson")
-local lattice_=require("lattice")
+local lattice_=include("acrostic/lib/lattice")
 local s=require("sequins")
 local MusicUtil=include("acrostic/lib/musicutil2")
 local acrosticgrid_=include("acrostic/lib/acrosticgrid")
@@ -48,11 +48,13 @@ function Acrostic:init(o)
           end
         end
         if idx+note_adjust>0 and idx+note_adjust<#self.scale_full then
-          print(note_adjust..": "..note.." -> "..self.scale_full[idx+note_adjust])
           note=self.scale_full[idx+note_adjust]
         end
       end
-      self:play_note(note,5)
+      if self.grid_last_note==nil or note~=self.grid_last_note then 
+        self:play_note(note,5)
+        self.grid_last_note=note
+      end
     end,
     note_off=function()
       -- if self.grid_last_note==nil then
