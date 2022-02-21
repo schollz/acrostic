@@ -4,16 +4,18 @@ if not string.find(package.cpath,"/home/we/dust/code/acrostic/lib/") then
   package.cpath=package.cpath..";/home/we/dust/code/acrostic/lib/?.so"
 end
 local json=require("cjson")
-local lattice_=require("lattice")
+local lattice_=include("acrostic/lib/lattice")
 local s=require("sequins")
 local MusicUtil=include("acrostic/lib/musicutil2")
-
+local acrosticgrid_=include("acrostic/lib/acrosticgrid")
+local has_rec_once=false -- TODO: softcut.rec_once~=nil
 local Acrostic={}
 
 function Acrostic:new (o)
   o=o or {} -- create object if user does not provide one
   setmetatable(o,self)
   self.__index=self
+  print("has rec_once: ".."yes" and has_rec_once or "no")
   return o
 end
 
@@ -24,6 +26,44 @@ function Acrostic:init(o)
   self.message_level=0
   self.debounce_chord_selection=0
   self.loop_length=16
+
+  -- setup grid
+  self.ag=acrosticgrid_:new{
+    note_on=function(step,row,note_adjust)
+      if self.scale_full==nil or self.matrix_final==nil then
+        do return end
+      end
+      local chord=params:get("current_chord")
+      local page=1
+      if chord>4 then
+        chord=chord-4
+        page=2
+      end
+      page=1 -- TODO: remove this
+      chord=1 -- TODO: remove this
+      local note=self.matrix_final[page][row][chord]
+      -- local note=notes[row]
+      if note_adjust~=0 and note_adjust~=nil then
+        local idx=0 
+        for i, n in ipairs(self.scale_full) do 
+          if n==note then
+            idx=i
+          end
+        end
+        if idx+note_adjust>0 and idx+note_adjust<#self.scale_full then
+          note=self.scale_full[idx+note_adjust]
+        end
+      end
+      self:play_note(note,5)
+    end,
+    note_off=function()
+      -- if self.grid_last_note==nil then
+      --   do return end
+      -- end
+      -- print("note off",self.grid_last_note)
+      -- crow.output[4](false)
+    end
+  }
 
   -- setup midi
   self.midis={}
@@ -81,7 +121,6 @@ function Acrostic:init(o)
   self.available_chords={}
   for _,v in ipairs({"","7","6-9","+7"}) do
     for _,c in ipairs(basic_chords) do
-      print(c,v)
       table.insert(self.available_chords,c..v)
     end
   end
@@ -135,42 +174,44 @@ function Acrostic:init(o)
     self.do_set_cut_to_1=true
   end)
 
-  params:add_group("midi/crow",10)
+  params:add_group("midi/crow",11)
   params:add_option("midi_in","midi in",self.midi_devices,#self.midi_devices==1 and 1 or 2)
   params:add_option("crow_1_pitch","crow 1 pitch",{"normal","korg monotron"},1)
-  params:add_control("crow 2 gate","crow 2 gate length",controlspec.new(0,100,"lin",1,75,"%",1/100))
-  params:add{type='binary',name="crow 3 clock",id='crow 3 clock',behavior='toggle',
-    action=function(v)
-      if v==1 then
-        self.start_clock_after_phrase=self.current_phrase+1
-      else
-        self.start_clock_after_phrase=nil
-      end
-    end
-  }
-  params:add_control("crow_3_volts","crow 3 volts",controlspec.new(0,10,'lin',0.1,1,'volts',0.1/10))
   local option_divisions={"1/32","1/16","1/8","1/4","1/2","1"}
   local option_divisions_num={1/32,1/16,1/8,1/4,1/2,1}
-  params:add_option("crow 3 division","crow 3 division",option_divisions,3)
-  params:set_action("crow 3 division",function(x)
-    if self.pattern_clock_sync~=nil then
-      self.pattern_clock_sync:set_division(option_divisions_num[x])
-    end
-  end)
-  params:add_control("crow_4_level","crow 4 sustain",controlspec.new(0,10,'lin',0.1,10,'volts',0.1/10))
-  params:add_control("crow_4_attack","crow 4 attack",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
+  params:add_control("crow_2_level","crow 2 sustain",controlspec.new(0,10,'lin',0.1,10,'volts',0.1/10))
+  params:add_control("crow_2_attack","crow 2 attack",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
+  params:add_control("crow_2_sustain","crow 2 sustain",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
+  params:add_control("crow_2_decay","crow 2 decay",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
+  params:add_option("crow_3_pitch","crow 3 pitch",{"normal","korg monotron"},1)
+  params:add_control("crow_4_attack","crow 4 attack",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
   params:add_control("crow_4_sustain","crow 4 sustain",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
-  params:add_control("crow_4_decay","crow 4 decay",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
+  params:add_control("crow_4_decay","crow 4 decay",controlspec.new(0,4,'lin',0.01,0.5,'sn',0.01/4))
+  params:add_control("crow_4_release","crow 4 release",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
+  for _,name in ipairs({"attack","sustain","decay","release"}) do
+    params:set_action("crow_4_"..name,function(x)
+      crow.output[4].action="adsr("..
+      (clock.get_beat_sec()/4*params:get("crow_4_attack"))..","..
+      (clock.get_beat_sec()/4*params:get("crow_4_decay"))..","..
+      params:get("crow_4_sustain")..","..
+      (clock.get_beat_sec()/4*params:get("crow_4_release"))..
+      ",'linear')"
+    end)
+  end
 
   for i=1,6 do
     params:add_group("loop "..i,11)
     params:add_control("rec_level"..i,"rec level "..i,controlspec.new(0,1,'lin',0.01,1.0,'',0.01/1))
     params:set_action("rec_level"..i,function(x)
-      softcut.rec_level(i,x)
+      if has_rec_once then 
+        softcut.rec_level(i,x)
+      end
     end)
     params:add_control("pre_level"..i,"pre level "..i,controlspec.new(0,1,'lin',0.01,0.5,'',0.01/1))
     params:set_action("pre_level"..i,function(x)
-      softcut.pre_level(i,x)
+      if has_rec_once then 
+        softcut.pre_level(i,x)
+      end
     end)
     params:add_control(i.."vol adj","vol adj",controlspec.new(-1,1,"lin",0.1,0,"",0.1/2))
     params:add_control(i.."vol lfo amp","vol lfo amp",controlspec.new(0,1,"lin",0.01,0.25,"",0.01))
@@ -249,6 +290,15 @@ function Acrostic:init(o)
                 self:softcut_render(i)
               end)
               print("dequeing "..self.rec_queue[1].i)
+              if not has_rec_once then
+                -- stop recording
+                local i=self.rec_queue[1].i
+                softcut.rec_level(i,0)
+                clock.run(function()
+                  clock.sleep(0.4)
+                  softcut.rec(i,0)
+                end)
+              end
               table.remove(self.rec_queue,1)
             end
           end
@@ -256,6 +306,15 @@ function Acrostic:init(o)
             if self.rec_queue[1].primed then
               print("setting to record",self.rec_queue[1].i)
               params:set("sel_note",self.rec_queue[1].i)
+              if not has_rec_once then
+                -- do record
+                clock.run(function()
+                  local i=self.rec_queue[1].i
+                  softcut.rec(i,1)
+                  clock.sleep(0.1)
+                  softcut.rec_level(i,params:get("rec_level"..i))
+                end)
+              end
               self.rec_queue[1].recording=true
             end
           end
@@ -271,8 +330,13 @@ function Acrostic:init(o)
           end
           if do_prime~=nil then
             self.rec_queue[do_prime].primed=true
-            print("softcut.rec_once("..self.rec_queue[do_prime].i..")")
-            softcut.rec_once(self.rec_queue[do_prime].i)
+            if has_rec_once then 
+              print("softcut.rec_once("..self.rec_queue[do_prime].i..")")
+              softcut.rec_once(self.rec_queue[do_prime].i)
+            else
+              softcut.rec(self.rec_queue[do_prime].i,0)
+              softcut.rec_level(self.rec_queue[do_prime].i,0)
+            end
             self.recorded[self.rec_queue[do_prime].i]=true
           end
         end
@@ -295,6 +359,7 @@ function Acrostic:init(o)
   }
   self.pattern_measure_inter={}
   local scale=MusicUtil.generate_scale_of_length(params:get("root_note"),params:get("scale"),120)
+  self.scale_full=MusicUtil.generate_scale_of_length(params:get("root_note")%12,params:get("scale"),120)
   for i=1,3 do
     self.pattern_measure_inter[i]=self.lattice:new_pattern{
       action=function(t)
@@ -315,7 +380,7 @@ function Acrostic:init(o)
     action=function(t)
       if params:get("is_playing")==1 then
         local note=self:get_random_note(self:get_current_octave()+2)
-	print("up note: ",note)
+        --print("up note: ",note)
         self:play_note(note,3)
       end
     end,
@@ -326,25 +391,20 @@ function Acrostic:init(o)
     action=function(t)
       if params:get("is_playing")==1 then
         local note=self:get_random_note(self:get_current_octave()+2)
-	print("midnote: ",note)
+        -- print("midnote: ",note)
         self:play_note(note,4)
       end
     end,
     division=1,
     delay=1/2,
   }
-
-  -- crow output 3 is for using a clock
-  self.start_clock_after_phrase=nil
-  self.pattern_clock_sync=self.lattice:new_pattern{
-    action=function(x)
-      crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(clock.get_beat_sec()/2).."), to(0,0) }"
-      -- crow.output[3].action="{ to("..params:get("crow_3_volts")..",0), to(0,0.015), to("..params:get("crow_3_volts")..",0) }"
-      crow.output[3]()
-      -- if params:get("is_playing")==1 and self.start_clock_after_phrase~=nil and self.current_phrase>=self.start_clock_after_phrase then
-      -- end
+  -- setup the grid
+  params:set("crow_4_attack",0.1) -- initialize attack
+  self.pattern_gridnote=self.lattice:new_pattern{
+    action=function(t)
+      self.ag:emit()
     end,
-    division=1/4,
+    division=1/64,
   }
 
   params.action_write=function(filename,name)
@@ -499,13 +559,17 @@ function Acrostic:iterate_note()
   end
   local chord_roman=params:get("chord"..page..chord)
   if chord_roman~=self.last_chord_roman and note~=self.last_note then
-    crow.output[4].action="{ to(0,0), to("..params:get("crow_4_level")..
-    ","..(clock.get_beat_sec()*params:get("crow_4_attack"))..
-    "), to("..params:get("crow_4_sustain")..","..(clock.get_beat_sec()*params:get("crow_4_decay"))..") }"
-    crow.output[4]()
+    -- TODO: make this resetting optional
+    --self.ag:reset()
+    crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
+    ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
+    "), to("..params:get("crow_2_sustain")..","..(clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
+    crow.output[2]()
   end
   self.last_chord_roman=chord_roman
   self.last_note=note
+
+  -- TODO: emit note from the grid
 
   -- play note
   self:play_note(note,1)
@@ -549,6 +613,7 @@ function Acrostic:toggle_start(stop_all)
     end
     clock.run(function()
       clock.sleep(0.5)
+      print("playing all")
       for i=1,6 do
         softcut.play(i,0)
         softcut.position(i,self.o.minmax[i][2])
@@ -586,45 +651,54 @@ function Acrostic:toggle_start(stop_all)
   end
 end
 
-
 function Acrostic:play_note(note,origin)
+  if origin==5 then
+    self:trigger_note(note)
+    self.had_origin5=5
+    do return end
+  end
+  if self.had_origin5~=nil and self.had_origin5>0 then 
+    self.had_origin5=self.had_origin5-1
+    if self.had_origin5>0 then
+      do return end    
+    end 
+  end
+  print("play_note",note,origin)
   if math.random()>params:get("gate_prob") then
     do return end
   end
 
   local note_lfos={
-	{math.random(20,30),math.random(0,60),1.0},
-	{math.random(20,30),math.random(0,60),0.5},
-	{math.random(20,30),math.random(0,60),0.6},
-	{math.random(20,30),math.random(0,60),0.4},
+    {math.random(20,30),math.random(0,60),1.0},
+    {math.random(20,30),math.random(0,60),0.5},
+    {math.random(20,30),math.random(0,60),0.6},
+    {math.random(20,30),math.random(0,60),0.4},
   }
-local use_note_lfos=params:get("melody_generator")==2 
-  if use_note_lfos then 
-	  local note_lfo=note_lfos[origin]
-	  local rmin=(calculate_lfo(clock.get_beats()*clock.get_beat_sec(),
-	  	note_lfo[1],note_lfo[2])+1)*50 -- generates number 0-100
-	  rmin=math.floor(rmin*note_lfo[3])
-	  local rtarget=math.random(rmin,100)
-	  local r=math.random(0,100)
-	  if r>rtarget then 
-		  print("skip note from origin "..origin)
-		  do return end 
-	  end
-  elseif not use_note_lfos and origin>1 then 
-	  do return end
+  local use_note_lfos=params:get("melody_generator")==2
+  if use_note_lfos then
+    local note_lfo=note_lfos[origin]
+    local rmin=(calculate_lfo(clock.get_beats()*clock.get_beat_sec(),
+    note_lfo[1],note_lfo[2])+1)*50 -- generates number 0-100
+    rmin=math.floor(rmin*note_lfo[3])
+    local rtarget=math.random(rmin,100)
+    local r=math.random(0,100)
+    if r>rtarget then
+      print("skip note from origin "..origin)
+      do return end
+    end
+  elseif not use_note_lfos and origin>1 then
+    do return end
   end
 
-  -- engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
-  -- print("play_note",note)
-  -- print("playing",note,MusicUtil.note_num_to_name(note))
+  self:trigger_note(note)
+end
+
+function Acrostic:trigger_note(note)
   local hz=MusicUtil.note_num_to_freq(note)
   if hz~=nil and hz>20 and hz<18000 then
     engine.hz(hz)
   end
-  local gate_length=clock.get_beat_sec()*params:get("crow 2 gate")/100
   if crow~=nil then
-    crow.output[2].action="{ to(0,0), to(5,"..gate_length.."), to(0,0) }"
-    crow.output[2]()
     if params:get("crow_1_pitch")==1 then
       crow.output[1].volts=(note-24)/12
     else
@@ -636,13 +710,11 @@ local use_note_lfos=params:get("melody_generator")==2
       if m.last_note~=nil then
         m.conn:note_off(m.last_note)
       end
-      print(name,note)
       m.conn:note_on(note,64)
       self.midis[name].last_note=note
     end
   end
   self.last_note=note
-
 end
 
 function Acrostic:softcut_goto0()
@@ -687,11 +759,11 @@ function Acrostic:softcut_init()
 
     softcut.level_slew_time(i,0.2)
     softcut.rate_slew_time(i,0.2)
-    softcut.recpre_slew_time(i,0.1)
+    softcut.recpre_slew_time(i,0.4)
     softcut.fade_time(i,0.2)
 
-    softcut.rec_level(i,params:get("rec_level"..i))
-    softcut.pre_level(i,params:get("pre_level"..i))
+    softcut.rec_level(i,has_rec_once and params:get("rec_level"..i) or 0)
+    softcut.pre_level(i,has_rec_once and params:get("pre_level"..i) or 1.0)
     softcut.phase_quant(i,0.025)
 
     softcut.post_filter_dry(i,0.0)
@@ -715,7 +787,9 @@ function Acrostic:softcut_init()
     end
   end)
   softcut.event_phase(function(i,pos)
-    self.o.pos[i]=pos-self.o.minmax[i][2]
+    if i<7 then
+      self.o.pos[i]=pos-self.o.minmax[i][2]
+    end
   end)
   softcut.poll_start_phase()
   for i=1,6 do

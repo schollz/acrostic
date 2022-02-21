@@ -172,6 +172,10 @@ function init()
   params:set("chord12",3,true)
   params:set("chord13",4,true)
   params:set("chord14",5,true)
+  params:set("beats11",4)
+  params:set("beats12",4)
+  params:set("beats13",4)
+  params:set("beats14",4)
 
   -- ?? basic 
   -- params:set("chord11",4,true)
