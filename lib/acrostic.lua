@@ -38,12 +38,8 @@ function Acrostic:init(o)
         chord=chord-4
         page=2
       end
-      local notes=MusicUtil.generate_chord_roman(params:get("root_note")-12,params:get("scale"),self.available_chords[params:get("chord"..page..chord)])
-      for i=1,3 do 
-        table.insert(notes,notes[i]+12)
-      end
-      -- local note=self.matrix_final[page][row][chord]
-      local note=notes[row]
+      local note=self.matrix_final[page][row][chord]
+      -- local note=notes[row]
       if note_adjust~=0 and note_adjust~=nil then
         local idx=0 
         for i, n in ipairs(self.scale_full) do 
@@ -51,17 +47,12 @@ function Acrostic:init(o)
             idx=i
           end
         end
-
         if idx+note_adjust>0 and idx+note_adjust<#self.scale_full then
           print(note_adjust..": "..note.." -> "..self.scale_full[idx+note_adjust])
           note=self.scale_full[idx+note_adjust]
         end
-        --note=MusicUtil.snap_note_to_array(note+note_adjust,self.scale_full)
       end
-      self.grid_last_note=note
-      local hz=MusicUtil.note_num_to_freq(note)
-      crow.output[3].volts=(note-12)/12
-      -- crow.output[4](true)
+      self:play_note(note,5)
     end,
     note_off=function()
       -- if self.grid_last_note==nil then
@@ -632,6 +623,10 @@ function Acrostic:toggle_start(stop_all)
 end
 
 function Acrostic:play_note(note,origin)
+  if origin==5 then
+    self:trigger_note(note)
+    do return end
+  end
   if math.random()>params:get("gate_prob") then
     do return end
   end
@@ -658,9 +653,10 @@ function Acrostic:play_note(note,origin)
     do return end
   end
 
-  -- engine.mx_note_on(note,0.5,clock.get_beat_sec()*self.loop_length/4)
-  -- print("play_note",note)
-  -- print("playing",note,MusicUtil.note_num_to_name(note))
+  self:trigger_note(note)
+end
+
+function Acrostic:trigger_note(note)
   local hz=MusicUtil.note_num_to_freq(note)
   if hz~=nil and hz>20 and hz<18000 then
     engine.hz(hz)
@@ -673,17 +669,15 @@ function Acrostic:play_note(note,origin)
     end
   end
   for name,m in pairs(self.midis) do
-    -- if name==self.midi_devices[params:get("midi_in")] then
-    --   if m.last_note~=nil then
-    --     m.conn:note_off(m.last_note)
-    --   end
-    --   print(name,note)
-    --   m.conn:note_on(note,64)
-    --   self.midis[name].last_note=note
-    -- end
+    if name==self.midi_devices[params:get("midi_in")] then
+      if m.last_note~=nil then
+        m.conn:note_off(m.last_note)
+      end
+      m.conn:note_on(note,64)
+      self.midis[name].last_note=note
+    end
   end
   self.last_note=note
-
 end
 
 function Acrostic:softcut_goto0()

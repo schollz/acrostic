@@ -54,7 +54,7 @@ function AcrosticGrid:new(args)
   m.cur={0,0,0,false}
   m.seq=s{m.cur}
   m.scale=musicutil.generate_scale (0,'major',90)
-  m.transpose_options={0,1,-1,2,-2,3,-3,8}
+  m.transpose_options={0,1,-1,2,-2}
 
   return m
 end
@@ -163,11 +163,12 @@ function AcrosticGrid:toggle_note(row,col)
         self.toggles[r][col]=0
       end
     end
-    if last>-1 then
-      self.toggles[row][col]=last
-    else
-      self.toggles[row][col]=self.toggles[row][col]+1
-    end
+    -- if last>-1 then
+    --   self.toggles[row][col]=last
+    -- else
+    --   self.toggles[row][col]=self.toggles[row][col]+1
+    -- end
+    self.toggles[row][col]=self.toggles[row][col]+1
     if self.toggles[row][col]>#self.transpose_options then
       self.toggles[row][col]=0
     end
@@ -218,7 +219,7 @@ function AcrosticGrid:get_visual()
         self.visual[row][col]=0
       end
       if row<=6 then
-        self.visual[row][col]=self.toggles[row][col]*2
+        self.visual[row][col]=self.toggles[row][col]*3
         if self.visual[row][col]>15 then
           self.visual[row][col]=15
         end
@@ -237,14 +238,11 @@ function AcrosticGrid:get_visual()
       self.visual[8][self.cur[2]]=15
     end
     if self.cur[1]>0 then
-      local val=self.toggles[self.cur[1]][self.cur[2]]
-      if val>1 then 
-        for r=7-val+2,7 do
+        for r=1,6 do
           if r~=self.cur[1] then
-            self.visual[r][self.cur[2]]=self.visual[r][self.cur[2]]+3
+            self.visual[r][self.cur[2]]=2
           end
         end
-      end
     end
   end
   -- -- illuminate currently pressed button
