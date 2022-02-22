@@ -8,7 +8,7 @@ acrostic lets you stack monophonic sound sources into chords with subtle melodie
 
 you can read more about the theory below, but the gist of acrostic is that it will play a series of chords one note at a time at different octaves. the sequenced notes are then fed back into acrostic and are sampled in quantized loops that will combine to form the semblance of bass, pad, and melody lines. you can add up to 8 chords with any number of beats per chord, and each chord has six notes that can be re-arranged and modified. you can use any instrument you want - midi, CV, or the internal engine (the "phantom"). like *oooooo* each of the six tracks have random lfos in their amplitude/pan so it sounds as if they are "swirling" around.
 
-I recorded a tutorial that includes a demo, a quick start and a in-depth overview: 
+I recorded a tutorial that includes a demo, a quick start and a in-depth overview (_note:_ some of the terminology changed since recording this and also there is no tutorial on the grid yet): 
 
 [![gif](https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/ab58d241-c235-4e2e-a21f-1f65f5cbaa8d.gif?ClientID=vimeo-core-prod&Date=1645549699&Signature=d179c0384b14904c248fe797efe09eb67ceae1db)](https://vimeo.com/663443176)
 
