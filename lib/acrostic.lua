@@ -38,7 +38,6 @@ function Acrostic:init(o)
       if chord>4 then
         chord=chord-4
       end
-      print(chord,page)
       local note=self.matrix_final[page][row][chord]
       if row<=3 then
         if step<=4 then
@@ -64,6 +63,11 @@ function Acrostic:init(o)
         end
       end
       self:play_note(note,5)
+      if self.grid_crow_dirty==true then 
+        self:update_grid_crow()
+        self.grid_crow_dirty=false 
+      end
+      crow.output[2](true)
     end,
     note_off=function()
       -- if self.grid_last_note==nil then
@@ -71,6 +75,7 @@ function Acrostic:init(o)
       -- end
       -- print("note off",self.grid_last_note)
       -- crow.output[4](false)
+      crow.output[2](false)
     end
   }
 
@@ -183,30 +188,39 @@ function Acrostic:init(o)
     self.do_set_cut_to_1=true
   end)
 
-  params:add_group("midi/crow",11)
-  params:add_option("midi_in","midi in",self.midi_devices,#self.midi_devices==1 and 1 or 2)
-  params:add_option("crow_1_pitch","crow 1 pitch",{"normal","korg monotron"},1)
+  params:add_group("midi/crow",14)
+  params:add_option("midi_out","midi out",self.midi_devices,#self.midi_devices==1 and 1 or 2)
+  params:add_option("crow_1_pitch","[1] pitch",{"normal","korg monotron"},1)
   local option_divisions={"1/32","1/16","1/8","1/4","1/2","1"}
   local option_divisions_num={1/32,1/16,1/8,1/4,1/2,1}
-  params:add_control("crow_2_level","crow 2 sustain",controlspec.new(0,10,'lin',0.1,10,'volts',0.1/10))
-  params:add_control("crow_2_attack","crow 2 attack",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
-  params:add_control("crow_2_sustain","crow 2 sustain",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
-  params:add_control("crow_2_decay","crow 2 decay",controlspec.new(0,10,'lin',0.1,1,'beats',0.1/10))
-  params:add_option("crow_3_pitch","crow 3 pitch",{"normal","korg monotron"},1)
-  params:add_control("crow_4_attack","crow 4 attack",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
-  params:add_control("crow_4_sustain","crow 4 sustain",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
-  params:add_control("crow_4_decay","crow 4 decay",controlspec.new(0,4,'lin',0.01,0.5,'sn',0.01/4))
-  params:add_control("crow_4_release","crow 4 release",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
+  params:add_control("crow_2_level","[2] level",controlspec.new(0,10,'lin',0.1,10,'volts',0.1/10))
+  params:add_control("crow_2_attack","[2] attack",controlspec.new(0,10,'lin',0.01,1,'qn',0.01/10))
+  params:add_control("crow_2_sustain","[2] sustain",controlspec.new(0,10,'lin',0.1,5,'volts',0.1/10))
+  params:add_control("crow_2_decay","[2] decay",controlspec.new(0,10,'lin',0.01,1,'qn',0.01/10))
+  params:add_control("crow_grid_attack","[2] attack (grid)",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
+  params:add_control("crow_grid_sustain","[2] sustain (grid)",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
+  params:add_control("crow_grid_decay","[2] decay (grid)",controlspec.new(0,4,'lin',0.01,0.5,'sn',0.01/4))
+  params:add_control("crow_grid_release","[2] release (grid)",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
   for _,name in ipairs({"attack","sustain","decay","release"}) do
-    params:set_action("crow_4_"..name,function(x)
-      crow.output[4].action="adsr("..
-      (clock.get_beat_sec()/4*params:get("crow_4_attack"))..","..
-      (clock.get_beat_sec()/4*params:get("crow_4_decay"))..","..
-      params:get("crow_4_sustain")..","..
-      (clock.get_beat_sec()/4*params:get("crow_4_release"))..
-      ",'linear')"
+    params:set_action("crow_grid_"..name,function(x)
+      self:update_grid_crow()
     end)
   end
+  params:add_control("crow_3_volts","[3] volts",controlspec.new(0,10,'lin',0.1,1,'volts',0.1/10))
+  local option_divisions={"1/32","1/16","1/8","1/4","1/2","1"}
+  local option_divisions_num={1/32,1/16,1/8,1/4,1/2,1}
+  params:add_option("crow 3 division","[3] division",option_divisions,3)
+  params:set_action("crow 3 division",function(x)
+    if self.pattern_clock_sync~=nil then
+      self.pattern_clock_sync:set_division(option_divisions_num[x])
+    end
+  end)
+  self.crow4_octaves={0.25,0.5,1,2,4}
+  params:add_option("crow_4_octave","[4] octave",{"1/4","1/2","1","2","4"},2)  
+  params:add_control("crow_4_volts","[4] volts",controlspec.new(0,10,'lin',0.1,2,'volts',0.1/10))  
+
+  params:add_group("grid",1)
+  params:add_option("grid_reset","reset every chord",{"yes","no"})
 
   for i=1,6 do
     params:add_group("loop "..i,11)
@@ -409,12 +423,20 @@ function Acrostic:init(o)
     delay=1/2,
   }
   -- setup the grid
-  params:set("crow_4_attack",0.1) -- initialize attack
+  params:set("crow_grid_attack",0.1) -- initialize attack
   self.pattern_gridnote=self.lattice:new_pattern{
     action=function(t)
       self.ag:emit()
     end,
     division=1/64,
+  }
+  -- crow output 3 is for using a clock
+  self.pattern_clock_sync=self.lattice:new_pattern{
+    action=function(x)
+      crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(clock.get_beat_sec()/2).."), to(0,0) }"
+      crow.output[3]()
+    end,
+    division=1/4,
   }
 
   params.action_write=function(filename,name)
@@ -469,6 +491,16 @@ function Acrostic:init(o)
   params:set("is_playing",1)
   self.softcut_stopped=false
   self.lattice:start()
+end
+
+
+function Acrostic:update_grid_crow()
+  crow.output[2].action="adsr("..
+  (clock.get_beat_sec()/4*params:get("crow_grid_attack"))..","..
+  (clock.get_beat_sec()/4*params:get("crow_grid_decay"))..","..
+  params:get("crow_grid_sustain")..","..
+  (clock.get_beat_sec()/4*params:get("crow_grid_release"))..
+  ",'linear')"
 end
 
 function Acrostic:iterate_chord()
@@ -569,11 +601,17 @@ function Acrostic:iterate_note()
   local chord_roman=params:get("chord"..page..chord)
   if chord_roman~=self.last_chord_roman and note~=self.last_note then
     -- TODO: make this resetting optional
-    self.ag:reset()
-    crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
-    ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
-    "), to("..params:get("crow_2_sustain")..","..(clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
-    crow.output[2]()
+    if params:get("grid_reset")==1 then
+      self.ag:reset()
+    end
+    self.gate_for_midi=true
+    if self.had_origin5==nil then 
+      crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
+      ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
+      "), to("..params:get("crow_2_sustain")..","..(clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
+      crow.output[2]()
+      self.grid_crow_dirty=true
+    end
   end
   self.last_chord_roman=chord_roman
   self.last_note=note
@@ -669,6 +707,7 @@ function Acrostic:play_note(note,origin)
   if self.had_origin5~=nil and self.had_origin5>0 then 
     self.had_origin5=self.had_origin5-1
     if self.had_origin5>0 then
+      self.had_origin5=nil
       do return end    
     end 
   end
@@ -708,6 +747,11 @@ function Acrostic:trigger_note(note)
     engine.hz(hz)
   end
   if crow~=nil then
+    if hz~=self.last_hz then 
+      crow.output[4].action="oscillate("..(hz*self.crow4_octaves[params:get("crow_4_octave")])..","..params:get("crow_4_volts")..",'exponential')"
+      crow.output[4]()
+      self.last_hz=hz
+    end
     if params:get("crow_1_pitch")==1 then
       crow.output[1].volts=(note-24)/12
     else
@@ -715,12 +759,13 @@ function Acrostic:trigger_note(note)
     end
   end
   for name,m in pairs(self.midis) do
-    if name==self.midi_devices[params:get("midi_in")] then
-      if m.last_note~=nil then
+    if name==self.midi_devices[params:get("midi_out")] then
+      if (m.last_note~=note and m.last_note~=nil) or (self.gate_for_midi==true) then
         m.conn:note_off(m.last_note)
+        self.gate_for_midi=false
+        m.conn:note_on(note,64)
+        self.midis[name].last_note=note
       end
-      m.conn:note_on(note,64)
-      self.midis[name].last_note=note
     end
   end
   self.last_note=note

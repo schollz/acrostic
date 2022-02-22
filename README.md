@@ -37,44 +37,8 @@ I want to express a huge thanks to Takahiro for implementing the eyes in their [
 
 # Documentation
 
-## installation
 
-requires latest softcut and a unreleased norns build.
 
-first rebuild norns:
-
-```bash
-sudo systemctl stop norns-jack.service; sudo systemctl stop norns-matron.service; sudo systemctl stop norns-crone.service && \
-cd ~; ~/norns/stop.sh; rm -rf ~/norns; \
-git clone https://github.com/schollz/norns && \
-cd ~/norns && git checkout id && \
-git submodule update --init --recursive && \
-cd ~/norns/crone/ && rm -rf softcut && \
-git clone https://github.com/schollz/softcut-lib softcut && \
-cd softcut && git checkout id && \
-cd ~/norns/crone/softcut/softcut-lib && \
-./waf configure && \
-./waf && \
-cd ~/norns && \
-./waf configure --enable-ableton-link && \
-./waf build && \
-sudo systemctl restart norns-jack.service; sudo systemctl restart norns-matron.service; sudo systemctl restart norns-crone.service
-```
-
-then install acrostic:
-
-```bash
-rm -rf ~/dust/code/acrostic && \
-git clone https://github.com/schollz/acrostic ~/dust/code/acrostic
-```
-
-then restart norns:
-
-```bash
-sudo systemctl restart norns-jack.service; \
-sudo systemctl restart norns-matron.service; \
-sudo systemctl restart norns-crone.service
-```
 
 ## quick start
 
@@ -187,17 +151,68 @@ when you queue a recording (K3) it will begin recording at the next loop. you ca
 the crow outputs are used for expression with CV instruments:
 
 - crow output 1 is pitch
-- crow output 2 is the note gate 
-- crow output 3 is grid pitch
-- crow output 4 is grid pitch adsr
+- crow output 2 is envelope
+- crow output 3 is clock
+- crow output 4 is oscillator
 
 ## grid
 
 ![Screenshot 2022-02-20 at 07-42-14 GridStation](https://user-images.githubusercontent.com/6550035/154850845-43dd6218-c10b-4701-ba29-94952c7a435f.png)
 
-- rows 1-6 control then notes. you can use two finger gestures to draw shapes. pressing a step twice (dimmer) will cause that note not to gate. the note shapes are applied the note matrix.
-- row 7 controls which steps will sequence. pressing a step twice (brighter) will cause that note to hold.
-- row 8 controls which steps have tranpose, transposition alternates between positive and negative. 
+**rows 1-6** control then notes. you can use two finger gestures to draw shapes. pressing a step twice (dimmer) will cause that note not to gate. the note shapes are applied the note matrix. the rows 1-3 notes that are always the same. the rows 4-6 are notes that change with every chord.
+
+**row 7** controls which steps will sequence. pressing a step twice (brighter) will cause that note to hold.
+
+**row 8** controls gates. pressing two gates will invert all gates in between.
+
+in the parameters you can set whether the sequence resets every chord or not (`PARAMS > grid > reset every chord`).
+
+using the grid will "takeover" the crow outputs. when the grid stops playing, the crow will output as normal
+
+## other 
+
+<details><summary>dev only</summary>
+I created a patch for softcut that simplifies the recording and lets the `pre` function work as it should.
+
+requires latest softcut and a unreleased norns build.
+
+first rebuild norns:
+
+```bash
+sudo systemctl stop norns-jack.service; sudo systemctl stop norns-matron.service; sudo systemctl stop norns-crone.service && \
+cd ~; ~/norns/stop.sh; rm -rf ~/norns; \
+git clone https://github.com/schollz/norns && \
+cd ~/norns && git checkout id && \
+git submodule update --init --recursive && \
+cd ~/norns/crone/ && rm -rf softcut && \
+git clone https://github.com/schollz/softcut-lib softcut && \
+cd softcut && git checkout id && \
+cd ~/norns/crone/softcut/softcut-lib && \
+./waf configure && \
+./waf && \
+cd ~/norns && \
+./waf configure --enable-ableton-link && \
+./waf build && \
+sudo systemctl restart norns-jack.service; sudo systemctl restart norns-matron.service; sudo systemctl restart norns-crone.service
+```
+
+then install acrostic:
+
+```bash
+rm -rf ~/dust/code/acrostic && \
+git clone https://github.com/schollz/acrostic ~/dust/code/acrostic
+```
+
+then restart norns:
+
+```bash
+sudo systemctl restart norns-jack.service; \
+sudo systemctl restart norns-matron.service; \
+sudo systemctl restart norns-crone.service
+```
+
+don't do this unless you know what you are doing.
+</details>
 
 
 # Install

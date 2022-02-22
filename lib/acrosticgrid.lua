@@ -112,6 +112,9 @@ function AcrosticGrid:key_press(row,col,on)
 end
 
 function AcrosticGrid:emit()
+  if self.note_off~=nil then 
+    self.note_off()
+  end
   self.cur=self.seq()
   local row=self.cur[1]
   local col=self.cur[2]
