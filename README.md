@@ -1,6 +1,6 @@
 # acrostic
 
-sample and layer chords.
+sample and layer chords one note at a time.
 
 ![img](https://user-images.githubusercontent.com/6550035/148664651-35ae313d-be73-445a-9c39-1e193d3bd3ba.png)
 
@@ -17,7 +17,7 @@ this script originated as an addition to the [norns *oooooo* script](https://lll
 
 I recorded a tutorial that includes a demo, a quick start and a in-depth overview: 
 
-https://vimeo.com/663443176
+[![gif](https://videoapi-muybridge.vimeocdn.com/animated-thumbnails/image/ab58d241-c235-4e2e-a21f-1f65f5cbaa8d.gif?ClientID=vimeo-core-prod&Date=1645549699&Signature=d179c0384b14904c248fe797efe09eb67ceae1db)](https://vimeo.com/663443176)
 
 here are a few more demo performances:
 
