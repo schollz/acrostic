@@ -168,9 +168,19 @@ function init()
   -- params:set("chord14",3+14,true)
   
   -- vi iii IV V
+  -- params:set("chord11",6,true)
+  -- params:set("chord12",3,true)
+  -- params:set("chord13",4,true)
+  -- params:set("chord14",5,true)
+  -- params:set("beats11",4)
+  -- params:set("beats12",4)
+  -- params:set("beats13",4)
+  -- params:set("beats14",4)
+
+  -- vi IV I V
   params:set("chord11",6,true)
-  params:set("chord12",3,true)
-  params:set("chord13",4,true)
+  params:set("chord12",4,true)
+  params:set("chord13",1,true)
   params:set("chord14",5,true)
   params:set("beats11",4)
   params:set("beats12",4)

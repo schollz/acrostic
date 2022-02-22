@@ -713,7 +713,6 @@ function Acrostic:play_note(note,origin)
       do return end    
     end 
   end
-  print("play_note",note,origin)
   if math.random()>params:get("gate_prob") then
     do return end
   end

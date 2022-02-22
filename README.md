@@ -4,15 +4,16 @@ sample and layer chords.
 
 ![img](https://user-images.githubusercontent.com/6550035/148664651-35ae313d-be73-445a-9c39-1e193d3bd3ba.png)
 
-acrostic lets you stack monophonic sound sources into chords with subtle melodies. basically, it is a sequencer that sends out one note at a time from chords to use the loops to record the entire chord phrase. it's described in more detail [here](https://llllllll.co/t/latest-tracks-videos/25738/3016) and is the basis of [an entire album I recorded](https://infinitedigits.bandcamp.com/album/at-the-place). 
+acrostic lets you stack monophonic sound sources into chords with subtle melodies. basically, it is a sequencer that sends out one note at a time from chords to use the loops to record the entire chord phrase. it's described in more detail [here](https://llllllll.co/t/latest-tracks-videos/25738/3016). I've used it recently to [record my entire album "generations"](https://infinitedigits.bandcamp.com/album/generations). 
 
-this script was added as an addition to the [norns *oooooo* script](https://llllllll.co/t/oooooo/35828/476?u=infinitedigits) but I've broken it out into its own script. the major benefits in this script are:
+this script originated as an addition to the [norns *oooooo* script](https://llllllll.co/t/oooooo/35828/476?u=infinitedigits) but I've broken it out into its own script with "acrostic". the major benefits in this script are:
 
 - up to 8 chords can be added
 - each chord has six notes that can be rearranged / modified
 - each chord can be set to 0-16 beats long
 - everything is accessible through the UI
 - additional controls for gating/adding notes
+- grid sequencer
 
 I recorded a tutorial that includes a demo, a quick start and a in-depth overview: 
 
@@ -34,6 +35,8 @@ I want to express a huge thanks to Takahiro for implementing the eyes in their [
 
 - norns
 - external midi or cv synth (optional)
+- grid/midigrid (optional)
+- crow (optional, requires [v3](https://llllllll.co/t/crow-v3/46425))
 
 # Documentation
 
