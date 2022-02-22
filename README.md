@@ -198,6 +198,21 @@ the grid is meant as a performative sequencer. in the parameters you can set whe
 **row 8** controls gates. pressing two gates will invert all gates in between.
 
 
+## tips and tricks
+
+
+### melodies
+
+there are two ways to add random melodies:
+
+1. goto `PARAMS > notes > melody generator` and set it to `yes`. 
+2. turn up `PARAMS > notes > inter-note probability`.
+
+if melodies are too "fast" you can turn down the gate probability (`PARAMS > notes > note gate probability`) to make them hold out longer.
+
+### playing "phrases"
+
+you can change the octave of phrases, while they are playing, to get higher/lower notes in case you want something to go into a "lead" sound or "bass" sound. actually, moving around the note/phrase stage will hold the note to that position.
 
 ## other 
 
