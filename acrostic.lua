@@ -2,6 +2,11 @@
 --
 -- sample and layer chords
 -- one note at a time.
+-- 
+-- llllllll.co/t/acrostic
+--
+--
+
 
 engine.name="Acrostic"
 
