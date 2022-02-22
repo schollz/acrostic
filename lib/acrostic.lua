@@ -70,11 +70,13 @@ function Acrostic:init(o)
       crow.output[2](true)
     end,
     note_off=function()
-      -- if self.grid_last_note==nil then
-      --   do return end
-      -- end
-      -- print("note off",self.grid_last_note)
-      -- crow.output[4](false)
+      if self.had_origin5==nil then 
+        do return end 
+      end
+      if self.grid_crow_dirty==true then 
+        self:update_grid_crow()
+        self.grid_crow_dirty=false 
+      end
       crow.output[2](false)
     end
   }
@@ -433,9 +435,8 @@ function Acrostic:init(o)
   -- crow output 3 is for using a clock
   self.pattern_clock_sync=self.lattice:new_pattern{
     action=function(x)
-      print("division",self.pattern_clock_sync.division)
-      -- crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(0.2).."), to(0,0) }"
-      -- crow.output[3]()
+      crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(self.pattern_clock_sync.division*2*clock.get_beat_sec()).."), to(0,0) }"
+      crow.output[3]()
     end,
     division=1/4,
   }
@@ -607,11 +608,11 @@ function Acrostic:iterate_note()
     end
     self.gate_for_midi=true
     if self.had_origin5==nil then 
+      self.grid_crow_dirty=true
       crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
       ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
       "), to("..params:get("crow_2_sustain")..","..(clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
       crow.output[2]()
-      self.grid_crow_dirty=true
     end
   end
   self.last_chord_roman=chord_roman
@@ -743,12 +744,15 @@ function Acrostic:play_note(note,origin)
 end
 
 function Acrostic:trigger_note(note)
+  if note==nil then 
+    do return end 
+  end
   local hz=MusicUtil.note_num_to_freq(note)
   if hz~=nil and hz>20 and hz<18000 then
     engine.hz(hz)
   end
   if crow~=nil then
-    if hz~=self.last_hz then 
+    if hz~=self.last_hz and (hz*self.crow4_octaves[params:get("crow_4_octave")]~=nil) then 
       crow.output[4].action="oscillate("..(hz*self.crow4_octaves[params:get("crow_4_octave")])..","..params:get("crow_4_volts")..",'exponential')"
       crow.output[4]()
       self.last_hz=hz
