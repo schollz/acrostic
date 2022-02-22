@@ -34,10 +34,9 @@ function Acrostic:init(o)
         do return end
       end
       local chord=params:get("current_chord")
-      local page=1
+      local page=self.page
       if chord>4 then
         chord=chord-4
-        page=2
       end
       print(chord,page)
       local note=self.matrix_final[page][row][chord]
