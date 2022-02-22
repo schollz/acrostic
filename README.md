@@ -180,9 +180,11 @@ the crow outputs are used for expression with CV instruments:
 
 ## grid
 
-the grid is meant as a performative sequencer. in the parameters you can set whether the sequence resets every chord or not (`PARAMS > midi/grid/crow > reset every chord`). using the grid will "takeover" the crow outputs. when the grid stops playing, the crow will output as normal. _tip:_ if you sequence a single note you and just change notes and use it as a simple keyboard.
+the grid is meant as a performative sequencer. in the parameters you can set whether the sequence resets every chord or not (`PARAMS > midi/grid/crow > reset every chord`). using the grid will "takeover" the crow outputs. when the grid stops playing, the crow will output as normal. _tip:_ if you sequence a single note you and just change notes and use it as a simple keyboard. here is a tutorial:
 
-**rows 1-6** controls pitch. you can use two finger gestures to draw shapes. the note shapes are applied the note matrix. the rows 1-3 notes that are always the same. the rows 4-6 are notes that change with every chord. pressing a note again will transpose it, alternating up/down.
+https://vimeo.com/680660126
+
+**rows 1-6** controls pitch. you can use two finger gestures to draw shapes. the note shapes are applied the note matrix. the rows 1-3 notes that are always the same that come from each chord, 4 columns per chord (I mis-spoke in the tutorial and said 3 columns per chord). the rows 4-6 are notes that change with every chord. pressing a note again will transpose it, alternating up/down.
 
 **row 7** controls duration. pressing a step twice will cause that note to hold. pressing two steps will reset their duration to the default (1/16th note).
 
