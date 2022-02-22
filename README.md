@@ -4,7 +4,7 @@ sample and layer chords.
 
 ![img](https://user-images.githubusercontent.com/6550035/148664651-35ae313d-be73-445a-9c39-1e193d3bd3ba.png)
 
-acrostic lets you stack monophonic sound sources into chords with subtle melodies. basically, it is a sequencer that sends out one note at a time from chords to use the loops to record the entire chord phrase. it's described in more detail [here](https://llllllll.co/t/latest-tracks-videos/25738/3016). I've used it recently to [record my entire album "generations"](https://infinitedigits.bandcamp.com/album/generations). 
+acrostic lets you stack monophonic sound sources into chords with subtle melodies. basically, it is a sequencer that sends out one note at a time from chords to use the loops to record the entire chord phrase. I've used just this script (+tapedeck) to [record my entire album "generations"](https://infinitedigits.bandcamp.com/album/generations). 
 
 this script originated as an addition to the [norns *oooooo* script](https://llllllll.co/t/oooooo/35828/476?u=infinitedigits) but I've broken it out into its own script with "acrostic". the major benefits in this script are:
 
@@ -40,14 +40,37 @@ I want to express a huge thanks to Takahiro for implementing the eyes in their [
 
 # Documentation
 
-
-
-
 ## quick start
 
 1. plug in a midi device or cv pitch to crow 1.
 2. start script, wait for the ghost's eyes to open.
 3. press K1+K3.
+
+## theory
+
+the idea behind "acrostic" is to take several chords and then rearrange the notes in the chords to create a semblance of melody (sometimes called "voice leading"). for example: first suppose you chose four chords: Am, F, C, G. acrostic will first determine the notes for *each chord in a separate column*:
+
+```
+Am  F   C   G  
+---------------
+A   F   C   G
+C   A   E   B
+E   C   G   D
+```
+
+
+then *acrostic* will rearrange the notes of each chord in each column. 
+
+```
+Am  F   C   G  
+---------------
+A   A   G   G
+C   C   C   D
+E   F   E   B
+```
+
+the nature of the re-arrangement can help to induce natural melodies. *acrostic* re-arranges in many ways - trying to keep similar notes grouped together or minimizing distances (as in example above), etc.
+
 
 ## pages
 
