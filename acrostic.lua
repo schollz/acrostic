@@ -1,5 +1,7 @@
--- acrostic
+-- acrostic v0.1.0
 --
+-- sample and layer chords
+-- one note at a time.
 
 engine.name="Acrostic"
 
