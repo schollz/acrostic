@@ -190,8 +190,9 @@ function Acrostic:init(o)
     self.do_set_cut_to_1=true
   end)
 
-  params:add_group("midi/crow",14)
+  params:add_group("midi/grid/crow",15)
   params:add_option("midi_out","midi out",self.midi_devices,#self.midi_devices==1 and 1 or 2)
+  params:add_option("grid_reset","grid reset every chord",{"yes","no"})
   params:add_option("crow_1_pitch","[1] pitch",{"normal","korg monotron"},1)
   local option_divisions={"1/32","1/16","1/8","1/4","1/2","1"}
   local option_divisions_num={1/32,1/16,1/8,1/4,1/2,1}
@@ -221,8 +222,6 @@ function Acrostic:init(o)
   params:add_option("crow_4_octave","[4] octave",{"1/4","1/2","1","2","4"},2)  
   params:add_control("crow_4_volts","[4] volts",controlspec.new(0,10,'lin',0.1,2,'volts',0.1/10))  
 
-  params:add_group("grid",1)
-  params:add_option("grid_reset","reset every chord",{"yes","no"})
 
   for i=1,6 do
     params:add_group("loop "..i,11)
@@ -1160,6 +1159,7 @@ function Acrostic:initiate_recording()
   end
   local foo={}
   local oooooo_ordering={5,2,1,6,4,3}
+  table.shuffle(oooooo_ordering)
   -- oooooo_ordering={3,2,1,5,4,6}
   for i=1,6 do
     if not self.recorded[i] and not table.contains(queued,i) then

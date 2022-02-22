@@ -12,7 +12,7 @@ function Monosaw:init()
   self.message=""
   self.message_level=0
   self.lpffreq=20000
-  params:add_group("MONOSAW",7)
+  params:add_group("phantom",7)
   local filter_freq=controlspec.new(20,20000,'exp',0,20000,'Hz')
   params:add{type="control",id="monosaw_amp",name="amp",
     controlspec=controlspec.new(0.0,1,'lin',0.01,0.0,"amp",0.01/1),action=function(x)

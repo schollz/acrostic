@@ -123,6 +123,8 @@ when you queue a recording (K3) it will begin recording at the next loop. you ca
 
 ![planets](https://user-images.githubusercontent.com/6550035/148664641-5f8c079a-6645-4fa7-8031-1643d886a515.png)
 
+adjust parameters in `PARAMS > loop X` or from the phantom UI:
+
 - K3 switches between loops
 - E1 adjusts volume
 - E2 adjust volume lfo amplitude
@@ -135,6 +137,8 @@ when you queue a recording (K3) it will begin recording at the next loop. you ca
 
 ![bars](https://user-images.githubusercontent.com/6550035/148664640-f5a7cc94-3de7-4da7-b8d3-c9903ab4735b.png)
 
+adjust parameters in `PARAMS > notes` or from the phantom UI:
+
 - E2 adjusts interstitial note probability
 - E3 adjusts gate probabilty
 
@@ -143,10 +147,12 @@ when you queue a recording (K3) it will begin recording at the next loop. you ca
 
 ![thephantom](https://user-images.githubusercontent.com/6550035/148664652-bcafc62b-e460-45de-ad4f-97cd6398c3cc.png)
 
+adjust parameters in `PARAMS > phantom` or from the phantom UI:
+
 - E1 adjusts LPF lfo frequency
 - E2 adjusts LPF minimum cutoff
 - E3 adjusts LPF maximum cutoff
-- K1+E2 adjusts volume
+- K1+E2 adjusts volume (by default its 0!, turn it up)
 - K1+E3 adjusts feedback
 
 ## crow
@@ -160,15 +166,15 @@ the crow outputs are used for expression with CV instruments:
 
 ## grid
 
-**rows 1-6** control then notes. you can use two finger gestures to draw shapes. pressing a step twice (dimmer) will cause that note not to gate. the note shapes are applied the note matrix. the rows 1-3 notes that are always the same. the rows 4-6 are notes that change with every chord.
+the grid is meant as a performative sequencer. in the parameters you can set whether the sequence resets every chord or not (`PARAMS > grid > reset every chord`). using the grid will "takeover" the crow outputs. when the grid stops playing, the crow will output as normal. _tip:_ if you sequence a single note you and just change notes and use it as a simple keyboard.
 
-**row 7** controls which steps will sequence. pressing a step twice (brighter) will cause that note to hold. pressing two steps will reset their duration to the default (1/16th note).
+**rows 1-6** controls pitch. you can use two finger gestures to draw shapes. the note shapes are applied the note matrix. the rows 1-3 notes that are always the same. the rows 4-6 are notes that change with every chord. pressing a note again will transpose it, alternating up/down.
+
+**row 7** controls duration. pressing a step twice will cause that note to hold. pressing two steps will reset their duration to the default (1/16th note).
 
 **row 8** controls gates. pressing two gates will invert all gates in between.
 
-in the parameters you can set whether the sequence resets every chord or not (`PARAMS > grid > reset every chord`).
 
-using the grid will "takeover" the crow outputs. when the grid stops playing, the crow will output as normal
 
 ## other 
 
