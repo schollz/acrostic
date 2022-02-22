@@ -4,16 +4,9 @@ sample and layer chords one note at a time.
 
 ![img](https://user-images.githubusercontent.com/6550035/148664651-35ae313d-be73-445a-9c39-1e193d3bd3ba.png)
 
-acrostic lets you stack monophonic sound sources into chords with subtle melodies. basically, it is a sequencer that sends out one note at a time from chords to use the loops to record the entire chord phrase. I've used just this script (+tapedeck) to [record my entire album "generations"](https://infinitedigits.bandcamp.com/album/generations). 
+acrostic lets you stack monophonic sound sources into chords with subtle melodies. basically, it is a sequencer that sends out one note at a time from chords to use the loops to record the entire chord phrase. I used this script to [record an entire album "generations"](https://infinitedigits.bandcamp.com/album/generations). this script originated as an addition to the [norns *oooooo* script](https://llllllll.co/t/oooooo/35828/476?u=infinitedigits) but I've broken it out into its own thing. 
 
-this script originated as an addition to the [norns *oooooo* script](https://llllllll.co/t/oooooo/35828/476?u=infinitedigits) but I've broken it out into its own script with "acrostic". the major benefits in this script are:
-
-- up to 8 chords can be added
-- each chord has six notes that can be rearranged / modified
-- each chord can be set to 0-16 beats long
-- everything is accessible through the UI
-- additional controls for gating/adding notes
-- grid sequencer
+you can read more about the theory below, but the gist of acrostic is that it will play a series of chords one note at a time at different octaves. the sequenced notes are then fed back into acrostic and are sampled in quantized loops that will combine to form the semblance of bass, pad, and melody lines. you can add up to 8 chords with any number of beats per chord, and each chord has six notes that can be re-arranged and modified. you can use any instrument you want - midi, CV, or the internal engine (the "phantom"). like *oooooo* each of the six tracks have random lfos in their amplitude/pan so it sounds as if they are "swirling" around.
 
 I recorded a tutorial that includes a demo, a quick start and a in-depth overview: 
 
@@ -48,7 +41,7 @@ I want to express a huge thanks to Takahiro for implementing the eyes in their [
 
 ## theory
 
-the idea behind "acrostic" is to take several chords and then rearrange the notes in the chords to create a semblance of melody (sometimes called "voice leading"). for example: first suppose you chose four chords: Am, F, C, G. acrostic will first determine the notes for *each chord in a separate column*:
+basically "acrostic" is a script that lets you sequence and record very simple [voice leading](https://en.wikipedia.org/wiki/Voice_leading). the idea behind "acrostic" is to take several chords and then rearrange the notes in the chords to create a semblance of melody. for example: first suppose you chose four chords: Am, F, C, G. acrostic will first determine the notes for *each chord in a separate column*:
 
 ```
 Am  F   C   G  
@@ -59,29 +52,27 @@ E   C   G   D
 ```
 
 
-then *acrostic* will rearrange the notes of each chord in each column. 
+then *acrostic* will rearrange the notes of each chord in each column according to a particular algorithm (several algorithms are available and they are randomly selected). for example, the above might be re-arranged into the following:
 
 ```
 Am  F   C   G  
 ---------------
-A   A   G   G
 C   C   C   D
+A   A   G   G
 E   F   E   B
 ```
 
-the nature of the re-arrangement can help to induce natural melodies. *acrostic* re-arranges in many ways - trying to keep similar notes grouped together or minimizing distances (as in example above), etc.
+the nature of the re-arrangement can help to induce natural melodies. *acrostic* re-arranges in many ways - trying to keep similar notes grouped together or minimizing distances (as in example above), maximizing distances, random, etc.
 
 
 ## pages
 
-use K1+E1 to change pages.
+the main UI is grouped into 4 pages. use K1+E1 to change pages. here are the four pages in acrostic:
 
-there are four pages in acrostic:
-
-1. the matrix
-2. the planets
-3. the bars
-4. the phantom
+1. the matrix (control note values)
+2. the planets (control amp/pan)
+3. the bars (controls note gating)
+4. the phantom (controls internal engine)
 
 the matrix does the sequencing and sampling and lets you modulate both. the planets lets you modulate the lfos for the volume and pan of the samples. the bars lets you gate and add interstitial notes. the phantom is a voice that you can use if you have no other voice.
 
@@ -189,7 +180,7 @@ the crow outputs are used for expression with CV instruments:
 
 ## grid
 
-the grid is meant as a performative sequencer. in the parameters you can set whether the sequence resets every chord or not (`PARAMS > grid > reset every chord`). using the grid will "takeover" the crow outputs. when the grid stops playing, the crow will output as normal. _tip:_ if you sequence a single note you and just change notes and use it as a simple keyboard.
+the grid is meant as a performative sequencer. in the parameters you can set whether the sequence resets every chord or not (`PARAMS > midi/grid/crow > reset every chord`). using the grid will "takeover" the crow outputs. when the grid stops playing, the crow will output as normal. _tip:_ if you sequence a single note you and just change notes and use it as a simple keyboard.
 
 **rows 1-6** controls pitch. you can use two finger gestures to draw shapes. the note shapes are applied the note matrix. the rows 1-3 notes that are always the same. the rows 4-6 are notes that change with every chord. pressing a note again will transpose it, alternating up/down.
 
@@ -219,12 +210,17 @@ you can change the octave of phrases, while they are playing, to get higher/lowe
 
 acrostic does not handle tempo changes well. its best to set the tempo you want and then start acrostic. if you do change the tempo, make sure to change the beats of a chord (you can change it from and back to) which will trigger acrostic to re-assign the sample lengths.
 
-## other 
+## future
 
-<details><summary>dev only</summary>
-I created a patch for softcut that simplifies the recording and lets the `pre` function work as it should.
+- fix [problems with softcut.rec_once](https://github.com/monome/norns/pull/1494), an addition to softcut better utilizes softcut to make fade-able loops (current acrostic uses clocks+recpre slew to accomplish the same thing).
+- option to introduce [ambisonics with head transfer functions](https://github.com/schollz/acrostic/blob/ambisonics/lib/Engine_Acrostic.sc#L14-L60) for more "swirling" for each track.
 
-requires latest softcut and a unreleased norns build.
+<details><summary>dev only - installing with softcut.rec_once</summary>
+!!! do not follow these instructions unless you know what you are doing !!!
+
+I created a patch for softcut that simplifies the recording and creating cross-fading loops.
+
+requires a special patch to softcut and to norns.
 
 first rebuild norns:
 
