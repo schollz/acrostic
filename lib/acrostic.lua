@@ -8,7 +8,7 @@ local lattice_=include("acrostic/lib/lattice")
 local s=require("sequins")
 local MusicUtil=include("acrostic/lib/musicutil2")
 local acrosticgrid_=include("acrostic/lib/acrosticgrid")
-local has_rec_once=false -- TODO: softcut.rec_once~=nil
+local has_rec_once=softcut.rec_once~=nil
 local Acrostic={}
 
 function Acrostic:new (o)
@@ -39,9 +39,19 @@ function Acrostic:init(o)
         chord=chord-4
         page=2
       end
-      page=1 -- TODO: remove this
-      chord=1 -- TODO: remove this
+      print(chord,page)
       local note=self.matrix_final[page][row][chord]
+      if row<=3 then
+        if step<=4 then
+          note=self.matrix_final[page][row+3][1]
+        elseif step<=8 then 
+          note=self.matrix_final[page][row+3][2]
+        elseif step<=12 then 
+          note=self.matrix_final[page][row+3][3]
+        elseif step<=16 then
+          note=self.matrix_final[page][row+3][4]
+        end
+      end
       -- local note=notes[row]
       if note_adjust~=0 and note_adjust~=nil then
         local idx=0 
@@ -360,6 +370,7 @@ function Acrostic:init(o)
   self.pattern_measure_inter={}
   local scale=MusicUtil.generate_scale_of_length(params:get("root_note"),params:get("scale"),120)
   self.scale_full=MusicUtil.generate_scale_of_length(params:get("root_note")%12,params:get("scale"),120)
+  self.chord_full=MusicUtil.generate_chord_roman(params:get("root_note"),params:get("scale"),"I")
   for i=1,3 do
     self.pattern_measure_inter[i]=self.lattice:new_pattern{
       action=function(t)
@@ -552,15 +563,14 @@ function Acrostic:iterate_note()
 
   -- enunciate phrases
   local chord=params:get("current_chord")
-  local page=1
-  if chord>4 then
+  if chord>4 then 
     chord=chord-4
-    page=2
   end
+  local page=self.page
   local chord_roman=params:get("chord"..page..chord)
   if chord_roman~=self.last_chord_roman and note~=self.last_note then
     -- TODO: make this resetting optional
-    --self.ag:reset()
+    self.ag:reset()
     crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
     ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
     "), to("..params:get("crow_2_sustain")..","..(clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
