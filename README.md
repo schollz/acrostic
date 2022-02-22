@@ -252,3 +252,5 @@ install with
 ```
 ;install https://github.com/schollz/acrostic
 ```
+
+make sure to do `SYSTEM > RESTART` after installing or updating.
