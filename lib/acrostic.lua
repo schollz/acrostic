@@ -42,9 +42,9 @@ function Acrostic:init(o)
       if row<=3 then
         if step<=4 then
           note=self.matrix_final[page][row+3][1]
-        elseif step<=8 then 
+        elseif step<=8 then
           note=self.matrix_final[page][row+3][2]
-        elseif step<=12 then 
+        elseif step<=12 then
           note=self.matrix_final[page][row+3][3]
         elseif step<=16 then
           note=self.matrix_final[page][row+3][4]
@@ -52,8 +52,8 @@ function Acrostic:init(o)
       end
       -- local note=notes[row]
       if note_adjust~=0 and note_adjust~=nil then
-        local idx=0 
-        for i, n in ipairs(self.scale_full) do 
+        local idx=0
+        for i,n in ipairs(self.scale_full) do
           if n==note then
             idx=i
           end
@@ -63,19 +63,19 @@ function Acrostic:init(o)
         end
       end
       self:play_note(note,5)
-      if self.grid_crow_dirty==true then 
+      if self.grid_crow_dirty==true then
         self:update_grid_crow()
-        self.grid_crow_dirty=false 
+        self.grid_crow_dirty=false
       end
       crow.output[2](true)
     end,
     note_off=function()
-      if self.had_origin5==nil then 
-        do return end 
+      if self.had_origin5==nil then
+        do return end
       end
-      if self.grid_crow_dirty==true then 
+      if self.grid_crow_dirty==true then
         self:update_grid_crow()
-        self.grid_crow_dirty=false 
+        self.grid_crow_dirty=false
       end
       crow.output[2](false)
     end
@@ -219,21 +219,20 @@ function Acrostic:init(o)
     end
   end)
   self.crow4_octaves={0.25,0.5,1,2,4}
-  params:add_option("crow_4_octave","[4] octave",{"1/4","1/2","1","2","4"},2)  
-  params:add_control("crow_4_volts","[4] volts",controlspec.new(0,10,'lin',0.1,2,'volts',0.1/10))  
-
+  params:add_option("crow_4_octave","[4] octave",{"1/4","1/2","1","2","4"},2)
+  params:add_control("crow_4_volts","[4] volts",controlspec.new(0,10,'lin',0.1,2,'volts',0.1/10))
 
   for i=1,6 do
     params:add_group("loop "..i,11)
     params:add_control("rec_level"..i,"rec level "..i,controlspec.new(0,1,'lin',0.01,1.0,'',0.01/1))
     params:set_action("rec_level"..i,function(x)
-      if has_rec_once then 
+      if has_rec_once then
         softcut.rec_level(i,x)
       end
     end)
     params:add_control("pre_level"..i,"pre level "..i,controlspec.new(0,1,'lin',0.01,0.5,'',0.01/1))
     params:set_action("pre_level"..i,function(x)
-      if has_rec_once then 
+      if has_rec_once then
         softcut.pre_level(i,x)
       end
     end)
@@ -354,7 +353,7 @@ function Acrostic:init(o)
           end
           if do_prime~=nil then
             self.rec_queue[do_prime].primed=true
-            if has_rec_once then 
+            if has_rec_once then
               print("softcut.rec_once("..self.rec_queue[do_prime].i..")")
               softcut.rec_once(self.rec_queue[do_prime].i)
             else
@@ -492,8 +491,11 @@ function Acrostic:init(o)
   params:set("is_playing",1)
   self.softcut_stopped=false
   self.lattice:start()
-end
 
+  if #self.midi_devices==1 and (not norns.crow.connected()) then
+    params:set("monosaw_amp",0.5)
+  end
+end
 
 function Acrostic:update_grid_crow()
   crow.output[2].action="adsr("..
@@ -595,7 +597,7 @@ function Acrostic:iterate_note()
 
   -- enunciate phrases
   local chord=params:get("current_chord")
-  if chord>4 then 
+  if chord>4 then
     chord=chord-4
   end
   local page=self.page
@@ -606,7 +608,7 @@ function Acrostic:iterate_note()
       self.ag:reset()
     end
     self.gate_for_midi=true
-    if self.had_origin5==nil then 
+    if self.had_origin5==nil then
       self.grid_crow_dirty=true
       crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
       ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
@@ -705,12 +707,12 @@ function Acrostic:play_note(note,origin)
     self.had_origin5=5
     do return end
   end
-  if self.had_origin5~=nil and self.had_origin5>0 then 
+  if self.had_origin5~=nil and self.had_origin5>0 then
     self.had_origin5=self.had_origin5-1
     if self.had_origin5>0 then
       self.had_origin5=nil
-      do return end    
-    end 
+      do return end
+    end
   end
   if math.random()>params:get("gate_prob") then
     do return end
@@ -742,15 +744,15 @@ function Acrostic:play_note(note,origin)
 end
 
 function Acrostic:trigger_note(note)
-  if note==nil then 
-    do return end 
+  if note==nil then
+    do return end
   end
   local hz=MusicUtil.note_num_to_freq(note)
   if hz~=nil and hz>20 and hz<18000 then
     engine.hz(hz)
   end
   if crow~=nil then
-    if hz~=self.last_hz and (hz*self.crow4_octaves[params:get("crow_4_octave")]~=nil) then 
+    if hz~=self.last_hz and (hz*self.crow4_octaves[params:get("crow_4_octave")]~=nil) then
       crow.output[4].action="oscillate("..(hz*self.crow4_octaves[params:get("crow_4_octave")])..","..params:get("crow_4_volts")..",'exponential')"
       crow.output[4]()
       self.last_hz=hz
