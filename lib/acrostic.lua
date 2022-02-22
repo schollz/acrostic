@@ -433,8 +433,9 @@ function Acrostic:init(o)
   -- crow output 3 is for using a clock
   self.pattern_clock_sync=self.lattice:new_pattern{
     action=function(x)
-      crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(clock.get_beat_sec()/2).."), to(0,0) }"
-      crow.output[3]()
+      print("division",self.pattern_clock_sync.division)
+      -- crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(0.2).."), to(0,0) }"
+      -- crow.output[3]()
     end,
     division=1/4,
   }
