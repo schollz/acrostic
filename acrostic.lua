@@ -295,6 +295,10 @@ function init()
 
   acrostic:toggle_start(true)
 
+  if #acrostic.midi_devices==1 and (not norns.crow.connected()) then
+    params:set("monosaw_amp",0.5)
+  end
+
   show_startup_screen_max=10
   show_startup_screen=0
   clock.run(function()

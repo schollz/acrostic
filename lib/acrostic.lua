@@ -492,9 +492,7 @@ function Acrostic:init(o)
   self.softcut_stopped=false
   self.lattice:start()
 
-  if #self.midi_devices==1 and (not norns.crow.connected()) then
-    params:set("monosaw_amp",0.5)
-  end
+
 end
 
 function Acrostic:update_grid_crow()
