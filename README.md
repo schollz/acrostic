@@ -42,9 +42,9 @@ I want to express a huge thanks to Takahiro for implementing the eyes in their [
 
 ## quick start
 
-1. plug in a midi device or cv pitch to crow 1.
-2. start script, wait for the ghost's eyes to open.
-3. press K1+K3.
+0. (optional) plug in midi device or attach crow pitch to synth, route synth to norns input
+1. start script, wait for the ghost's eyes to open.
+2. press K1+K3.
 
 ## theory
 
