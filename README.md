@@ -198,7 +198,7 @@ the grid is meant as a performative sequencer. in the parameters you can set whe
 **row 8** controls gates. pressing two gates will invert all gates in between.
 
 
-## tips and tricks
+## tips and tricks and gotchas
 
 
 ### melodies
@@ -213,6 +213,11 @@ if melodies are too "fast" you can turn down the gate probability (`PARAMS > not
 ### playing "phrases"
 
 you can change the octave of phrases, while they are playing, to get higher/lower notes in case you want something to go into a "lead" sound or "bass" sound. actually, moving around the note/phrase stage will hold the note to that position.
+
+
+### "tempo" gotchas
+
+acrostic does not handle tempo changes well. its best to set the tempo you want and then start acrostic. if you do change the tempo, make sure to change the beats of a chord (you can change it from and back to) which will trigger acrostic to re-assign the sample lengths.
 
 ## other 
 
