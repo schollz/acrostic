@@ -193,6 +193,18 @@ function AcrosticGrid:toggle_note_from_to(row1,col1,row2,col2,toggle_note_from)
   if col2==col1 then
     do return end
   end
+  if col2<col1 then
+    local foo=row1 
+    local foo2=col1
+    row1=row2 
+    col1=col2
+    row2=foo
+    col2=foo2
+    self:toggle_note(row1,col1)
+    if row1==row2 then
+      self:toggle_note(row2,col2)
+    end
+  end
   local m=(row2-row1)/(col2-col1)
   local b=row2-(m*col2)
   local startcol=col1+1
