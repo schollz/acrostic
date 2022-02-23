@@ -212,6 +212,10 @@ you can change the octave of phrases, while they are playing, to get higher/lowe
 
 acrostic does not handle tempo changes well. its best to set the tempo you want and then start acrostic. if you do change the tempo, make sure to change the beats of a chord (you can change it from and back to) which will trigger acrostic to re-assign the sample lengths.
 
+### non-sequencing
+
+its fun to unplug all devices (midi/crow) and turn down the phantom and record in sounds played by *you* directly. just follow along with the notes specified in the matrix and let your own human sequencing unfold the layers.
+
 ## future
 
 - fix [problems with softcut.rec_once](https://github.com/monome/norns/pull/1494), an addition to softcut better utilizes softcut to make fade-able loops (current acrostic uses clocks+recpre slew to accomplish the same thing).
