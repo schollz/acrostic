@@ -62,7 +62,7 @@ A   A   G   G
 E   F   E   B
 ```
 
-the nature of the re-arrangement can help to induce natural melodies. *acrostic* re-arranges in many ways - trying to keep similar notes grouped together or minimizing distances (as in example above), maximizing distances, random, etc.
+the nature of the re-arrangement can help to induce natural melodies. *acrostic* re-arranges in many ways - trying to keep similar notes grouped together or minimizing distances (as in example above), maximizing distances, random, etc. the next step is to simply play each *row*, one note at a time, and over-dub the notes atop each other so that they form chords. also by putting notes in different octaves you can spread the chord around and get "bass" and "lead" lines.
 
 
 ## pages
