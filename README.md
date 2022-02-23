@@ -20,7 +20,7 @@ https://vimeo.com/663740704
 
 https://vimeo.com/663740652
 
-I want to express a huge thanks to Takahiro for implementing the eyes in their [wonderful three-eyes norns script](https://github.com/monome-community/nc01-drone/blob/master/three-eyes.lua) and thanks to Ezra for helping me integrate some softcut code to record single loops. also big thanks to Jonathan who was a big inspiration for the demo video (I literaly took a page out his book displaying video text on a physical notebook).
+I want to express a huge thanks to Takahiro for implementing the eyes in their [wonderful three-eyes norns script](https://github.com/monome-community/nc01-drone/blob/master/three-eyes.lua) and thanks to Ezra for helping me integrate some softcut code to record single loops. thanks to Dewb for implementing the roman numeral chord generation which was super useful for this script. also big thanks to Jonathan who was a big inspiration for the demo video (I literaly took a page out his book displaying video text on a physical notebook).
 
 
 
@@ -97,9 +97,10 @@ this context lets you modify the chords. you are in the "chord context" when the
 
 - E2 or K1+E2 select chord position
 - E3 change chord
-- K1+K3 change beats of chord
-- K2 transpose chords
+- K1+E3 change beats of chord
+- K2 regenerate notes
 - K3 start/stop
+- K1+K3 stop all
 
 ### note/phrase context
 
@@ -215,6 +216,11 @@ acrostic does not handle tempo changes well. its best to set the tempo you want 
 ### non-sequencing
 
 its fun to unplug all devices (midi/crow) and turn down the phantom and record in sounds played by *you* directly. just follow along with the notes specified in the matrix and let your own human sequencing unfold the layers.
+
+### regenerate often
+
+you can re-generate the notes in the matrix by going to the first page and pressing K2. this will provide a whole new bed of notes which is useful if you are soloing and want the notes to be different than what is already recorded.
+
 
 ## future
 
