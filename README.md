@@ -1,12 +1,12 @@
 # acrostic
 
-sample and layer chords one note at a time.
+sample and layer chords, one note at a time.
 
 ![img](https://user-images.githubusercontent.com/6550035/148664651-35ae313d-be73-445a-9c39-1e193d3bd3ba.png)
 
-acrostic lets you stack monophonic sound sources into chords with subtle melodies. basically, it is a sequencer that sends out one note at a time from chords to use the loops to record the entire chord phrase. I used this script to [record an entire album "generations"](https://infinitedigits.bandcamp.com/album/generations). this script originated as an addition to the [norns *oooooo* script](https://llllllll.co/t/oooooo/35828/476?u=infinitedigits) but I've broken it out into its own thing. 
+acrostic lets you stack monophonic sound sources into chords with subtle melodies. basically, it is a sequencer that sends out one note at a time from specified chords while simultaneously recording those notes into individual tracks that are randomly modulated (wrt amplitude/pan). I used this script to [record an entire album "generations"](https://infinitedigits.bandcamp.com/album/generations) - every song on that album is an example of this script. this script originated as an addition to the [norns *oooooo* script](https://llllllll.co/t/oooooo/35828/476?u=infinitedigits), which itself originated from an idea I had while recording [an entire album from a cheap monophonic synthesizer](https://infinitedigits.bandcamp.com/album/at-the-place). 
 
-you can read more about the theory below, but the gist of acrostic is that it will play a series of chords one note at a time at different octaves. the sequenced notes are then fed back into acrostic and are sampled in quantized loops that will combine to form the semblance of bass, pad, and melody lines. you can add up to 8 chords with any number of beats per chord, and each chord has six notes that can be re-arranged and modified. you can use any instrument you want - midi, CV, or the internal engine (the "phantom"). like *oooooo* each of the six tracks have random lfos in their amplitude/pan so it sounds as if they are "swirling" around.
+you can read more about the theory below, but the gist of acrostic is that it will play a series of chords one note at a time at different octaves. the sequenced notes are then fed back into acrostic and are sampled in quantized loops that will combine to form the semblance of bass, pad, and melody lines. you can add up to six tracks, with up to eight chords with any number of beats per chord. you can use any instrument you want - midi, CV, or the internal engine (the "phantom" - the voice when no other voices are present). like *oooooo* each of the six tracks have random lfos in their amplitude/pan so it sounds as if they are "swirling" around.
 
 I recorded a tutorial that includes a demo, a quick start and a in-depth overview (_note:_ some of the terminology changed since recording this and also there is no tutorial on the grid yet): 
 
@@ -80,20 +80,20 @@ the matrix does the sequencing and sampling and lets you modulate both. the plan
 
 ![matrix](https://user-images.githubusercontent.com/6550035/148664651-35ae313d-be73-445a-9c39-1e193d3bd3ba.png)
 
-use E1 to change "context" within this page. in the matrix there are four contexts:
+the matrix is what lets you specify note pitches and their duration. you can pick chords, re-arrange the notes in the chord, and re-arrange/change the notes in the individual phrases. this particular UI has four "contexts". use E1 to change "context" within this page. they are as follows:
 
 1. chords
 2. notes
 3. phrase
 4. sampling
 
-the chords lets you pick the chords and allocate the beats. the notes context lets you rotate and change octave of notes in a chord. the phrase context lets you rotate notes and change octave in a phrase. the sampling context is where you initiate recording and can do some leveling.
+the chords context lets you pick the chords and allocate the beats. the notes context lets you rotate and change octave of notes in a chord. the phrase context lets you rotate notes and change octave in a phrase. the sampling context is where you initiate recording and can do some leveling.
 
 ### chord context
 
 ![chord context](https://user-images.githubusercontent.com/6550035/148664646-3bd20a3d-628b-4dbe-9d4d-13c317323d69.png)
 
-you are in the "chord context" when the bar around the roman numerals is highlighted.
+this context lets you modify the chords. you are in the "chord context" when the bar around the roman numerals is highlighted.
 
 - E2 or K1+E2 select chord position
 - E3 change chord
@@ -107,7 +107,7 @@ you are in the "chord context" when the bar around the roman numerals is highlig
 
 ![phrase context](https://user-images.githubusercontent.com/6550035/148664643-2e3d9ef8-290f-4fd8-b93a-b8f651d824ef.png)
 
-you are in the "note context" when the columns are highlighted and you are in the "phrase context" when a row is highlighted. both of these contexts have the same controls/share controls.
+this context lets you mainpulate/rotate/change pitches. you are in the "note context" when the columns are highlighted and you are in the "phrase context" when a row is highlighted. both of these contexts have the same controls/share controls.
 
 - E2 select notes in chord
 - E3 select phrase
@@ -120,7 +120,7 @@ you are in the "note context" when the columns are highlighted and you are in th
 
 ![sampling context](https://user-images.githubusercontent.com/6550035/148664642-74596b94-a29d-4efe-9038-68993d8addb1.png)
 
-you are in the "sampling context" when the sample area is highlighted.
+this context lets you queue tracks for recording. you are in the "sampling context" when the sample area is highlighted.
 
 - E2 select sample
 - K3 queues recording
@@ -137,7 +137,7 @@ when you queue a recording (K3) it will begin recording at the next loop. you ca
 
 ![planets](https://user-images.githubusercontent.com/6550035/148664641-5f8c079a-6645-4fa7-8031-1643d886a515.png)
 
-adjust parameters in `PARAMS > loop X` or from the phantom UI:
+the planets are representations of the current volume/pan for each track. they are automatically given random LFOs, but there are adjustments you can make manually. adjust parameters in `PARAMS > loop X` or from the phantom UI:
 
 - K3 switches between loops
 - E1 adjusts volume
@@ -151,7 +151,7 @@ adjust parameters in `PARAMS > loop X` or from the phantom UI:
 
 ![bars](https://user-images.githubusercontent.com/6550035/148664640-f5a7cc94-3de7-4da7-b8d3-c9903ab4735b.png)
 
-adjust parameters in `PARAMS > notes` or from the phantom UI:
+the bars lets you modify the gating of notes and add new notes. adjust parameters in `PARAMS > notes` or from the phantom UI:
 
 - E2 adjusts interstitial note probability
 - E3 adjusts gate probabilty
@@ -161,7 +161,7 @@ adjust parameters in `PARAMS > notes` or from the phantom UI:
 
 ![thephantom](https://user-images.githubusercontent.com/6550035/148664652-bcafc62b-e460-45de-ad4f-97cd6398c3cc.png)
 
-adjust parameters in `PARAMS > phantom` or from the phantom UI:
+the phantom is a voice when there are no other voices. it is driven by an internal engine which is automatically used when no crow or midi device is detected (if midi/crow is detected, then the volume of the phantom is set to 0 by default). adjust parameters in `PARAMS > phantom` or from the phantom UI:
 
 - E1 adjusts LPF lfo frequency
 - E2 adjusts LPF minimum cutoff
@@ -171,7 +171,7 @@ adjust parameters in `PARAMS > phantom` or from the phantom UI:
 
 ## crow
 
-the crow outputs are used for expression with CV instruments:
+the crow output is used to send out sequences. pitch 1 is the current sequencer pitch (1v/oct, but that can be modified in the parameters). the pitch will be the matrix sequencer, but switches over to the grid if the grid sequencer is active. crow output 2 is an envelope, which is by default activated when a chord change occurs (or when each note plays if the grid is active). crow output 3 is a clock which can be used to sync other instruments. crow output 4 is an oscillator which can be used to as a sub-oscillator to mix in bass.
 
 - crow output 1 is pitch
 - crow output 2 is envelope
@@ -198,8 +198,8 @@ https://vimeo.com/680660126
 
 there are two ways to add random melodies:
 
-1. goto `PARAMS > notes > melody generator` and set it to `yes`. 
-2. turn up `PARAMS > notes > inter-note probability`.
+1. turn up `PARAMS > notes > inter-note probability`.
+2. goto `PARAMS > notes > melody generator` and set it to `yes`.
 
 if melodies are too "fast" you can turn down the gate probability (`PARAMS > notes > note gate probability`) to make them hold out longer.
 
