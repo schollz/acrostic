@@ -219,7 +219,7 @@ its fun to unplug all devices (midi/crow) and turn down the phantom and record i
 
 ### regenerate often
 
-you can re-generate the notes in the matrix by going to the first page and pressing K2. this will provide a whole new bed of notes which is useful if you are soloing and want the notes to be different than what is already recorded.
+you can re-generate the notes in the matrix by going to the first page, turning E1 all the way CCW (to select the chord context), and then pressing K2. this will provide a whole new bed of notes which is useful if you are soloing and want the notes to be different than what is already recorded.
 
 
 ## future
