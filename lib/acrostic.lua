@@ -823,8 +823,8 @@ function Acrostic:softcut_init()
     softcut.pre_level(i,has_rec_once and params:get("pre_level"..i) or 1.0)
     softcut.phase_quant(i,0.025)
 
-    softcut.post_filter_dry(i,0.0)
-    softcut.post_filter_lp(i,1.0)
+    softcut.post_filter_dry(i,1.0)
+    --softcut.post_filter_lp(i,1.0)
     softcut.post_filter_rq(i,1.0)
     softcut.post_filter_fc(i,20100)
 
