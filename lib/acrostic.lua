@@ -15,7 +15,7 @@ function Acrostic:new (o)
   o=o or {} -- create object if user does not provide one
   setmetatable(o,self)
   self.__index=self
-  print("has rec_once: ".."yes" and has_rec_once or "no")
+  print("has rec_once: "..(has_rec_once and "yes" or "no"))
   return o
 end
 
