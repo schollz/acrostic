@@ -25,6 +25,19 @@ function init()
   norns.enc.sens(2,6)
   norns.enc.sens(3,6)
 
+  params:set("clock_tempo",120)
+
+  clock.run(function()
+  for i, loop in ipairs(find_files("/home/we/dust/audio/performance")) do
+    pathname,filename,ext=string.match(loop,"(.-)([^\\/]-%.?([^%.\\/]*))$")
+    engine.add(i,loop,120,clock.get_tempo())
+    params:add{type='binary',name=filename:sub(1,8),id=string.format("%dloop",i),behavior='toggle',action=function(x)
+      engine.set(i,"amp",x==1 and 1.0 or 0,2)
+    end}
+    clock.sleep(0.1)
+  end
+  end)
+
   local acrostic_=include("acrostic/lib/acrostic")
   local monosaw_=include("acrostic/lib/monosaw")
   local volpan_=include("acrostic/lib/volpan")
@@ -415,3 +428,16 @@ function redraw()
   screen.update()
 end
 
+function find_files(folder)
+  local lines=util.os_capture("find "..folder.."* -print -type f -name '*.flac' -o -name '*.wav' | grep 'wav\\|flac' > /tmp/files")
+  return lines_from("/tmp/files")
+end
+
+function lines_from(file)
+  if not util.file_exists(file) then return {} end
+  local lines={}
+  for line in io.lines(file) do
+    lines[#lines+1]=line
+  end
+  return lines
+end

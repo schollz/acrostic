@@ -289,8 +289,13 @@ function Acrostic:init(o)
   self.lattice=lattice_:new()
   self.rec_queue={}
 
+  local first_beat_ever=false
   self.pattern_measure=self.lattice:new_pattern{
     action=function(t)
+      if first_beat_ever==false then 
+	first_beat_ever=true 
+	engine.resetPhase()
+      end
       local result=false
       local i=0
       while result==false do
@@ -499,7 +504,6 @@ function Acrostic:init(o)
   params:set("is_playing",1)
   self.softcut_stopped=false
   self.lattice:start()
-
 end
 
 function Acrostic:update_grid_crow()
