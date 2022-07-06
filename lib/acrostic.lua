@@ -27,6 +27,13 @@ function Acrostic:init(o)
   self.debounce_chord_selection=0
   self.loop_length=16
 
+  -- start at 0, rise to 5V over 0.1 seconds, fall to 1V over 2 seconds
+  local qn=clock.get_beat_sec()
+  local total_beats=16 -- TODO: figure out how many total beats there are?
+  crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2,qn,qn*1.5)
+  crow.output[3].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2+0.1,qn-0.2,qn*1.5+0.1)
+  crow.output[4].action=string.format("{ to(0,0), to(-0.1,0.1), to(0,%2.3f) }",qn*total_beats)
+
   -- setup grid
   self.ag=acrosticgrid_:new{
     note_on=function(step,row,note_adjust)
@@ -67,7 +74,7 @@ function Acrostic:init(o)
         self:update_grid_crow()
         self.grid_crow_dirty=false
       end
-      crow.output[2](true)
+      --crow.output[2](true)
     end,
     note_off=function()
       if self.had_origin5==nil then
@@ -77,7 +84,7 @@ function Acrostic:init(o)
         self:update_grid_crow()
         self.grid_crow_dirty=false
       end
-      crow.output[2](false)
+      -- crow.output[2](false)
     end
   }
 
@@ -433,8 +440,8 @@ function Acrostic:init(o)
   -- crow output 3 is for using a clock
   self.pattern_clock_sync=self.lattice:new_pattern{
     action=function(x)
-      crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(self.pattern_clock_sync.division*2*clock.get_beat_sec()).."), to(0,0) }"
-      crow.output[3]()
+      --crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(self.pattern_clock_sync.division*2*clock.get_beat_sec()).."), to(0,0) }"
+      --crow.output[3]()
     end,
     division=1/4,
   }
@@ -492,16 +499,15 @@ function Acrostic:init(o)
   self.softcut_stopped=false
   self.lattice:start()
 
-
 end
 
 function Acrostic:update_grid_crow()
-  crow.output[2].action="adsr("..
-  (clock.get_beat_sec()/4*params:get("crow_grid_attack"))..","..
-  (clock.get_beat_sec()/4*params:get("crow_grid_decay"))..","..
-  params:get("crow_grid_sustain")..","..
-  (clock.get_beat_sec()/4*params:get("crow_grid_release"))..
-  ",'linear')"
+  -- crow.output[2].action="adsr("..
+  -- (clock.get_beat_sec()/4*params:get("crow_grid_attack"))..","..
+  -- (clock.get_beat_sec()/4*params:get("crow_grid_decay"))..","..
+  -- params:get("crow_grid_sustain")..","..
+  -- (clock.get_beat_sec()/4*params:get("crow_grid_release"))..
+  -- ",'linear')"
 end
 
 function Acrostic:iterate_chord()
@@ -601,6 +607,7 @@ function Acrostic:iterate_note()
   local page=self.page
   local chord_roman=params:get("chord"..page..chord)
   if chord_roman~=self.last_chord_roman and note~=self.last_note then
+    crow.output[2]()
     -- TODO: make this resetting optional
     if params:get("grid_reset")==1 then
       self.ag:reset()
@@ -608,10 +615,10 @@ function Acrostic:iterate_note()
     self.gate_for_midi=true
     if self.had_origin5==nil then
       self.grid_crow_dirty=true
-      crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
-      ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
-      "), to("..params:get("crow_2_sustain")..","..(clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
-      crow.output[2]()
+      -- crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
+      -- ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
+      -- "), to("..params:get("crow_2_sustain")..","..(clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
+      -- crow.output[2]()
     end
   end
   self.last_chord_roman=chord_roman
@@ -751,8 +758,8 @@ function Acrostic:trigger_note(note)
   end
   if crow~=nil then
     if hz~=self.last_hz and (hz*self.crow4_octaves[params:get("crow_4_octave")]~=nil) then
-      crow.output[4].action="oscillate("..(hz*self.crow4_octaves[params:get("crow_4_octave")])..","..params:get("crow_4_volts")..",'exponential')"
-      crow.output[4]()
+      --crow.output[4].action="oscillate("..(hz*self.crow4_octaves[params:get("crow_4_octave")])..","..params:get("crow_4_volts")..",'exponential')"
+      --crow.output[4]()
       self.last_hz=hz
     end
     if params:get("crow_1_pitch")==1 then
