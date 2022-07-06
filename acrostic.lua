@@ -52,23 +52,23 @@ function init()
   -- params:set("beats12",5)
   
   -- dunnno 
-  -- params:set("chord11",4,true)
-  -- params:set("chord12",5,true)
-  -- params:set("chord13",1,true)
-  -- params:set("chord14",6,true)
-  -- params:set("chord21",4,true)
-  -- params:set("chord22",1,true)
-  -- params:set("chord23",5,true)
-  -- params:set("chord24",3,true)
-  -- params:set("number_of_chords",2)
-  -- params:set("beats11",3)
-  -- params:set("beats12",3)
-  -- params:set("beats13",3)
-  -- params:set("beats14",7)
-  -- params:set("beats21",4)
-  -- params:set("beats22",4)
-  -- params:set("beats23",7)
-  -- params:set("beats24",1)
+  params:set("chord11",4,true)
+  params:set("chord12",5,true)
+  params:set("chord13",1,true)
+  params:set("chord14",6,true)
+  params:set("chord21",4,true)
+  params:set("chord22",1,true)
+  params:set("chord23",5,true)
+  params:set("chord24",3,true)
+  params:set("number_of_chords",2)
+  params:set("beats11",3)
+  params:set("beats12",3)
+  params:set("beats13",3)
+  params:set("beats14",7)
+  params:set("beats21",4)
+  params:set("beats22",4)
+  params:set("beats23",7)
+  params:set("beats24",1)
   
   -- 
   -- params:set("chord11",1,true)
@@ -185,14 +185,14 @@ function init()
   -- params:set("beats14",4)
 
   -- vi IV I V
-  params:set("chord11",6,true)
-  params:set("chord12",4,true)
-  params:set("chord13",1,true)
-  params:set("chord14",5,true)
-  params:set("beats11",4)
-  params:set("beats12",4)
-  params:set("beats13",4)
-  params:set("beats14",4)
+  -- params:set("chord11",6,true)
+  -- params:set("chord12",4,true)
+  -- params:set("chord13",1,true)
+  -- params:set("chord14",5,true)
+  -- params:set("beats11",4)
+  -- params:set("beats12",4)
+  -- params:set("beats13",4)
+  -- params:set("beats14",4)
 
   -- ?? basic 
   -- params:set("chord11",4,true)
@@ -295,9 +295,9 @@ function init()
 
   acrostic:toggle_start(true)
 
-  if #acrostic.midi_devices==1 and (not norns.crow.connected()) then
-    params:set("monosaw_amp",0.5)
-  end
+  -- if #acrostic.midi_devices==1 and (not norns.crow.connected()) then
+  --   params:set("monosaw_amp",0.5)
+  -- end
 
   show_startup_screen_max=10
   show_startup_screen=0
@@ -321,6 +321,10 @@ function init()
     end
   end)
   
+  params:set("reverb",2)
+  params:set("rev_monitor_input",-3)
+  params:set("rev_cut_input",-3)
+  params:set("rev_return_level",6)
 end
 
 function cleanup()
