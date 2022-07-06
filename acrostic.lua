@@ -8,7 +8,7 @@
 --
 
 
-engine.name="Acrostic"
+engine.name="Paracosms"
 
 global_shift=false
 global_page=0
@@ -70,6 +70,12 @@ function init()
   params:set("beats23",7)
   params:set("beats24",1)
   
+  local qn=clock.get_beat_sec()
+  local total_beats=self:get_total_beats()
+  crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2,qn,qn*1.5)
+  crow.output[3].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2+0.1,qn-0.2,qn*1.5+0.1)
+  crow.output[4].action=string.format("{ to(0,0), to(-0.1,0.1), to(0,%2.3f) }",qn*total_beats)
+
   -- 
   -- params:set("chord11",1,true)
   -- params:set("chord12",3,true)

@@ -27,13 +27,6 @@ function Acrostic:init(o)
   self.debounce_chord_selection=0
   self.loop_length=16
 
-  -- start at 0, rise to 5V over 0.1 seconds, fall to 1V over 2 seconds
-  local qn=clock.get_beat_sec()
-  local total_beats=16 -- TODO: figure out how many total beats there are?
-  crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2,qn,qn*1.5)
-  crow.output[3].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2+0.1,qn-0.2,qn*1.5+0.1)
-  crow.output[4].action=string.format("{ to(0,0), to(-0.1,0.1), to(0,%2.3f) }",qn*total_beats)
-
   -- setup grid
   self.ag=acrosticgrid_:new{
     note_on=function(step,row,note_adjust)
@@ -387,6 +380,14 @@ function Acrostic:init(o)
     end,
     division=1/4,
   }
+  self.pattern_detune=self.lattice:new_pattern{
+    action=function(t)
+	    print("DETUNING")
+	    crow.output[4]()
+    end,
+    division=4,
+    delay=1/8,
+  }
   self.pattern_measure_inter={}
   local scale=MusicUtil.generate_scale_of_length(params:get("root_note"),params:get("scale"),120)
   self.scale_full=MusicUtil.generate_scale_of_length(params:get("root_note")%12,params:get("scale"),120)
@@ -608,6 +609,7 @@ function Acrostic:iterate_note()
   local chord_roman=params:get("chord"..page..chord)
   if chord_roman~=self.last_chord_roman and note~=self.last_note then
     crow.output[2]()
+    crow.output[3]()
     -- TODO: make this resetting optional
     if params:get("grid_reset")==1 then
       self.ag:reset()
@@ -700,9 +702,9 @@ function Acrostic:toggle_start(stop_all)
     end
   end
   if params:get("is_playing")==0 then
-    engine.amp(0)
+    --engine.amp(0)
   else
-    engine.amp(params:get("monosaw_amp"))
+    --engine.amp(params:get("monosaw_amp"))
   end
 end
 
@@ -754,7 +756,7 @@ function Acrostic:trigger_note(note)
   end
   local hz=MusicUtil.note_num_to_freq(note)
   if hz~=nil and hz>20 and hz<18000 then
-    engine.hz(hz)
+    --engine.hz(hz)
   end
   if crow~=nil then
     if hz~=self.last_hz and (hz*self.crow4_octaves[params:get("crow_4_octave")]~=nil) then
@@ -985,14 +987,18 @@ function Acrostic:minimize_transposition_old(changes)
   self:update_final()
 end
 
-function Acrostic:update_beats(update_softcut)
+function Acrostic:get_total_beats()
   local total_beats=0
   for page=1,params:get("number_of_chords") do
     for chord=1,4 do
       total_beats=total_beats+params:get("beats"..page..chord)
     end
   end
-  self.loop_length=total_beats
+  return total_beats
+end
+
+function Acrostic:update_beats(update_softcut)
+  self.loop_length=self:get_total_beats()
   if update_softcut==nil or update_softcut then
     for i=1,6 do
       softcut.loop_end(i,self.o.minmax[i][2]+self.loop_length*clock.get_beat_sec())
