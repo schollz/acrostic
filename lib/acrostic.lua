@@ -611,9 +611,16 @@ function Acrostic:iterate_note()
   end
   local page=self.page
   local chord_roman=params:get("chord"..page..chord)
-  if chord_roman~=self.last_chord_roman and note~=self.last_note then
+  if chord_roman~=self.last_chord_roman then 
+    -- crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2,qn+qn,qn*1.5); crow.output[3].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2+0.1,qn-0.2+qn,qn*1.5+0.1)
+    local tt=clock.get_beat_sec()*params:get(string.format("beats%d%d",page,params:get("sel_chord")))
+    crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(5,%2.3f), to(0,%2.3f) }",tt/32,tt/2,tt/16)
+    crow.output[3].action=string.format("{ to(0,0), to(10,%2.3f), to(5,%2.3f), to(0,%2.3f) }",tt/4,tt/2,tt/4)
+
     crow.output[2]()
     crow.output[3]()
+  end
+  if chord_roman~=self.last_chord_roman and note~=self.last_note then
     -- TODO: make this resetting optional
     if params:get("grid_reset")==1 then
       self.ag:reset()

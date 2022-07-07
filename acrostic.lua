@@ -25,18 +25,21 @@ function init()
   norns.enc.sens(2,6)
   norns.enc.sens(3,6)
 
-  params:set("clock_tempo",120)
+  params:set("clock_tempo",105)
 
   clock.run(function()
-  for i, loop in ipairs(find_files("/home/we/dust/audio/performance")) do
+    clock.sleep(1)
+  for i, loop in ipairs(find_files("/home/we/dust/audio/performance2/")) do
     pathname,filename,ext=string.match(loop,"(.-)([^\\/]-%.?([^%.\\/]*))$")
-    engine.add(i,loop,120,clock.get_tempo())
-    params:add{type='binary',name=filename:sub(1,8),id=string.format("%dloop",i),behavior='toggle',action=function(x)
-      engine.set(i,"amp",x==1 and 1.0 or 0,2)
-    end}
-    clock.sleep(0.1)
+    engine.add(i,loop,clock.get_tempo(),clock.get_tempo())
+    params:add_number(string.format("%dloop",i),filename:sub(1,20),0,300,0)
+    params:set_action(string.format("%dloop",i),function(v)
+       engine.set(i,"amp",v/100,2)
+    end)
+    clock.sleep(0.2)
   end
   end)
+
 
   local acrostic_=include("acrostic/lib/acrostic")
   local monosaw_=include("acrostic/lib/monosaw")
@@ -84,10 +87,10 @@ function init()
   params:set("beats24",1)
   
   local qn=clock.get_beat_sec()
-  local total_beats=self:get_total_beats()
+  local total_beats=acrostic:get_total_beats()
   crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2,qn,qn*1.5)
   crow.output[3].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2+0.1,qn-0.2,qn*1.5+0.1)
-  crow.output[4].action=string.format("{ to(0,0), to(-0.1,0.1), to(0,%2.3f) }",qn*total_beats)
+  crow.output[4].action="{ to(0.08,0.1),to(0.1,0.2) }"; crow.output[4]()
 
   -- 
   -- params:set("chord11",1,true)
