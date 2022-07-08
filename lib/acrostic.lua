@@ -20,6 +20,12 @@ function Acrostic:new (o)
 end
 
 function Acrostic:init(o)
+  params:set("reverb",2)
+  params:set("rev_monitor_input",-9)
+  params:set("rev_cut_input",-9)
+  params:set("rev_eng_input",-12)
+  params:set("rev_return_level",6)
+
   self.pan={0,0,0,0,0,0}
   self.vol={0.5,0.5,0.5,0.5,0.5,0.5}
   self.message=""
@@ -292,9 +298,9 @@ function Acrostic:init(o)
   local first_beat_ever=false
   self.pattern_measure=self.lattice:new_pattern{
     action=function(t)
-      if first_beat_ever==false then 
-	first_beat_ever=true 
-	engine.resetPhase()
+      if first_beat_ever==false then
+        first_beat_ever=true
+        engine.resetPhase()
       end
       local result=false
       local i=0
@@ -387,8 +393,8 @@ function Acrostic:init(o)
   }
   self.pattern_detune=self.lattice:new_pattern{
     action=function(t)
-	    print("DETUNING")
-	    crow.output[4]()
+      print("DETUNING")
+      crow.output[4]()
     end,
     division=4,
     delay=1/8,
@@ -611,10 +617,10 @@ function Acrostic:iterate_note()
   end
   local page=self.page
   local chord_roman=params:get("chord"..page..chord)
-  if chord_roman~=self.last_chord_roman then 
+  if chord_roman~=self.last_chord_roman then
     -- crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2,qn+qn,qn*1.5); crow.output[3].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2+0.1,qn-0.2+qn,qn*1.5+0.1)
     local tt=clock.get_beat_sec()*params:get(string.format("beats%d%d",page,params:get("sel_chord")))
-    crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(5,%2.3f), to(0,%2.3f) }",tt/32,tt/2,tt/16)
+    crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(5,%2.3f), to(0,%2.3f) }",tt/16,tt/4,tt/16)
     crow.output[3].action=string.format("{ to(0,0), to(10,%2.3f), to(5,%2.3f), to(0,%2.3f) }",tt/4,tt/2,tt/4)
 
     crow.output[2]()
@@ -816,7 +822,7 @@ function Acrostic:softcut_init()
   softcut.reset()
   audio.level_cut(1)
   audio.level_adc_cut(1)
-  audio.level_eng_cut(1)
+  audio.level_eng_cut(0)
   audio.level_tape_cut(1)
   for i=1,6 do
     softcut.enable(i,1)
@@ -899,7 +905,9 @@ function Acrostic:minimize_transposition()
     for chord=1,4 do
       table.insert(roman_numerals,self.available_chords[params:get("chord"..ppage..chord)])
     end
-    local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{2,2,3,3,3,4})
+    --local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{2,2,3,3,3,4})
+    -- TODO: check if this works
+    local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{1,2,3,3,4,5})
     self.matrix_octave[ppage]={}
     self.matrix_base[ppage]={}
     for note=1,6 do
@@ -1184,7 +1192,7 @@ function Acrostic:initiate_recording()
   local foo={}
   local oooooo_ordering={5,2,1,6,4,3}
   table.shuffle(oooooo_ordering)
-  -- oooooo_ordering={3,2,1,5,4,6}
+  oooooo_ordering={3,2,1,5,4,6}
   for i=1,6 do
     if not self.recorded[i] and not table.contains(queued,i) then
       table.insert(foo,oooooo_ordering[i])

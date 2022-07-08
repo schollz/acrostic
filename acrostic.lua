@@ -2,11 +2,10 @@
 --
 -- sample and layer chords
 -- one note at a time.
--- 
+--
 -- llllllll.co/t/acrostic
 --
 --
-
 
 engine.name="Paracosms"
 
@@ -29,17 +28,16 @@ function init()
 
   clock.run(function()
     clock.sleep(1)
-  for i, loop in ipairs(find_files("/home/we/dust/audio/performance2/")) do
-    pathname,filename,ext=string.match(loop,"(.-)([^\\/]-%.?([^%.\\/]*))$")
-    engine.add(i,loop,clock.get_tempo(),clock.get_tempo())
-    params:add_number(string.format("%dloop",i),filename:sub(1,20),0,300,0)
-    params:set_action(string.format("%dloop",i),function(v)
-       engine.set(i,"amp",v/100,2)
-    end)
-    clock.sleep(0.2)
-  end
+    for i,loop in ipairs(find_files("/home/we/dust/audio/performance/")) do
+      pathname,filename,ext=string.match(loop,"(.-)([^\\/]-%.?([^%.\\/]*))$")
+      engine.add(i,loop,clock.get_tempo(),clock.get_tempo())
+      params:add_number(string.format("%dloop",i),filename:sub(1,20),0,300,0)
+      params:set_action(string.format("%dloop",i),function(v)
+        engine.set(i,"amp",v/100,2)
+      end)
+      clock.sleep(0.2)
+    end
   end)
-
 
   local acrostic_=include("acrostic/lib/acrostic")
   local monosaw_=include("acrostic/lib/monosaw")
@@ -54,7 +52,6 @@ function init()
   monosaw=monosaw_:new()
   monosaw:init()
 
-  
   -- params:set("chord11",3,true)
   -- params:set("chord12",6,true)
   -- params:set("chord13",4,true)
@@ -66,8 +63,8 @@ function init()
   -- params:set("number_of_chords",2)
   -- params:set("beats11",3)
   -- params:set("beats12",5)
-  
-  -- dunnno 
+
+  -- dunnno
   params:set("chord11",4,true)
   params:set("chord12",5,true)
   params:set("chord13",1,true)
@@ -85,14 +82,14 @@ function init()
   params:set("beats22",4)
   params:set("beats23",7)
   params:set("beats24",1)
-  
+
   local qn=clock.get_beat_sec()
   local total_beats=acrostic:get_total_beats()
   crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2,qn,qn*1.5)
   crow.output[3].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2+0.1,qn-0.2,qn*1.5+0.1)
-  crow.output[4].action="{ to(0.08,0.1),to(0.1,0.2) }"; crow.output[4]()
+  crow.output[4].action="{ to(0.08,0.1),to(0.1,0.2) }";crow.output[4]()
 
-  -- 
+  --
   -- params:set("chord11",1,true)
   -- params:set("chord12",3,true)
   -- params:set("chord13",4,true)
@@ -102,7 +99,7 @@ function init()
   -- params:set("chord23",3,true)
   -- params:set("chord24",1,true)
   -- params:set("number_of_chords",2)
-  
+
   -- dont think twice
   -- params:set("chord11",1,true)
   -- params:set("chord12",5,true)
@@ -113,7 +110,7 @@ function init()
   -- params:set("chord23",1,true)
   -- params:set("chord24",5,true)
   -- params:set("number_of_chords",2)
-  
+
   -- mr tambourine
   -- params:set("chord11",4,true)
   -- params:set("chord12",5,true)
@@ -124,7 +121,6 @@ function init()
   -- params:set("chord23",5,true)
   -- params:set("chord24",5,true)
   -- params:set("number_of_chords",2)
-
 
   -- params:set("chord11",5,true)
   -- params:set("chord12",6,true)
@@ -180,22 +176,21 @@ function init()
   --   acrostic:change_chord(4,-1)
   --   acrostic:copy_octave_to_all(2,6)
   --   acrostic:update_final()
-  --   -- for ppage=1,2 do 
-  --   --   for nnote=1,1 do 
+  --   -- for ppage=1,2 do
+  --   --   for nnote=1,1 do
   --   --     acrostic:mod_octave(ppage,nnote,-1)
   --   --   end
   --   -- end
   --   acrostic:update_final()
   --   acrostic:initiate_recording() -- TODO: remove
   -- end)
-  
-  
+
   -- vi V IV iiim7
   -- params:set("chord11",6,true)
   -- params:set("chord12",5,true)
   -- params:set("chord13",4,true)
   -- params:set("chord14",3+14,true)
-  
+
   -- vi iii IV V
   -- params:set("chord11",6,true)
   -- params:set("chord12",3,true)
@@ -216,7 +211,7 @@ function init()
   -- params:set("beats13",4)
   -- params:set("beats14",4)
 
-  -- ?? basic 
+  -- ?? basic
   -- params:set("chord11",4,true)
   -- params:set("chord12",5,true)
   -- params:set("chord13",1,true)
@@ -226,7 +221,6 @@ function init()
   -- params:set("chord23",3,true)
   -- params:set("chord24",3,true)
   -- params:set("number_of_chords",2)
-
 
   -- philipglass
   -- params:set("clock_tempo",110)
@@ -244,7 +238,6 @@ function init()
   -- params:set("beats14",2)
   -- params:set("beats21",6)
   -- params:set("beats23",6)
-
 
   -- brande
   -- params:set("clock_tempo",115)
@@ -265,7 +258,6 @@ function init()
   -- params:set("beats22",3)
   -- params:set("beats23",3)
   -- params:set("beats24",6)
- 
 
   -- sp
   -- params:set("chord11",6,true)
@@ -293,7 +285,6 @@ function init()
   -- params:set("chord12",1,true)
   -- params:set("chord13",4,true)
   -- params:set("chord14",5,true)
-
 
   -- for i=1,6 do
   --   softcut.post_filter_dry(i,1)
@@ -342,11 +333,7 @@ function init()
       redraw()
     end
   end)
-  
-  params:set("reverb",2)
-  params:set("rev_monitor_input",-3)
-  params:set("rev_cut_input",-3)
-  params:set("rev_return_level",6)
+
 end
 
 function cleanup()
