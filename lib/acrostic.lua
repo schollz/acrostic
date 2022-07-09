@@ -20,7 +20,7 @@ function Acrostic:new (o)
 end
 
 function Acrostic:init(o)
-  params:set("reverb",2)
+  params:set("reverb",1)
   params:set("rev_monitor_input",-9)
   params:set("rev_cut_input",-9)
   params:set("rev_eng_input",-12)
@@ -34,11 +34,13 @@ function Acrostic:init(o)
   self.loop_length=16
 
   -- setup grid
+  self.time_since_grid_note=0
   self.ag=acrosticgrid_:new{
     note_on=function(step,row,note_adjust)
       if self.scale_full==nil or self.matrix_final==nil then
         do return end
       end
+      self.time_since_grid_note=clock.get_beat_sec()*clock.get_beats()
       local chord=params:get("current_chord")
       local page=self.page
       if chord>4 then
@@ -73,7 +75,7 @@ function Acrostic:init(o)
         self:update_grid_crow()
         self.grid_crow_dirty=false
       end
-      --crow.output[2](true)
+      crow.output[2](true)
     end,
     note_off=function()
       if self.had_origin5==nil then
@@ -83,7 +85,7 @@ function Acrostic:init(o)
         self:update_grid_crow()
         self.grid_crow_dirty=false
       end
-      -- crow.output[2](false)
+      crow.output[2](false)
     end
   }
 
@@ -198,7 +200,7 @@ function Acrostic:init(o)
 
   params:add_group("midi/grid/crow",15)
   params:add_option("midi_out","midi out",self.midi_devices,#self.midi_devices==1 and 1 or 2)
-  params:add_option("grid_reset","grid reset every chord",{"yes","no"})
+  params:add_option("grid_reset","grid reset every chord",{"yes","no"},2)
   params:add_option("crow_1_pitch","[1] pitch",{"normal","korg monotron"},1)
   local option_divisions={"1/32","1/16","1/8","1/4","1/2","1"}
   local option_divisions_num={1/32,1/16,1/8,1/4,1/2,1}
@@ -243,11 +245,11 @@ function Acrostic:init(o)
       end
     end)
     params:add_control(i.."vol adj","vol adj",controlspec.new(-1,1,"lin",0.1,0,"",0.1/2))
-    params:add_control(i.."vol lfo amp","vol lfo amp",controlspec.new(0,1,"lin",0.01,0.25,"",0.01))
+    params:add_control(i.."vol lfo amp","vol lfo amp",controlspec.new(0,1,"lin",0.01,0.75,"",0.01))
     params:add_control(i.."vol lfo period","vol lfo period",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
     params:add_control(i.."vol lfo offset","vol lfo offset",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
     params:add_control(i.."pan adj","pan adj",controlspec.new(-1,1,"lin",0.1,0,"",0.1/2))
-    params:add_control(i.."pan lfo amp","pan lfo amp",controlspec.new(0,1,"lin",0.01,0.2,"",0.01))
+    params:add_control(i.."pan lfo amp","pan lfo amp",controlspec.new(0,1,"lin",0.01,0.5,"",0.01))
     params:add_control(i.."pan lfo period","pan lfo period",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
     params:add_control(i.."pan lfo offset","pan lfo offset",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
     params:add_control(i.."lpf","lpf",controlspec.new(40,20000,"exp",40,20000,"Hz",40/20000))
@@ -267,7 +269,7 @@ function Acrostic:init(o)
     -- oooooo v1.11.0
     params:set(i.."vol lfo period",round_time_to_nearest_beat(math.random()*20+2))
     params:set(i.."vol lfo offset",round_time_to_nearest_beat(math.random()*60))
-    params:set(i.."vol lfo amp",math.random()*0.25+0.1)
+    params:set(i.."vol lfo amp",math.random()*0.25+0.5)
     params:set(i.."pan lfo amp",math.random()*0.6+0.2)
     params:set(i.."pan lfo period",round_time_to_nearest_beat(math.random()*20+2))
     params:set(i.."pan lfo offset",round_time_to_nearest_beat(math.random()*60))
@@ -448,6 +450,7 @@ function Acrostic:init(o)
       self.ag:emit()
     end,
     division=1/64,
+    delay=0.1,
   }
   -- crow output 3 is for using a clock
   self.pattern_clock_sync=self.lattice:new_pattern{
@@ -513,12 +516,13 @@ function Acrostic:init(o)
 end
 
 function Acrostic:update_grid_crow()
-  -- crow.output[2].action="adsr("..
-  -- (clock.get_beat_sec()/4*params:get("crow_grid_attack"))..","..
-  -- (clock.get_beat_sec()/4*params:get("crow_grid_decay"))..","..
-  -- params:get("crow_grid_sustain")..","..
-  -- (clock.get_beat_sec()/4*params:get("crow_grid_release"))..
-  -- ",'linear')"
+	print("updating grid crow")
+   crow.output[2].action="adsr("..
+   (clock.get_beat_sec()/4*params:get("crow_grid_attack"))..","..
+   (clock.get_beat_sec()/4*params:get("crow_grid_decay"))..","..
+   params:get("crow_grid_sustain")..","..
+   (clock.get_beat_sec()/4*params:get("crow_grid_release"))..
+   ",'linear')"
 end
 
 function Acrostic:iterate_chord()
@@ -605,6 +609,7 @@ function Acrostic:get_random_note(octave)
   print("should never get here")
 end
 
+local fngen=nil
 function Acrostic:iterate_note()
   -- iterate note
   self.last_sel_chord=params:get("sel_chord")
@@ -617,13 +622,36 @@ function Acrostic:iterate_note()
   end
   local page=self.page
   local chord_roman=params:get("chord"..page..chord)
-  if chord_roman~=self.last_chord_roman then
-    -- crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2,qn+qn,qn*1.5); crow.output[3].action=string.format("{ to(0,0), to(10,%2.3f), to(10,%2.3f), to(0,%2.3f) }",qn/2+0.1,qn-0.2+qn,qn*1.5+0.1)
-    local tt=clock.get_beat_sec()*params:get(string.format("beats%d%d",page,params:get("sel_chord")))
-    crow.output[2].action=string.format("{ to(0,0), to(10,%2.3f), to(5,%2.3f), to(0,%2.3f) }",tt/16,tt/4,tt/16)
-    crow.output[3].action=string.format("{ to(0,0), to(10,%2.3f), to(5,%2.3f), to(0,%2.3f) }",tt/4,tt/2,tt/4)
-
-    crow.output[2]()
+  local chord_next=""
+  if chord<4 then 
+	  chord_next=params:get("chord"..page..chord+1)
+  end
+  local time_since_grid_note=clock.get_beats()*clock.get_beat_sec()-self.time_since_grid_note
+  if chord_roman~=self.last_chord_roman and time_since_grid_note>0.5 then
+    local tt=params:get(string.format("beats%d%d",page,chord))
+    if chord_next==chord_roman then 
+      tt=tt+params:get(string.format("beats%d%d",page,chord+1))
+    end
+    local strength=util.linlin(2,12,10,1,tt)
+    print(strength,tt)
+    tt=tt*clock.get_beat_sec()
+    crow.output[2].action=string.format("adsr(%2.3f,0.25,%2.3f,%2.3f,'sine')",tt/4*(math.random(80,120)/100),strength,tt/4)
+    crow.output[3].action=string.format("adsr(%2.3f,0.25,%2.3f,%2.3f,'line')",tt/4,strength,tt/4)
+    if fngen~=nil then 
+    	clock.cancel(fngen)
+    end
+    crow.output[2](true)
+    crow.output[3](true)
+    fngen=clock.run(function()
+	    local sleep_time=tt*3/4
+	    if sleep_time<0 then 
+		    sleep_time=1
+	    end
+	    clock.sleep(sleep_time)
+	    print("NOTE OFF")
+	    crow.output[2](false)
+	    crow.output[3](false)
+    end)
     crow.output[3]()
   end
   if chord_roman~=self.last_chord_roman and note~=self.last_note then
@@ -907,7 +935,7 @@ function Acrostic:minimize_transposition()
     end
     --local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{2,2,3,3,3,4})
     -- TODO: check if this works
-    local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{1,2,3,3,4,5})
+    local note_name_matrix=phrase_generate_low_high(params:get("root_note"),roman_numerals,{2,3,3,4,4,5})
     self.matrix_octave[ppage]={}
     self.matrix_base[ppage]={}
     for note=1,6 do
