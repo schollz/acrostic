@@ -192,14 +192,14 @@ function Acrostic:init(o)
 
   params:add_group("midi/grid/crow",15)
   params:add_option("midi_out","midi out",self.midi_devices,#self.midi_devices==1 and 1 or 2)
-  params:add_option("grid_reset","grid reset every chord",{"yes","no"})
+  params:add_option("grid_reset","grid reset every chord",{"yes","no"},2)
   params:add_option("crow_1_pitch","[1] pitch",{"normal","korg monotron"},1)
   local option_divisions={"1/32","1/16","1/8","1/4","1/2","1"}
   local option_divisions_num={1/32,1/16,1/8,1/4,1/2,1}
   params:add_control("crow_2_level","[2] level",controlspec.new(0,10,'lin',0.1,10,'volts',0.1/10))
   params:add_control("crow_2_attack","[2] attack",controlspec.new(0,10,'lin',0.01,1,'qn',0.01/10))
   params:add_control("crow_2_sustain","[2] sustain",controlspec.new(0,10,'lin',0.1,5,'volts',0.1/10))
-  params:add_control("crow_2_decay","[2] decay",controlspec.new(0,10,'lin',0.01,1,'qn',0.01/10))
+  params:add_control("crow_2_decay","[2] decay",controlspec.new(0,10,'lin',0.01,4,'qn',0.01/10))
   params:add_control("crow_grid_attack","[2] attack (grid)",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
   params:add_control("crow_grid_sustain","[2] sustain (grid)",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
   params:add_control("crow_grid_decay","[2] decay (grid)",controlspec.new(0,4,'lin',0.01,0.5,'sn',0.01/4))

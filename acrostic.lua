@@ -34,6 +34,7 @@ function lines_from(file)
 end
 
 function init()
+  params:set("clock_tempo",135)
   norns.enc.sens(1,10)
   norns.enc.sens(2,6)
   norns.enc.sens(3,6)
@@ -51,7 +52,7 @@ function init()
   monosaw=monosaw_:new()
   monosaw:init()
 
-  for i,loop in ipairs(find_files("/home/we/dust/audio/performances/performance/")) do
+  for i,loop in ipairs(find_files("/home/we/dust/audio/performances/performance3/")) do
     print(loop)
     pathname,filename,ext=string.match(loop,"(.-)([^\\/]-%.?([^%.\\/]*))$")
     params:add_number(string.format("%dloop",i),filename:sub(1,20),-48,12,-48)
@@ -203,15 +204,29 @@ function init()
   -- params:set("beats13",4)
   -- params:set("beats14",4)
 
-  -- vi IV I V
+  -- -- vi IV I V
+  -- params:set("chord11",6,true)
+  -- params:set("chord12",4,true)
+  -- params:set("chord13",1,true)
+  -- params:set("chord14",5,true)
+  -- params:set("beats11",4)
+  -- params:set("beats12",4)
+  -- params:set("beats13",4)
+  -- params:set("beats14",4)
+
   params:set("chord11",6,true)
-  params:set("chord12",4,true)
-  params:set("chord13",1,true)
-  params:set("chord14",5,true)
-  params:set("beats11",4)
-  params:set("beats12",4)
-  params:set("beats13",4)
-  params:set("beats14",4)
+  params:set("chord12",6,true)
+  params:set("chord13",4,true)
+  params:set("chord14",6,true)
+  params:set("chord21",6,true)
+  params:set("chord22",6,true)
+  params:set("chord23",5,true)
+  params:set("chord24",6,true)
+  params:set("number_of_chords",2)
+  params:set("beats13",5)
+  params:set("beats14",3)
+  params:set("beats23",5)
+  params:set("beats24",3)
 
   -- ?? basic
   -- params:set("chord11",4,true)
