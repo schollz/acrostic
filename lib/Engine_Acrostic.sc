@@ -5,8 +5,52 @@ Engine_Acrostic : CroneEngine {
 	var synthMonosaw;
 	var paramsMonosaw;
 	var osfun;
+	var bufs;
+	var syns;
 
 	alloc { 
+
+		bufs=Dictionary.new();
+		syns=Dictionary.new();
+
+		SynthDef("sample",{
+			arg amp=0,buf,gate=1;
+			var snd=PlayBuf.ar(buf,2,loop:1);
+			snd=snd*EnvGen.ar(Env.adsr(1,1,1,1),gate,doneAction:2);
+			Out.ar(0,snd*Lag.kr(amp));
+		}).add;
+
+		this.addCommand("sample", "sf", { arg msg;
+			var fname=msg[1];
+			var amp=msg[2].dbamp;
+			if (amp<0.01,{
+				// shut it down
+				syns.at(fname).set(\gate,0);
+				syns.put(fname,nil);
+			},{
+				var exists=0;
+				if (syns.at(fname).notNil,{
+					if (syns.at(fname).isRunning,{
+						exists=1;
+					});
+				});
+				if (exists>0,{
+					// update
+					syns.at(fname).set(\amp,amp);
+				},{
+					// create
+					if (bufs.at(fname).notNil,{
+						syns.put(fname,Synth.new("samle",[\amp,amp,\buf,bufs.at(fname)]));
+					},{
+						Buffer.load(fname,action:{ arg buf;
+							bufs.put(fname,buf);
+							syns.put(fname,Synth.new("samle",[\amp,amp,\buf,bufs.at(fname)]));
+						});
+					});
+					NodeWatcher.register(bufs.at(fname));
+				})
+			});
+		});
 
 		SynthDef("autotune", {
 			arg hz=220,amp=0.0,mix=0.0,amplitudeMin=1;
