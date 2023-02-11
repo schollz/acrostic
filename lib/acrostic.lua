@@ -304,6 +304,8 @@ function Acrostic:init(o)
         -- on the first chord of each time, clear the queue and prime the recording
         if self.current_phrase>last_phrase then
           print("bumped phrase")
+          engine.sync()
+
           -- take care of queue
           if not table.is_empty(self.rec_queue) then
             if self.rec_queue[1].recording then
@@ -491,7 +493,6 @@ function Acrostic:init(o)
   params:set("is_playing",1)
   self.softcut_stopped=false
   self.lattice:start()
-
 
 end
 

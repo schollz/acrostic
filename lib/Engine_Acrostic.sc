@@ -6,49 +6,74 @@ Engine_Acrostic : CroneEngine {
 	var paramsMonosaw;
 	var osfun;
 	var bufs;
+	var amps;
 	var syns;
+	var loading=false;
 
 	alloc { 
 
 		bufs=Dictionary.new();
 		syns=Dictionary.new();
+		amps=Dictionary.new();
 
 		SynthDef("sample",{
 			arg amp=0,buf,gate=1;
-			var snd=PlayBuf.ar(buf,2,loop:1);
+			var snd=PlayBuf.ar(2,buf,rate:BufRateScale.ir(buf),loop:1);
 			snd=snd*EnvGen.ar(Env.adsr(1,1,1,1),gate,doneAction:2);
 			Out.ar(0,snd*Lag.kr(amp));
 		}).add;
 
+		this.addCommand("sync","",{ arg msg;
+	        syns.keysValuesDo({ arg fname, val;
+				("[sample] syncing"+fname).postln;
+	        	val.set(\gate,0);
+				syns.put(fname,Synth.new("sample",[\amp,amps.at(fname),\buf,bufs.at(fname)]));
+				NodeWatcher.register(syns.at(fname));
+	        });
+		});
+
 		this.addCommand("sample", "sf", { arg msg;
 			var fname=msg[1];
 			var amp=msg[2].dbamp;
-			if (amp<0.01,{
-				// shut it down
-				syns.at(fname).set(\gate,0);
-				syns.put(fname,nil);
+			amps.put(fname,amp);
+			if (loading,{
 			},{
-				var exists=0;
-				if (syns.at(fname).notNil,{
-					if (syns.at(fname).isRunning,{
-						exists=1;
+				if (msg[2]<47.neg,{
+					// shut it down
+					if (syns.at(fname).notNil,{
+						("[sample] stopping"+fname).postln;
+						syns.at(fname).set(\gate,0);
+						syns.put(fname,nil);
 					});
-				});
-				if (exists>0,{
-					// update
-					syns.at(fname).set(\amp,amp);
 				},{
-					// create
-					if (bufs.at(fname).notNil,{
-						syns.put(fname,Synth.new("samle",[\amp,amp,\buf,bufs.at(fname)]));
+					var exists=false;
+					loading=true;
+					if (syns.at(fname).notNil,{
+						exists=true;
+						// if (syns.at(fname).isRunning,{
+						// });
+					});
+					if (exists,{
+						// update
+						("[sample] updating"+fname+amp).postln;
+						syns.at(fname).set(\amp,amp);
 					},{
-						Buffer.load(fname,action:{ arg buf;
-							bufs.put(fname,buf);
-							syns.put(fname,Synth.new("samle",[\amp,amp,\buf,bufs.at(fname)]));
+						// create
+						if (bufs.at(fname).notNil,{
+							("[sample] playing"+fname+amp).postln;
+							syns.put(fname,Synth.new("sample",[\amp,amp,\buf,bufs.at(fname)]));
+						},{
+							("[sample] loading"+fname+amp).postln;
+							Buffer.read(Server.default,fname.asString,action:{ arg buf;
+								("[sample] loaded"+fname+amp).postln;
+								bufs.put(fname,buf);
+								syns.put(fname,Synth.new("sample",[\amp,amp,\buf,bufs.at(fname)]));
+								NodeWatcher.register(syns.at(fname));
+							});
 						});
 					});
-					NodeWatcher.register(bufs.at(fname));
-				})
+					loading=false;
+				});
 			});
 		});
 
@@ -168,7 +193,13 @@ Engine_Acrostic : CroneEngine {
 	}
 
 	free {
-		synthAutotune.free;
+        bufs.keysValuesDo({ arg buf, val;
+            val.free;
+        });
+        syns.keysValuesDo({ arg buf, val;
+            val.free;
+        });
+   		synthAutotune.free;
 		synthMonosaw.free;
 		osfun.free;
 	}
