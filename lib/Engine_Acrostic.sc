@@ -32,49 +32,21 @@ Engine_Acrostic : CroneEngine {
 	        });
 		});
 
-		this.addCommand("sample", "sf", { arg msg;
+		this.addCommand("load_sample", "s", { arg msg;
 			var fname=msg[1];
-			var amp=msg[2].dbamp;
-			amps.put(fname,amp);
-			if (loading,{
-			},{
-				if (msg[2]<47.neg,{
-					// shut it down
-					if (syns.at(fname).notNil,{
-						("[sample] stopping"+fname).postln;
-						syns.at(fname).set(\gate,0);
-						syns.put(fname,nil);
-					});
-				},{
-					var exists=false;
-					loading=true;
-					if (syns.at(fname).notNil,{
-						exists=true;
-						// if (syns.at(fname).isRunning,{
-						// });
-					});
-					if (exists,{
-						// update
-						("[sample] updating"+fname+amp).postln;
-						syns.at(fname).set(\amp,amp);
-					},{
-						// create
-						if (bufs.at(fname).notNil,{
-							("[sample] playing"+fname+amp).postln;
-							syns.put(fname,Synth.new("sample",[\amp,amp,\buf,bufs.at(fname)]));
-						},{
-							("[sample] loading"+fname+amp).postln;
-							Buffer.read(Server.default,fname.asString,action:{ arg buf;
-								("[sample] loaded"+fname+amp).postln;
-								bufs.put(fname,buf);
-								syns.put(fname,Synth.new("sample",[\amp,amp,\buf,bufs.at(fname)]));
-								NodeWatcher.register(syns.at(fname));
-							});
-						});
-					});
-					loading=false;
-				});
+			Buffer.read(Server.default,fname.asString,action:{ arg buf;
+				("[sample] loaded"+fname).postln;
+				bufs.put(fname,buf);
+				syns.put(fname,Synth.new("sample",[\amp,0,\buf,bufs.at(fname)]));
+				NodeWatcher.register(syns.at(fname));
 			});
+		});
+
+		this.addCommand("amp_sample", "sf", { arg msg;
+			var fname=msg[1];
+			var amp=msg[2];
+			amps.put(fname,amp);
+			syns.at(fname).set(\amp,amp);
 		});
 
 		SynthDef("autotune", {

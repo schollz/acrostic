@@ -342,6 +342,16 @@ function Acrostic:init(o)
               end
               self.rec_queue[1].recording=true
             end
+          else
+            print("record queue empty")
+            self:minimize_transposition(true)
+            self:mod_octave(1,4,1)
+            self:mod_octave(1,5,1)
+            self:mod_octave(1,6,1)
+            self:mod_octave(2,4,1)
+            self:mod_octave(2,5,1)
+            self:mod_octave(2,6,1)
+            self:update_final()
           end
         end
 

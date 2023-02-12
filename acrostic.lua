@@ -34,6 +34,8 @@ function lines_from(file)
 end
 
 function init()
+  params:set("reverb",1)
+  params:set("compressor",1)
   params:set("clock_tempo",135)
   norns.enc.sens(1,10)
   norns.enc.sens(2,6)
@@ -55,9 +57,10 @@ function init()
   for i,loop in ipairs(find_files("/home/we/dust/audio/performances/performance3/")) do
     print(loop)
     pathname,filename,ext=string.match(loop,"(.-)([^\\/]-%.?([^%.\\/]*))$")
-    params:add_number(string.format("%dloop",i),filename:sub(1,20),-48,12,-48)
+    params:add_number(string.format("%dloop",i),filename:sub(1,20),0,200,0)
+    engine.load_sample(loop)
     params:set_action(string.format("%dloop",i),function(v)
-      engine.sample(loop,v)
+      engine.amp_sample(loop,v/100)
     end)
   end
 
