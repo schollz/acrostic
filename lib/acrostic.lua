@@ -237,11 +237,11 @@ function Acrostic:init(o)
       end
     end)
     params:add_control(i.."vol adj","vol adj",controlspec.new(-1,1,"lin",0.1,0,"",0.1/2))
-    params:add_control(i.."vol lfo amp","vol lfo amp",controlspec.new(0,1,"lin",0.01,0.25,"",0.01))
+    params:add_control(i.."vol lfo amp","vol lfo amp",controlspec.new(0,1,"lin",0.01,1,"",0.01))
     params:add_control(i.."vol lfo period","vol lfo period",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
     params:add_control(i.."vol lfo offset","vol lfo offset",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
     params:add_control(i.."pan adj","pan adj",controlspec.new(-1,1,"lin",0.1,0,"",0.1/2))
-    params:add_control(i.."pan lfo amp","pan lfo amp",controlspec.new(0,1,"lin",0.01,0.2,"",0.01))
+    params:add_control(i.."pan lfo amp","pan lfo amp",controlspec.new(0,1,"lin",0.01,0.5,"",0.01))
     params:add_control(i.."pan lfo period","pan lfo period",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
     params:add_control(i.."pan lfo offset","pan lfo offset",controlspec.new(0,60,"lin",0,0,"s",0.1/60))
     params:add_control(i.."lpf","lpf",controlspec.new(40,20000,"exp",40,20000,"Hz",40/20000))
@@ -259,11 +259,11 @@ function Acrostic:init(o)
     -- params:set(i.."pan lfo period",round_time_to_nearest_beat(math.random()*15+10))
     -- params:set(i.."pan lfo offset",round_time_to_nearest_beat(math.random()*60))
     -- oooooo v1.11.0
-    params:set(i.."vol lfo period",round_time_to_nearest_beat(math.random()*20+2))
+    params:set(i.."vol lfo period",round_time_to_nearest_beat(math.random()*20+20))
     params:set(i.."vol lfo offset",round_time_to_nearest_beat(math.random()*60))
-    params:set(i.."vol lfo amp",math.random()*0.25+0.1)
-    params:set(i.."pan lfo amp",math.random()*0.6+0.2)
-    params:set(i.."pan lfo period",round_time_to_nearest_beat(math.random()*20+2))
+    params:set(i.."vol lfo amp",1)
+    params:set(i.."pan lfo amp",1)
+    params:set(i.."pan lfo period",round_time_to_nearest_beat(math.random()*20+20))
     params:set(i.."pan lfo offset",round_time_to_nearest_beat(math.random()*60))
   end
 
@@ -326,6 +326,9 @@ function Acrostic:init(o)
               end
               table.remove(self.rec_queue,1)
             end
+            if #self.rec_queue==0 then 
+              self.done_recording=true 
+            end
           end
           if not table.is_empty(self.rec_queue) then
             if self.rec_queue[1].primed then
@@ -343,15 +346,18 @@ function Acrostic:init(o)
               self.rec_queue[1].recording=true
             end
           else
-            print("record queue empty")
-            self:minimize_transposition(true)
-            self:mod_octave(1,4,1)
-            self:mod_octave(1,5,1)
-            self:mod_octave(1,6,1)
-            self:mod_octave(2,4,1)
-            self:mod_octave(2,5,1)
-            self:mod_octave(2,6,1)
-            self:update_final()
+            if self.changed_positions==nil and self.done_recording then 
+              self.changed_positions = true
+              print("changing positions here")
+              self:minimize_transposition(true)
+              self:mod_octave(1,4,2)
+              self:mod_octave(1,5,1)
+              -- self:mod_octave(1,6,1)
+              self:mod_octave(2,4,2)
+              self:mod_octave(2,5,1)
+              -- self:mod_octave(2,6,1)
+              self:update_final()  
+            end
           end
         end
 
@@ -885,6 +891,7 @@ function Acrostic:minimize_transposition()
     {0,0,0,0},
     {0,0,0,0},
   }
+  local ooctaves={-24,-12,0,-12,0,0}
   for ppage=1,2 do
     local roman_numerals={}
     for chord=1,4 do
@@ -897,7 +904,7 @@ function Acrostic:minimize_transposition()
       self.matrix_octave[ppage][note]={}
       self.matrix_base[ppage][note]={}
       for chord=1,4 do
-        self.matrix_octave[ppage][note][chord]=12*chord_octaves[ppage][chord]
+        self.matrix_octave[ppage][note][chord]=ooctaves[note]+12*chord_octaves[ppage][chord]
         self.matrix_base[ppage][note][chord]=MusicUtil.note_name_to_num(note_name_matrix[note][chord])
       end
     end
@@ -982,8 +989,9 @@ function Acrostic:minimize_transposition_old(changes)
     self.matrix_base[self.page][i]=foo[v[2]]
   end
   self.matrix_octave[self.page][1]={-12,-12,-12,-12}
+  self.matrix_octave[self.page][2]={0,0,0,0}
   self.matrix_octave[self.page][3]={12,12,12,12}
-  self.matrix_octave[self.page][4]={12,12,12,12}
+  self.matrix_octave[self.page][4]={0,0,0,0}
   self.matrix_octave[self.page][5]={12,12,12,12}
   self.matrix_octave[self.page][6]={24,24,24,24}
   self:update_final()
@@ -1137,7 +1145,7 @@ function Acrostic:key(k,z)
         if i<#self.rec_queue then
           table.insert(foo,v)
         end
-      end
+      end 
       self.rec_queue=foo
     end
   end
@@ -1169,7 +1177,8 @@ function Acrostic:initiate_recording()
     table.insert(queued,v.i)
   end
   local foo={}
-  local oooooo_ordering={5,2,1,6,4,3}
+  -- local oooooo_ordering={5,2,1,6,4,3}
+  local oooooo_ordering={3,2,1,6,5,4}
   table.shuffle(oooooo_ordering)
   -- oooooo_ordering={3,2,1,5,4,6}
   for i=1,6 do
@@ -1178,7 +1187,7 @@ function Acrostic:initiate_recording()
     end
   end
   --table.shuffle(foo) -- TODO: maybe allow shuffling as an option?
-  for _,i in ipairs(foo) do
+  for _,i in ipairs({3,2,1,6,5,4}) do
     self:queue_recording(i)
   end
 end
