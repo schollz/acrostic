@@ -261,8 +261,8 @@ function Acrostic:init(o)
     -- oooooo v1.11.0
     params:set(i.."vol lfo period",round_time_to_nearest_beat(math.random()*20+20))
     params:set(i.."vol lfo offset",round_time_to_nearest_beat(math.random()*60))
-    params:set(i.."vol lfo amp",1)
-    params:set(i.."pan lfo amp",1)
+    params:set(i.."vol lfo amp",0.4)
+    params:set(i.."pan lfo amp",0.4)
     params:set(i.."pan lfo period",round_time_to_nearest_beat(math.random()*20+20))
     params:set(i.."pan lfo offset",round_time_to_nearest_beat(math.random()*60))
   end
