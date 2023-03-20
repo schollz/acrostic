@@ -62,12 +62,15 @@ function Acrostic:init(o)
           note=self.scale_full[idx+note_adjust]
         end
       end
-      self:play_note(note,5)
-      if self.grid_crow_dirty==true then
-        self:update_grid_crow()
-        self.grid_crow_dirty=false
+      if note~=self.grid_last_note then 
+        self:play_note(note,5)
+        if self.grid_crow_dirty==true then
+          self:update_grid_crow()
+          self.grid_crow_dirty=false
+        end
+        crow.output[2]()
+        self.grid_last_note=note 
       end
-      crow.output[2](true)
     end,
     note_off=function()
       if self.had_origin5==nil then
@@ -77,7 +80,7 @@ function Acrostic:init(o)
         self:update_grid_crow()
         self.grid_crow_dirty=false
       end
-      crow.output[2](false)
+      -- crow.output[2](false)
     end
   }
 
@@ -197,11 +200,11 @@ function Acrostic:init(o)
   local option_divisions={"1/32","1/16","1/8","1/4","1/2","1"}
   local option_divisions_num={1/32,1/16,1/8,1/4,1/2,1}
   params:add_control("crow_2_level","[2] level",controlspec.new(0,10,'lin',0.1,10,'volts',0.1/10))
-  params:add_control("crow_2_attack","[2] attack",controlspec.new(0,10,'lin',0.01,1,'qn',0.01/10))
-  params:add_control("crow_2_sustain","[2] sustain",controlspec.new(0,10,'lin',0.1,5,'volts',0.1/10))
-  params:add_control("crow_2_decay","[2] decay",controlspec.new(0,10,'lin',0.01,4,'qn',0.01/10))
+  params:add_control("crow_2_attack","[2] attack",controlspec.new(0,10,'lin',0.01,0.1,'qn',0.01/10))
+  params:add_control("crow_2_sustain","[2] sustain",controlspec.new(0,10,'lin',0.1,0,'volts',0.1/10))
+  params:add_control("crow_2_decay","[2] decay",controlspec.new(0,10,'lin',0.01,2,'qn',0.01/10))
   params:add_control("crow_grid_attack","[2] attack (grid)",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
-  params:add_control("crow_grid_sustain","[2] sustain (grid)",controlspec.new(0,10,'lin',0.1,6,'volts',0.1/10))
+  params:add_control("crow_grid_sustain","[2] sustain (grid)",controlspec.new(0,10,'lin',0.1,0,'volts',0.1/10))
   params:add_control("crow_grid_decay","[2] decay (grid)",controlspec.new(0,4,'lin',0.01,0.5,'sn',0.01/4))
   params:add_control("crow_grid_release","[2] release (grid)",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
   for _,name in ipairs({"attack","sustain","decay","release"}) do
@@ -350,10 +353,10 @@ function Acrostic:init(o)
               self.changed_positions = true
               print("changing positions here")
               self:minimize_transposition(true)
-              self:mod_octave(1,4,2)
+              self:mod_octave(1,4,1)
               self:mod_octave(1,5,1)
               -- self:mod_octave(1,6,1)
-              self:mod_octave(2,4,2)
+              self:mod_octave(2,4,1)
               self:mod_octave(2,5,1)
               -- self:mod_octave(2,6,1)
               self:update_final()  
@@ -513,12 +516,12 @@ function Acrostic:init(o)
 end
 
 function Acrostic:update_grid_crow()
-  crow.output[2].action="adsr("..
-  (clock.get_beat_sec()/4*params:get("crow_grid_attack"))..","..
-  (clock.get_beat_sec()/4*params:get("crow_grid_decay"))..","..
-  params:get("crow_grid_sustain")..","..
-  (clock.get_beat_sec()/4*params:get("crow_grid_release"))..
-  ",'linear')"
+  -- crow.output[2].action="adsr("..
+  -- (clock.get_beat_sec()/4*params:get("crow_grid_attack"))..","..
+  -- (clock.get_beat_sec()/4*params:get("crow_grid_decay"))..","..
+  -- params:get("crow_grid_sustain")..","..
+  -- (clock.get_beat_sec()/4*params:get("crow_grid_release"))..
+  -- ",'linear')"
 end
 
 function Acrostic:iterate_chord()
@@ -719,15 +722,16 @@ end
 function Acrostic:play_note(note,origin)
   if origin==5 then
     self:trigger_note(note)
-    self.had_origin5=5
+    self.had_origin5=20
     do return end
   end
   if self.had_origin5~=nil and self.had_origin5>0 then
     self.had_origin5=self.had_origin5-1
-    if self.had_origin5>0 then
+    if self.had_origin5==0 then
+      print("grid release")
       self.had_origin5=nil
-      do return end
     end
+    do return end
   end
   if math.random()>params:get("gate_prob") then
     do return end
@@ -891,7 +895,7 @@ function Acrostic:minimize_transposition()
     {0,0,0,0},
     {0,0,0,0},
   }
-  local ooctaves={-24,-12,0,-12,0,0}
+  local ooctaves={-12,0,0,0,0,0}
   for ppage=1,2 do
     local roman_numerals={}
     for chord=1,4 do
