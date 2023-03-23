@@ -202,7 +202,7 @@ function Acrostic:init(o)
   params:add_control("crow_2_level","[2] level",controlspec.new(0,10,'lin',0.1,10,'volts',0.1/10))
   params:add_control("crow_2_attack","[2] attack",controlspec.new(0,10,'lin',0.01,0.1,'qn',0.01/10))
   params:add_control("crow_2_sustain","[2] sustain",controlspec.new(0,10,'lin',0.1,0,'volts',0.1/10))
-  params:add_control("crow_2_decay","[2] decay",controlspec.new(0,10,'lin',0.01,2,'qn',0.01/10))
+  params:add_control("crow_2_decay","[2] decay",controlspec.new(0,10,'lin',0.01,3,'qn',0.01/10))
   params:add_control("crow_grid_attack","[2] attack (grid)",controlspec.new(0,4,'lin',0.01,0.2,'sn',0.01/4))
   params:add_control("crow_grid_sustain","[2] sustain (grid)",controlspec.new(0,10,'lin',0.1,0,'volts',0.1/10))
   params:add_control("crow_grid_decay","[2] decay (grid)",controlspec.new(0,4,'lin',0.01,0.5,'sn',0.01/4))
@@ -895,7 +895,7 @@ function Acrostic:minimize_transposition()
     {0,0,0,0},
     {0,0,0,0},
   }
-  local ooctaves={-12,0,0,0,0,0}
+  local ooctaves={-12,0,0,12,12,0}
   for ppage=1,2 do
     local roman_numerals={}
     for chord=1,4 do
