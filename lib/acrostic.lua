@@ -62,14 +62,14 @@ function Acrostic:init(o)
           note=self.scale_full[idx+note_adjust]
         end
       end
-      if note~=self.grid_last_note then 
+      if note~=self.grid_last_note then
         self:play_note(note,5)
         if self.grid_crow_dirty==true then
           self:update_grid_crow()
           self.grid_crow_dirty=false
         end
         crow.output[2]()
-        self.grid_last_note=note 
+        self.grid_last_note=note
       end
     end,
     note_off=function()
@@ -329,8 +329,8 @@ function Acrostic:init(o)
               end
               table.remove(self.rec_queue,1)
             end
-            if #self.rec_queue==0 then 
-              self.done_recording=true 
+            if #self.rec_queue==0 then
+              self.done_recording=true
             end
           end
           if not table.is_empty(self.rec_queue) then
@@ -349,8 +349,8 @@ function Acrostic:init(o)
               self.rec_queue[1].recording=true
             end
           else
-            if self.changed_positions==nil and self.done_recording then 
-              self.changed_positions = true
+            if self.changed_positions==nil and self.done_recording then
+              self.changed_positions=true
               print("changing positions here")
               self:minimize_transposition(true)
               self:mod_octave(1,4,1)
@@ -359,7 +359,7 @@ function Acrostic:init(o)
               self:mod_octave(2,4,1)
               self:mod_octave(2,5,1)
               -- self:mod_octave(2,6,1)
-              self:update_final()  
+              self:update_final()
             end
           end
         end
@@ -454,8 +454,8 @@ function Acrostic:init(o)
   -- crow output 3 is for using a clock
   self.pattern_clock_sync=self.lattice:new_pattern{
     action=function(x)
-      crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(self.pattern_clock_sync.division*2*clock.get_beat_sec()).."), to(0,0) }"
-      crow.output[3]()
+      -- crow.output[3].action="{ to(0,0), to("..params:get("crow_3_volts")..","..(self.pattern_clock_sync.division*2*clock.get_beat_sec()).."), to(0,0) }"
+      -- crow.output[3]()
     end,
     division=1/4,
   }
@@ -628,10 +628,18 @@ function Acrostic:iterate_note()
     self.gate_for_midi=true
     if self.had_origin5==nil then
       self.grid_crow_dirty=true
-      crow.output[2].action="{ to(0,0), to("..params:get("crow_2_level")..
+      local action_string="{ to(0,0), to("..params:get("crow_2_level")..
       ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
       "), to("..params:get("crow_2_sustain")..","..(clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
+      crow.output[2].action=action_string
       crow.output[2]()
+      -- local base_note=MusicUtil.generate_chord_roman(params:get("root_note"),params:get("scale"),params:string("chord"..page..chord))
+      -- crow.output[3]=base_note[1]
+      -- action_string="{ to(0,0), to("..params:get("crow_2_level")..
+      -- ","..(clock.get_beat_sec()*params:get("crow_2_attack"))..
+      -- "), to("..params:get("crow_2_sustain")..","..(3*clock.get_beat_sec()*params:get("crow_2_decay"))..") }"
+      -- crow.output[4].action=action_string
+      -- crow.output[4]()
     end
   end
   self.last_chord_roman=chord_roman
@@ -772,12 +780,12 @@ function Acrostic:trigger_note(note)
   end
   if crow~=nil then
     if hz~=self.last_hz and (hz*self.crow4_octaves[params:get("crow_4_octave")]~=nil) then
-      crow.output[4].action="oscillate("..(hz*self.crow4_octaves[params:get("crow_4_octave")])..","..params:get("crow_4_volts")..",'exponential')"
-      crow.output[4]()
+      -- crow.output[4].action="oscillate("..(hz*self.crow4_octaves[params:get("crow_4_octave")])..","..params:get("crow_4_volts")..",'exponential')"
+      -- crow.output[4]()
       self.last_hz=hz
     end
     if params:get("crow_1_pitch")==1 then
-      crow.output[1].volts=(note-24)/12
+      crow.output[1].volts=(note-24-12)/12
     else
       crow.output[1].volts=0.0372*note+0.527 -- korg monotron!
     end
@@ -1149,7 +1157,7 @@ function Acrostic:key(k,z)
         if i<#self.rec_queue then
           table.insert(foo,v)
         end
-      end 
+      end
       self.rec_queue=foo
     end
   end

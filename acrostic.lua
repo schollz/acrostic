@@ -34,7 +34,8 @@ function lines_from(file)
 end
 
 function init()
-  params:set("reverb",1)
+  params:set("monitor_level",0)
+  params:set("reverb",0)
   params:set("compressor",1)
   params:set("clock_tempo",135)
   norns.enc.sens(1,10)
