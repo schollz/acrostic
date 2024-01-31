@@ -1352,34 +1352,34 @@ function Acrostic:draw()
       screen.fill()
     end
     local levels={12,5,3,2,1}
-    for sign=-1,1,2 do
-      for kk=5,1,-1 do
-        if params:get("sel_cut")==j and params:get("sel_selection")==4 then
-          screen.level(0)
-        else
-          screen.level(levels[kk])
-        end
-        screen.move(x,y)
-        for i,sample in ipairs(self.waveforms[j]) do
-          local xx=x+(i-1)
-          local yy=y+util.linlin(-1,1,-1*kk,kk,sign*math.abs(sample))
-          screen.line(xx,yy)
-          screen.stroke()
-          screen.move(xx,yy)
-        end
-      end
-    end
-    -- draw waveform positions
-    local pos=util.linlin(0,self.loop_length*clock.get_beat_sec(),1,53,self.o.pos[j])
-    local xx=x+(pos-1)
-    if params:get("sel_cut")==j and params:get("sel_selection")==4 then
-      screen.level(0)
-    else
-      screen.level(5)
-    end
-    screen.move(xx,y+4)
-    screen.line(xx,y-4)
-    screen.stroke()
+    -- for sign=-1,1,2 do
+    --   for kk=5,1,-1 do
+    --     if params:get("sel_cut")==j and params:get("sel_selection")==4 then
+    --       screen.level(0)
+    --     else
+    --       screen.level(levels[kk])
+    --     end
+    --     screen.move(x,y)
+    --     for i,sample in ipairs(self.waveforms[j]) do
+    --       local xx=x+(i-1)
+    --       local yy=y+util.linlin(-1,1,-1*kk,kk,sign*math.abs(sample))
+    --       screen.line(xx,yy)
+    --       screen.stroke()
+    --       screen.move(xx,yy)
+    --     end
+    --   end
+    -- end
+    -- -- draw waveform positions
+    -- local pos=util.linlin(0,self.loop_length*clock.get_beat_sec(),1,53,self.o.pos[j])
+    -- local xx=x+(pos-1)
+    -- if params:get("sel_cut")==j and params:get("sel_selection")==4 then
+    --   screen.level(0)
+    -- else
+    --   screen.level(5)
+    -- end
+    -- screen.move(xx,y+4)
+    -- screen.line(xx,y-4)
+    -- screen.stroke()
   end
 
   if self.message_level>0 and self.message~="" then
