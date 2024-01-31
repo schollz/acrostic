@@ -1,4 +1,4 @@
--- acrostic v0.1.0
+-- acrostic v0.1.1
 --
 -- sample and layer chords
 -- one note at a time.
