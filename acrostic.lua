@@ -316,11 +316,14 @@ function init()
         show_startup_screen=show_startup_screen+1
       end
       clock.sleep(1/10)
-      acrostic:update()
-      redraw()
     end
   end)
   
+end
+
+function refresh() 
+  acrostic:update()
+  redraw()
 end
 
 function cleanup()
