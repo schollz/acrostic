@@ -952,8 +952,8 @@ function Acrostic:minimize_transposition_old(changes)
   -- print("self.matrix_base[self.page]")
   -- table.print_matrix(self.matrix_base[self.page])
   self:update_final()
-  print("update1")
-  table.print_matrix(self.matrix_name[self.page])
+  -- print("update1")
+  -- table.print_matrix(self.matrix_name[self.page])
 
   local averages={}
   for note=1,6 do
@@ -1346,23 +1346,42 @@ function Acrostic:draw()
     local x=11+(4-1)*19+8
     local y=5+9*j
     if params:get("sel_cut")==j and params:get("sel_selection")==4 then
-      -- screen.rect()
       screen.level(5)
       screen.rect(x-2,y-5,55,10)
       screen.fill()
     end
-    -- if params:get("sel_cut")==j and params:get("sel_selection")==4 then
-    --   screen.level(0)
-    -- else
-    --   screen.level(10)
-    -- end
     screen.level(12)
-    for i,sample in ipairs(self.waveforms[j]) do
-      local samp = 6*math.abs(sample)
-      screen.move(x+i,y-samp/2-1)
-      screen.line(x+i,y+samp-1)
-      screen.stroke()
+    
+    -- Optimize waveform drawing
+    local waveform = self.waveforms[j]
+    local num_points = #waveform
+    local display_width = 53  -- Width of display area
+    
+    -- Only draw as many points as we have pixels for
+    local skip = math.max(1, math.floor(num_points / display_width))
+    local lines = {}
+    
+    -- Pre-calculate points to reduce calculations during drawing
+    for i = 1, num_points, skip do
+      -- Find max amplitude in this pixel's range
+      local max_amp = 0
+      local end_idx = math.min(i + skip - 1, num_points)
+      for k = i, end_idx do
+        max_amp = math.max(max_amp, math.abs(waveform[k]))
+      end
+      
+      local samp = 6 * max_amp
+      local idx = math.floor((i - 1) / skip) + 1
+      lines[idx] = {x = x + idx, y_top = y - samp/2 - 1, y_bottom = y + samp - 1}
     end
+    
+    -- Batch draw the lines to reduce API calls
+    for _, line in ipairs(lines) do
+      screen.move(line.x, line.y_top)
+      screen.line(line.x, line.y_bottom)
+    end
+    screen.stroke()
+    
     -- draw waveform positions
     local pos=util.linlin(0,self.loop_length*clock.get_beat_sec(),1,53,self.o.pos[j])
     local xx=x+(pos-1)
